@@ -16,6 +16,6 @@ The corresponding code is available in the [vschaos library](github.com/vschaos_
   
 <h2>Examples</h2>
 
-<h3>Reconstructions</h2>
-<h3>Interpolations</h2>
-<h3>Random trajectories</h2>
+<h3>Reconstructions</h3>
+<h3>Interpolations</h3>
+<h3>Random trajectories</h3>
