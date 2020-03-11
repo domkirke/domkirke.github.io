@@ -1,3 +1,3 @@
 #domkirke
 
-[ShrubVAE](ShrubVAE)
+[ShrubVAE](github.com/domkirke.github.io/ShrubVAE)
