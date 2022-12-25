@@ -1,0 +1,17 @@
+{%- if post.direct-url -%} 
+<a href="{{ post.direct-url }}"> 
+{%- else -%}
+<a href="{{ post.url }}"> 
+{%- endif -%}
+<div class="post_preview" tags="{{post.categories}}">
+    {%- if post.img -%}
+        <div class="preview" style="background-image: url('/assets/images/posts/{{ post.img }}');"> </div> 
+    {%- else -%}
+        <div class="preview">  </div>
+    {%- endif -%}
+    <div class="content">
+        <h2> {{ post.title }} </h2>
+    <p> {{ post.preview }} </p>
+    </div>
+</div>
+</a>
