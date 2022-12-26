@@ -2,6 +2,7 @@
  * Site header
  */
  .site-header {
+    background-color: $background-color;
     border-top: 5px solid $grey-color-dark;
     border-bottom: 1px solid $grey-color-light;
     min-height: $spacing-unit * 1.865;
@@ -242,4 +243,19 @@
       }
     }
   }
+
+
+.music-link {
+  margin-right: 2vh;  
+  margin-left: 2vh;
+}
+
+.music-link:first-child {
+  margin-left: 0vh;
+}
   
+
+#button_biography
+{
+  cursor: help;
+}

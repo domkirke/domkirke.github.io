@@ -33,8 +33,32 @@ body
 // {
 //     display: none;
 // }
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+  }
+  
+  /* Tooltip text */
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
 
+    /* Position the tooltip text - see examples below! */
+    position: absolute;
+    z-index: 1;
+}
 
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    font-size: 70%;
+}
 
 #home_tags {
     position: relative;
@@ -250,4 +274,64 @@ body
         height: 75%;
         margin-bottom: 40%;
     }
+}
+
+.laptop-only {
+    display: none;
+    @include media-query($on-palm) {
+        display: none;
+    }
+    @include media-query($on-laptop) {
+        display: none;
+    }
+}
+
+.palm-only {
+    display: none;
+
+    @include media-query($on-palm) {
+        display: inherit;
+    }
+    @include media-query($on-laptop) {
+        display: inherit;
+    }
+}
+
+
+.screen-only {
+    @include media-query($on-palm) {
+        display: none;
+    }
+    @include media-query($on-laptop) {
+        display: none;
+    }
+}
+
+.running_order {
+    margin-top: 5vh;
+    margin-bottom: 10vh
+}
+
+.running_order h1
+{
+    margin-bottom: 0px;
+    font-size: 1.8vmax;
+}
+.running_order h2 
+{
+    margin-bottom: 10px;
+    font-size: 1.5vmax;
+    font-weight: 300;
+}
+
+.running_order p
+{
+    font-size: 1.2vmax;
+    font-family: 'Courier New', Courier, monospace
+}
+
+.running_order_set 
+{
+    margin-top: 5px;
+    margin-bottom: 5px;
 }

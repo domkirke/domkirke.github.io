@@ -1,32 +1,32 @@
 ---
 layout: post
-title:  "Daim™ MINIUI Release"
+title:  "Daim™ - MINIUI"
 date:   2022-05-12 10:10:00 +0100
 categories: music;daim;production
 img: daim2.png
-direct-url: https://daim.bandcamp.com/album/miniui
-preview: "guided by maximalism & information saturation"
+permalink: daim-miniui
+preview: "second explorative EP on exhuberant poetry and colorful harshness"
 ---
-You’ll find this post in your `_posts` directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run `jekyll serve`, which launches a web server and auto-regenerates your site when a file is updated.
 
-Jekyll requires blog post files to be named according to the following format:
+<div class="screen-only">
+<div style="display: flex; align-items: stretch;">
+<iframe style="border: 0; display: inline-block; border: 0; width: 350px; height: 470px; padding-right: 30px" src="https://bandcamp.com/EmbeddedPlayer/album=1822873900/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/transparent=true/" seamless><a href="https://daim.bandcamp.com/album/miniui">MINIUI by Daim™</a></iframe>
 
-`YEAR-MONTH-DAY-title.MARKUP`
+<div style="font-size: 1.7vw; font-weight: 200; text-align: justify; display: inline-block;">
+<emph style="font-weight: 600; display: inline;">MINIUI</emph> is the second album of the Daim™ trio, composed three years after the <a href="/daim.html">first album ɯıɐp</a>. Released on paar with its post-liminal counterpart <a href="/daimnd.html">Natures&Découverte</a>, this EP signs a drastic radical turn towards brutalist pop music, layering experimental, hip-hop and electro-pop musical elements to provide a disturbing but lavish musical experience. This EP also contains several featurings, notably with Adèle Pécout, bolide international, and Minh Boutin. <br/><br/>
+<div class="stream-list">
+<a class="music-link" href="https://open.spotify.com/album/6o2434SmYfYmyhx0kCdeS2?si=aIdJWjv9R8qSNYBa3fMdYA">Spotify</a>
+<a class="music-link" href="https://deezer.page.link/8TULY7BXABwSTSRH9">Deezer</a>
+<a class="music-link">Apple Music</a>
+</div>
+</div>
+</div>
+</div>
 
-Where `YEAR` is a four-digit number, `MONTH` and `DAY` are both two-digit numbers, and `MARKUP` is the file extension representing the format used in the file. After that, include the necessary front matter. Take a look at the source for this post to get an idea about how it works.
 
-Jekyll also offers powerful support for code snippets:
-
-{% highlight ruby %}
-def print_hi(name)
-  puts "Hi, #{name}"
-end
-print_hi('Tom')
-#=> prints 'Hi, Tom' to STDOUT.
-{% endhighlight %}
-
-Check out the [Jekyll docs][jekyll-docs] for more info on how to get the most out of Jekyll. File all bugs/feature requests at [Jekyll’s GitHub repo][jekyll-gh]. If you have questions, you can ask them on [Jekyll Talk][jekyll-talk].
-
-[jekyll-docs]: https://jekyllrb.com/docs/home
-[jekyll-gh]:   https://github.com/jekyll/jekyll
-[jekyll-talk]: https://talk.jekyllrb.com/
+<div class="palm-only">
+<iframe style="border: 0; width: 100%; height: 120px;" src="https://bandcamp.com/EmbeddedPlayer/album=1822873900/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/transparent=true/" seamless><a href="https://daim.bandcamp.com/album/miniui">MINIUI by Daim™</a></iframe>
+<p style="font-size: 2.5vw; font-weight: 200; text-align: justify; display: inline-block;">
+<emph style="font-weight: 600; display: inline;">MINIUI</emph> is the second album of the Daim™ trio, composed three years after the <a href="/daim.html">first album ɯıɐp</a>. Released on paar with its post-liminal counterpart <a href="/daimnd.html">Natures&Découverte</a>, this EP signs a drastic radical turn towards brutalist pop music, layering experimental, hip-hop and electro-pop musical elements to provide a disturbing but lavish musical experience. This EP also contains several featurings, notably with Adèle Pécout, bolide international, and Minh Boutin.
+</p>
+</div>

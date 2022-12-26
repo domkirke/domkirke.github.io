@@ -4,28 +4,14 @@ title:  "Cirque Laboratoire with IRCAM"
 date:   2022-06-05 21:00:00 +0100
 categories: music;ai;live;events
 img: cirquelab.jpg
+permalink: cirquelab2022
 preview: "AI/Music/Circus experiments at Cirque Electrique with Centre National des Arts du Cirque (CNAC)"
 ---
-You’ll find this post in your `_posts` directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run `jekyll serve`, which launches a web server and auto-regenerates your site when a file is updated.
 
-Jekyll requires blog post files to be named according to the following format:
-
-`YEAR-MONTH-DAY-title.MARKUP`
-
-Where `YEAR` is a four-digit number, `MONTH` and `DAY` are both two-digit numbers, and `MARKUP` is the file extension representing the format used in the file. After that, include the necessary front matter. Take a look at the source for this post to get an idea about how it works.
-
-Jekyll also offers powerful support for code snippets:
-
-{% highlight ruby %}
-def print_hi(name)
-  puts "Hi, #{name}"
-end
-print_hi('Tom')
-#=> prints 'Hi, Tom' to STDOUT.
-{% endhighlight %}
-
-Check out the [Jekyll docs][jekyll-docs] for more info on how to get the most out of Jekyll. File all bugs/feature requests at [Jekyll’s GitHub repo][jekyll-gh]. If you have questions, you can ask them on [Jekyll Talk][jekyll-talk].
-
-[jekyll-docs]: https://jekyllrb.com/docs/home
-[jekyll-gh]:   https://github.com/jekyll/jekyll
-[jekyll-talk]: https://talk.jekyllrb.com/
+<div style="font-size: 1.7vw; font-weight: 200; text-align: justify; display: inline-bloc;">
+<div style="text-align: center; margin-bottom: 20px;">
+<img src="/assets/images/posts/cirquelab.jpg" style="width: 70%;"/>
+</div>
+Le Cirque Électrique welcomes, for the 2022 Edition of the Cirques Laboratoires, the <div class="tooltip">ACIDS <span class="tooltiptext">Artificial & Creative Intelligence and Data Science</span> </div> team (alongside with the <div class="tooltip">ISMM team<span class="tooltiptext">Interaction, Sound, Music, Movement</span> </div>) of IRCAM and students from the Centre national des Arts du Cirque Chalons-en-Champagne. Created since the early beginnings of the Cirque Electric since 1995, Cirque Laboratoire proposes musical improvisation along with circus performances, and then becomes a place for openness and curiosity. <br/>
+For this show : dance, motion capture, trapeze, neural synthesis, German wheel, industrial techno, acrobratic lift, gazing soundscapes, Chinese pole, all of this blended together during a flash 2-days work session.
+</div>
