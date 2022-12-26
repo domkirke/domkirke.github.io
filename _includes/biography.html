@@ -10,3 +10,14 @@ Parallelly to my academic career, I also pursued musical activities notably thro
 </div>
 <!-- <div id = "close"> <a onclick = "removeBio()"> CLOSE </a> </div> -->
 </div>
+
+
+<script>
+    function showBio() {
+        document.getElementById("biography").style.display = "block";
+    }
+    bio_buttons = document.querySelectorAll("#button_biography")
+    for (var i = 0; i < bio_buttons.length; i++) {
+        bio_buttons[i].onclick = () => { showBio(); }
+    }
+</script>

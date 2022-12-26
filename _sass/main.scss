@@ -29,10 +29,10 @@ body
     font-size: 1em;
 }
 
-.site-nav
-{
-    display: none;
-}
+// .site-nav
+// {
+//     display: none;
+// }
 
 
 
@@ -174,7 +174,8 @@ body
     // margin-top: 0.7vh;
     display: inline-block;
     font-size: calc(10px + 1.3vw);
-    flex: 3;
+    width: 100%;
+    flex: 1;
     text-align: center;
     font-style: normal;
     margin-top: calc(5px + 1vh);
@@ -191,6 +192,7 @@ body
     display: inline-block;
     text-align: center;
     font-size: calc(8px + 0.8vw);
+    width: 100%;
     font-weight: 100;
     line-break:loose;
     flex: 2;

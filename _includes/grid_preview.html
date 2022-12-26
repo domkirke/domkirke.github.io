@@ -1,18 +1,16 @@
 {%- if post.direct-url -%} 
-<a href="{{ post.direct-url }}"> 
+<a class="post_preview"  tags="{{post.categories}}" href="{{ post.direct-url }}"> 
 {%- else -%}
-<a href="{{ post.url }}"> 
+<a class="post_preview"  tags="{{post.categories}}" href="{{ post.url }}"> 
 {%- endif -%}
-<div class="post_preview" tags="{{post.categories}}">
-    {%- if post.img -%}
-        <div class="preview" style="background-image: url('/assets/images/posts/{{ post.img }}');"> </div> 
-    {%- else -%}
-        <div class="preview">  </div>
-    {%- endif -%}
-    <h2> {{ post.title }} </h2>
-    <div class="content">
-        
-    <p> {{ post.preview }} </p>
-    </div>
-</div>
+        {%- if post.img -%}
+            <div class="preview" style="background-image: url('/assets/images/posts/{{ post.img }}');"> </div> 
+        {%- else -%}
+            <div class="preview">  </div>
+        {%- endif -%}
+        <h2> {{ post.title }} </h2>
+        <br/>
+        <div class="content">
+            <p> {{ post.preview }} </p>
+        </div>
 </a>

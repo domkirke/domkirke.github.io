@@ -108,19 +108,39 @@
    * Site footer
    */
   .site-footer {
+    bottom: 0px;
+    width: 100%;
+    background-color: $background-color;
+    position: fixed;
     border-top: 1px solid $grey-color-light;
-    padding: $spacing-unit 0;
+    // padding: $spacing-unit 0;
   }
   
   .footer-heading {
-    @include relative-font-size(1.125);
-    margin-bottom: $spacing-unit / 2;
+    @include relative-font-size(0.8);
+    margin-bottom: $spacing-unit / 4;
   }
   
   .contact-list,
   .social-media-list {
+    display: flex;
+    flex-direction: row;
+    flex-flow: row;
+    align-items: flex-end;
+    // @include media-query($on-palm) {
+    //   flex-direction: column;
+    //   flex-flow: column;
+    //   align-items: flex-start;
+    // }
+    justify-content: space-around;
     list-style: none;
     margin-left: 0;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+
+  .social-media-list li{
+    display: inline-block;
   }
   
   .footer-col-wrapper {
@@ -132,38 +152,14 @@
   
   .footer-col {
     float: left;
-    margin-bottom: $spacing-unit / 2;
-    padding-left: $spacing-unit / 2;
+    // margin-bottom: $spacing-unit / 2;
+    // padding-left: $spacing-unit / 2;
   }
   
   .footer-col-1 {
-    width: -webkit-calc(45% - (#{$spacing-unit} / 2));
-    width:         calc(45% - (#{$spacing-unit} / 2));
+    width: -webkit-calc(100% - (#{$spacing-unit} / 2));
+    width:         calc(100% - (#{$spacing-unit} / 2));
   }
-  
-  .footer-col-2 {
-    width: -webkit-calc(50% - (#{$spacing-unit} / 2));
-    width:         calc(50% - (#{$spacing-unit} / 2));
-  }
-  
-  
-  @include media-query($on-laptop) {
-    .footer-col-1,
-    .footer-col-2 {
-      width: -webkit-calc(50% - (#{$spacing-unit} / 2));
-      width:         calc(50% - (#{$spacing-unit} / 2));
-    }
-  }
-  
-  @include media-query($on-palm) {
-    .footer-col {
-      float: none;
-      width: -webkit-calc(100% - (#{$spacing-unit} / 2));
-      width:         calc(100% - (#{$spacing-unit} / 2));
-    }
-  }
-  
-  
   
   /**
    * Page content
