@@ -1,19 +1,12 @@
-<script>
-function showBio() {
-  console.log("hello?");
-  document.getElementById("biography").style.display = "block";
-}
-</script>
+
 
 <footer class="site-footer h-card">
   <data class="u-url" href="{{ "/" | relative_url }}"></data>
 
   <div class="wrapper">
 
-    <!-- <h2 class="footer-heading">{{ site.title | escape }}</h2> -->
-
     <div class="footer-col-wrapper">
-
+<!-- 
       <div class="footer-col footer-col-1">
         <ul class="contact-list">
           <li class="p-name">
@@ -27,16 +20,16 @@ function showBio() {
             <li><a class="u-email" href="mailto:{{ site.email }}">{{ site.email }}</a></li>
             {%- endif -%}
         </ul>
-      </div>
+      </div> -->
 
-      <div class="footer-col footer-col-2">
+      <div class="footer-col footer-col-1">
         {%- include social.html -%}
       </div>
 
-      <div class="footer-col footer-col-3">
+      <div class="footer-col footer-col-2">
         <p>
         <!-- {{- site.description | escape -}} -->
-        <a onclick="showBio()"> Short Biography </span>
+        <a id="button_biography"> Short Biography </span>
         <br />
         <a href="assets/documents/cv.pdf">CV</a>
         </p>
@@ -46,3 +39,10 @@ function showBio() {
   </div>
 
 </footer>
+
+<script>
+  function showBio() {
+    document.getElementById("biography").style.display = "block";
+  }
+  document.querySelector("#button_biography").onclick = () => { showBio(); }
+  </script>

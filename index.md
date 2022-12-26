@@ -65,15 +65,7 @@ layout: default
 
 </div>
 
-
-
-<div id = "biography">
-<div id = "biography_body">
-Axel Chemla--Romeu-Santos is .....
-</div>
-<div id = "close"> <a onclick = "removeBio()"> CLOSE </a> </div>
-</div>
-
+{%- include biography.html -%}
 <script>
   function removeBio() {
     document.getElementById("biography").style.display = "none";
