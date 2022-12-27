@@ -6,26 +6,14 @@ categories: ai;code;experiments;articles
 img: badneurips.png
 preview: "Submitted at NeurIPS Creativity Workshop 2022"
 ---
-You’ll find this post in your `_posts` directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run `jekyll serve`, which launches a web server and auto-regenerates your site when a file is updated.
+<img src="https://github.com/domkirke/divergent-synthesis/blob/main/assets/extrap_v2.png?raw=true" style="width: 100%; margin-bottom: 15px"/>
+<div style="font-size: 1.7vw; font-weight: 150; margin-bottom: 15px;">
+Machine learning approaches now achieve impressive generation capabilities in numerous domains such as image, audio or video. However, most training & evaluation frameworks revolve around the idea of strictly modelling the original data distribution rather than trying to extrapolate from it. This precludes the ability of such models to diverge from the original distribution and, hence, exhibit some creative traits. In this paper, we propose various perspectives on how this complicated goal could ever be achieved, and provide preliminary results on our novel training objective called <emph style="font-weight: 600; display: inline;">Bounded Adversarial Divergence</emph> (BAD).
+</div>
 
-Jekyll requires blog post files to be named according to the following format:
-
-`YEAR-MONTH-DAY-title.MARKUP`
-
-Where `YEAR` is a four-digit number, `MONTH` and `DAY` are both two-digit numbers, and `MARKUP` is the file extension representing the format used in the file. After that, include the necessary front matter. Take a look at the source for this post to get an idea about how it works.
-
-Jekyll also offers powerful support for code snippets:
-
-{% highlight ruby %}
-def print_hi(name)
-  puts "Hi, #{name}"
-end
-print_hi('Tom')
-#=> prints 'Hi, Tom' to STDOUT.
-{% endhighlight %}
-
-Check out the [Jekyll docs][jekyll-docs] for more info on how to get the most out of Jekyll. File all bugs/feature requests at [Jekyll’s GitHub repo][jekyll-gh]. If you have questions, you can ask them on [Jekyll Talk][jekyll-talk].
-
-[jekyll-docs]: https://jekyllrb.com/docs/home
-[jekyll-gh]:   https://github.com/jekyll/jekyll
-[jekyll-talk]: https://talk.jekyllrb.com/
+<div style="margin-bottom: 15px;">
+  <div style="display: flex; align-items: stretch; justify-content: space-around; font-size: 1.9vw; font-weight: 150">
+    <div style="display: inline-block;"><a href="https://github.com/domkirke/divergent-synthesis">Github</a></div>
+    <div style="display: inline-block;"><a href="https://arxiv.org/abs/2211.08861">Paper</a></div>
+  </div>
+</div>
