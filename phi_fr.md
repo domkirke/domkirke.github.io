@@ -67,6 +67,8 @@ layout: default
 
 [divergent-synthesis](https://github.com/domkirke/divergent-synthesis) sont les premières expériences d'une méthode d'apprentissage extrapolatif pour les IA génératives appelée Bounded Adversarial Divergence (BAD), basé sur l'adaptation de modèles génératifs pré-entraînés à l'aide de classificateurs neuronaux. 
 
+<em>active_divergence</em> est une boîte à outil pour permettre l'application de diverses méthodes d'altération de modèles génératifs audio, visuels, textuels, en commande ou en temps-réel : adaptation, network bending, re-écriture. A paraître dans les prochains mois.
+
 ### Slideshows
 [Presentation in Sorbonne Universités](/assets/documents/sorbonne.pdf) pour le séminaire Textures Électroniques, organisé par l'artiste Kaspar Ravel (2023)
 

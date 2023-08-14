@@ -68,6 +68,8 @@ team, performers, composers, and their audience. The first edition, that took pl
 
 [divergent-synthesis](https://github.com/domkirke/divergent-synthesis) are first experiments of an extrapolative learning framework for generative IAs called (Bounded Adversarial Divergence), based on the divergent fine-tuning of pre-trained models using neural classifiers. 
 
+<em>active_divergence</em> is a toolbox for applying various alteration methods to audio, visual and textual generative models, in command or in real-time: adaptation, network bending, rewriting. To be published in the coming months.
+
 ### Slideshows
 [Presentation in Sorbonne Universités](/assets/documents/sorbonne.pdf) for Textures Électroniques seminar, organized by artist Kaspar Ravel (2023)
 
