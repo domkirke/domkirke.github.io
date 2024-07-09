@@ -4,7 +4,7 @@ title:  "genesis - patch version"
 date:   2024-03-23 17:00:00 +0100
 categories: ai;music;code
 img: genesis_patch.png
-preview: 3th IRCAM Generative Music Prize
+preview: AI no-input generative patch - 3rd IRCAM Generative Music Prize
 direct-url: 
 ---
 
