@@ -1,8 +1,8 @@
 ---
 layout: post
 title:  "acids workshop gamma"
-date:   2023-11-28 17:00:00 +0100
-categories: ai;music;live
+date:   2023-12-01 17:00:00 +0100
+categories: ai;music;live;events
 img: workshop3.png
 preview: third edition of the AI-oriented electronic music show ACIDS Workshop at Cirque Électrique
 ---
