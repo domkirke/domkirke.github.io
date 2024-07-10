@@ -8,7 +8,12 @@
         {%- else -%}
             <div class="preview">  </div>
         {%- endif -%}
-        <h2> {{ post.title }} </h2>
+        <h2> {{ post.title }} 
+        {%- if post.ongoing -%}
+            <span class="ongoing">now!</span>
+        {%- endif -%}
+        </h2>
+        
         <br/>
         <div class="content">
             <p> {{ post.preview }} </p>
