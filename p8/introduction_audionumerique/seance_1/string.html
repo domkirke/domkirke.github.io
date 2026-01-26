@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Perfect Sine Vibrating String (Standing Wave)</title>
+  <style>
+    body { margin:0; font-family:system-ui, sans-serif; background:#f6f8fb; color:#132033; }
+    .wrap { display:flex; gap:12px; padding:12px; align-items:flex-start; flex-wrap:wrap; }
+    canvas { background:#fff; border:1px solid #d3dbe6; border-radius:10px; }
+    .panel { max-width: 520px; line-height:1.35; }
+    button, select, input {
+      background:#fff; color:#132033;
+      border:1px solid #c7d1df; padding:8px 10px; border-radius:8px;
+    }
+    button { cursor:pointer; }
+    button:hover { background:#eef3fa; }
+    label { display:flex; gap:10px; align-items:center; margin:10px 0; }
+    input[type="range"] { width: 240px; }
+    code { color:#2f5fb8; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div>
+      <canvas id="string" width="720" height="220"></canvas>
+      <div style="height:12px"></div>
+      <canvas id="plot" width="720" height="220"></canvas>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin:0 0 8px 0;">“Perfect” sine vibrating string (analytic)</h3>
+      <div style="opacity:.95">
+        Ideal fixed-ends string in one normal mode:
+        <code>u(x,t)=A·sin(nπx/L)·cos(ωt)</code>, with <code>ω=nπc/L</code>.
+        No damping, no numerics → perfectly sinusoidal in space and time.
+      </div>
+
+      <div class="row" style="margin:12px 0;">
+        <button id="toggle">Pause</button>
+        <button id="reset">Reset time</button>
+      </div>
+
+      <label>
+        Mode (n)
+        <select id="mode">
+          <option>1</option><option>2</option><option>3</option><option>4</option>
+          <option>5</option><option>6</option><option>7</option><option>8</option>
+        </select>
+        <span id="modeVal"></span>
+      </label>
+
+      <label>
+        Amplitude (A)
+        <input id="amp" type="range" min="0" max="1" step="0.01" value="0.75" />
+        <span id="ampVal"></span>
+      </label>
+
+      <label>
+        Wave speed (c)
+        <input id="c" type="range" min="0.2" max="3" step="0.01" value="1.2" />
+        <span id="cVal"></span>
+      </label>
+
+      <label>
+        Pickup position
+        <input id="pickup" type="range" min="0" max="1" step="0.01" value="0.80" />
+        <span id="pickupVal"></span>
+      </label>
+
+      <div style="margin-top:10px; opacity:.8; font-size:14px;">
+        Plot = displacement at the pickup point vs time (a pure sinusoid).
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const cString = document.getElementById('string');
+  const cPlot = document.getElementById('plot');
+  const ctxS = cString.getContext('2d');
+  const ctxP = cPlot.getContext('2d');
+
+  const toggleBtn = document.getElementById('toggle');
+  const resetBtn = document.getElementById('reset');
+
+  const modeEl = document.getElementById('mode');
+  const ampEl = document.getElementById('amp');
+  const cEl = document.getElementById('c');
+  const pickupEl = document.getElementById('pickup');
+
+  const modeVal = document.getElementById('modeVal');
+  const ampVal = document.getElementById('ampVal');
+  const cVal = document.getElementById('cVal');
+  const pickupVal = document.getElementById('pickupVal');
+
+  // Spatial sampling for drawing
+  const N = 500;
+
+  // String length (units)
+  const L = 1.0;
+
+  // Plot history
+  const windowSeconds = 3.5;
+  const samples = []; // {t, y}
+
+  let running = true;
+  let t0 = 0;           // simulation time offset
+  let tPausedAt = 0;    // time when paused (in seconds)
+  let lastTs = null;    // for real-time delta
+
+  function params() {
+    const n = parseInt(modeEl.value, 10);
+    const A = parseFloat(ampEl.value);
+    const c = parseFloat(cEl.value);
+    const pickup = parseFloat(pickupEl.value);
+    const omega = (n * Math.PI * c) / L; // ω = nπc/L
+    return { n, A, c, pickup, omega };
+  }
+
+  function u(x, t, {n, A, omega}) {
+    // Standing wave mode with fixed ends: sin(nπx/L)
+    return A * Math.sin(n * Math.PI * x / L) * Math.cos(omega * t);
+  }
+
+  function setLabels() {
+    const { n } = params();
+    modeVal.textContent = ` (n=${n})`;
+    ampVal.textContent = parseFloat(ampEl.value).toFixed(2);
+    cVal.textContent = parseFloat(cEl.value).toFixed(2);
+    pickupVal.textContent = parseFloat(pickupEl.value).toFixed(2);
+  }
+  [modeEl, ampEl, cEl, pickupEl].forEach(el => el.addEventListener('input', setLabels));
+  setLabels();
+
+  toggleBtn.addEventListener('click', () => {
+    running = !running;
+    toggleBtn.textContent = running ? "Pause" : "Resume";
+  });
+
+  resetBtn.addEventListener('click', () => {
+    t0 = 0;
+    tPausedAt = 0;
+    samples.length = 0;
+    lastTs = null;
+  });
+
+  function renderString(simT) {
+    const W = cString.width, H = cString.height;
+    ctxS.clearRect(0, 0, W, H);
+
+    const midY = Math.round(H * 0.55);
+    const left = 18, right = 18;
+    const x0 = left, x1 = W - right;
+
+    // baseline
+    ctxS.strokeStyle = "#e3e9f3";
+    ctxS.lineWidth = 2;
+    ctxS.beginPath();
+    ctxS.moveTo(x0, midY);
+    ctxS.lineTo(x1, midY);
+    ctxS.stroke();
+
+    // end posts
+    ctxS.fillStyle = "#2f5fb8";
+    ctxS.fillRect(x0 - 4, midY - 18, 6, 36);
+    ctxS.fillRect(x1 - 2, midY - 18, 6, 36);
+
+    const p = params();
+    const scaleY = 70; // pixels per unit amplitude
+
+    // string curve (perfect sinusoid)
+    ctxS.strokeStyle = "#3a4a5f";
+    ctxS.lineWidth = 2.2;
+    ctxS.beginPath();
+    for (let i = 0; i < N; i++) {
+      const xn = i / (N - 1);
+      const x = x0 + xn * (x1 - x0);
+      const y = midY - u(xn * L, simT, p) * scaleY;
+      if (i === 0) ctxS.moveTo(x, y);
+      else ctxS.lineTo(x, y);
+    }
+    ctxS.stroke();
+
+    // pickup marker
+    const px = x0 + p.pickup * (x1 - x0);
+    ctxS.strokeStyle = "#5b7fc9";
+    ctxS.setLineDash([6, 6]);
+    ctxS.beginPath();
+    ctxS.moveTo(px, 14);
+    ctxS.lineTo(px, H - 14);
+    ctxS.stroke();
+    ctxS.setLineDash([]);
+
+    // text
+    ctxS.fillStyle = "#132033";
+    ctxS.font = "13px system-ui, sans-serif";
+    ctxS.fillText(`t = ${simT.toFixed(2)} s`, 12, 20);
+    ctxS.fillText(`u(x,t)=A·sin(nπx/L)·cos(ωt)`, 12, 38);
+    ctxS.fillText(`ω = nπc/L`, 12, 56);
+  }
+
+  function renderPlot() {
+    const W = cPlot.width, H = cPlot.height;
+    ctxP.clearRect(0, 0, W, H);
+
+    ctxP.strokeStyle = "#d3dbe6";
+    ctxP.lineWidth = 1;
+    ctxP.strokeRect(0.5, 0.5, W - 1, H - 1);
+
+    if (samples.length < 2) return;
+
+    const tMin = samples[0].t;
+    const tMax = samples[samples.length - 1].t;
+
+    let ymin = Infinity, ymax = -Infinity;
+    for (const s of samples) { ymin = Math.min(ymin, s.y); ymax = Math.max(ymax, s.y); }
+    const pad = 0.15 * Math.max(1e-6, (ymax - ymin));
+    ymin -= pad; ymax += pad;
+
+    const left = 55, right = 12, top = 18, bottom = 22;
+    const xToPx = (tt) => left + (tt - tMin) / Math.max(1e-9, (tMax - tMin)) * (W - left - right);
+    const yToPx = (yy) => top + (1 - (yy - ymin) / Math.max(1e-9, (ymax - ymin))) * (H - top - bottom);
+
+    // labels
+    ctxP.fillStyle = "#132033";
+    ctxP.font = "12px system-ui, sans-serif";
+    ctxP.fillText("pickup displacement (pure sine)", 12, 14);
+    ctxP.fillText(ymax.toFixed(2), 8, 34);
+    ctxP.fillText(ymin.toFixed(2), 8, H - 10);
+
+    // zero line if visible
+    if (ymin < 0 && ymax > 0) {
+      ctxP.strokeStyle = "#e3e9f3";
+      ctxP.lineWidth = 1.5;
+      ctxP.beginPath();
+      ctxP.moveTo(left, yToPx(0));
+      ctxP.lineTo(W - right, yToPx(0));
+      ctxP.stroke();
+    }
+
+    // curve
+    ctxP.strokeStyle = "#2f5fb8";
+    ctxP.lineWidth = 2;
+    ctxP.beginPath();
+    ctxP.moveTo(xToPx(samples[0].t), yToPx(samples[0].y));
+    for (let i = 1; i < samples.length; i++) {
+      ctxP.lineTo(xToPx(samples[i].t), yToPx(samples[i].y));
+    }
+    ctxP.stroke();
+
+    ctxP.fillStyle = "#5b7fc9";
+    ctxP.fillText(`${(tMax - tMin).toFixed(2)} s window`, W - 140, 14);
+  }
+
+  function pushSample(simT) {
+    const p = params();
+    const y = u(p.pickup * L, simT, p);
+    samples.push({ t: simT, y });
+
+    // keep last windowSeconds
+    const cutoff = simT - windowSeconds;
+    while (samples.length && samples[0].t < cutoff) samples.shift();
+  }
+
+  function frame(ts) {
+    if (lastTs == null) lastTs = ts;
+    const dtReal = Math.min(0.05, (ts - lastTs) / 1000);
+    lastTs = ts;
+
+    if (running) {
+      t0 += dtReal;
+      pushSample(t0);
+    }
+
+    renderString(t0);
+    renderPlot();
+    requestAnimationFrame(frame);
+  }
+
+  // seed plot
+  for (let i = 0; i < 30; i++) pushSample(i * 0.001);
+
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mass–Spring Oscillator + Sine Plot (Light)</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background:#f6f8fb; color:#132033; }
+    .wrap { display:flex; gap:12px; padding:12px; align-items:flex-start; }
+    canvas { background:#ffffff; border:1px solid #d3dbe6; border-radius:10px; }
+    .panel { max-width: 520px; line-height:1.35; }
+    button {
+      background:#ffffff; color:#132033;
+      border:1px solid #c7d1df; padding:8px 10px; border-radius:8px; cursor:pointer;
+    }
+    button:hover { background:#eef3fa; }
+    code { color:#2f5fb8; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div>
+      <canvas id="sim" width="520" height="220"></canvas>
+      <div style="height:12px"></div>
+      <canvas id="plot" width="520" height="220"></canvas>
+    </div>
+    <div class="panel">
+      <h3 style="margin:0 0 8px 0;">Mass / Spring (free oscillation)</h3>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:8px 0 12px;">
+        <button id="reset">Reset</button>
+        <button id="kick">Kick (add velocity)</button>
+      </div>
+      <div style="opacity:.95">
+        Undamped oscillator: <code>x'' + (k/m) x = 0</code><br/>
+        Integrator: Velocity Verlet.<br/>
+        Plot shows displacement <code>x(t)</code> (sinusoidal).
+      </div>
+      <div style="margin-top:12px; opacity:.8; font-size:14px;">
+        Tip: edit <code>m</code>, <code>k</code>, <code>x0</code>, <code>v0</code> in the script.
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const simCanvas = document.getElementById('sim');
+  const plotCanvas = document.getElementById('plot');
+  const simCtx = simCanvas.getContext('2d');
+  const plotCtx = plotCanvas.getContext('2d');
+
+  // Physics parameters
+  const m = 1.0;
+  const k = 20.0;
+
+  // Initial conditions (x relative to equilibrium)
+  let x0 = 0.7;
+  let v0 = 0.0;
+
+  // State
+  let t = 0;
+  let x = x0;
+  let v = v0;
+  let a = -(k / m) * x;
+
+  // Fixed-timestep simulation
+  const dt = 1 / 240;
+  let accumulator = 0;
+  let lastTs = null;
+
+  // Plot buffer
+  const windowSeconds = 6;
+  const samples = [];
+  const maxSamples = Math.floor(windowSeconds / dt);
+
+  function reset() {
+    t = 0;
+    x = x0;
+    v = v0;
+    a = -(k / m) * x;
+    samples.length = 0;
+  }
+
+  function kick() {
+    v += 2.0;
+  }
+
+  document.getElementById('reset').addEventListener('click', reset);
+  document.getElementById('kick').addEventListener('click', kick);
+
+  // Velocity Verlet integration
+  function step() {
+    x += v * dt + 0.5 * a * dt * dt;
+    const aNew = -(k / m) * x;
+    v += 0.5 * (a + aNew) * dt;
+    a = aNew;
+
+    t += dt;
+
+    samples.push({ t, x });
+    if (samples.length > maxSamples) samples.shift();
+  }
+
+  function drawSpring(ctx, x1, y1, x2, y2, coils = 12, amp = 10) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 1e-6) return;
+
+    const ux = dx / len, uy = dy / len;  // along
+    const px = -uy, py = ux;             // perpendicular
+
+    const start = 18, end = 18;
+    const inner = Math.max(0, len - start - end);
+    const stepLen = inner / coils;
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x1 + ux * start, y1 + uy * start);
+
+    for (let i = 0; i <= coils; i++) {
+      const s = start + i * stepLen;
+      const zig = (i % 2 === 0) ? 1 : -1;
+      ctx.lineTo(x1 + ux * s + px * amp * zig, y1 + uy * s + py * amp * zig);
+    }
+
+    ctx.lineTo(x2 - ux * end, y2 - uy * end);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  function renderSim() {
+    const ctx = simCtx;
+    ctx.clearRect(0, 0, simCanvas.width, simCanvas.height);
+
+    // Map physics x to pixels
+    const anchorX = 50, anchorY = 110;
+    const eqLenPx = 220;
+    const pxPerUnit = 120;
+
+    const massX = anchorX + eqLenPx + x * pxPerUnit;
+    const massY = anchorY;
+
+    // Anchor
+    ctx.fillStyle = "#2f5fb8";
+    ctx.fillRect(anchorX - 6, anchorY - 25, 12, 50);
+
+    // Equilibrium marker
+    ctx.strokeStyle = "#d7e0ee";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    ctx.moveTo(anchorX + eqLenPx, 20);
+    ctx.lineTo(anchorX + eqLenPx, simCanvas.height - 20);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#5b7fc9";
+    ctx.font = "12px system-ui, sans-serif";
+    ctx.fillText("equilibrium", anchorX + eqLenPx + 8, 24);
+
+    // Spring
+    ctx.strokeStyle = "#3a4a5f";
+    ctx.lineWidth = 2.5;
+    drawSpring(ctx, anchorX, anchorY, massX - 22, massY, 14, 9);
+
+    // Mass
+    ctx.fillStyle = "#f0f4fb";
+    ctx.strokeStyle = "#7f91aa";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(massX - 22, massY - 22, 44, 44, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    // Text
+    const omega = Math.sqrt(k / m);
+    ctx.fillStyle = "#132033";
+    ctx.font = "14px system-ui, sans-serif";
+    ctx.fillText(`t = ${t.toFixed(2)} s`, 12, 24);
+    ctx.fillText(`x = ${x.toFixed(3)}`, 12, 44);
+    ctx.fillText(`v = ${v.toFixed(3)}`, 12, 64);
+    ctx.fillText(`ω = √(k/m) = ${omega.toFixed(2)} rad/s`, 12, 84);
+  }
+
+  function renderPlot() {
+    const ctx = plotCtx;
+    const W = plotCanvas.width, H = plotCanvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Frame
+    ctx.strokeStyle = "#d3dbe6";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+
+    if (samples.length < 2) return;
+
+    const tMin = samples[0].t;
+    const tMax = samples[samples.length - 1].t;
+
+    // auto-scale y with padding
+    let ymin = Infinity, ymax = -Infinity;
+    for (const s of samples) { ymin = Math.min(ymin, s.x); ymax = Math.max(ymax, s.x); }
+    const pad = 0.15 * Math.max(1e-6, (ymax - ymin));
+    ymin -= pad; ymax += pad;
+
+    const xToPx = (tt) => (tt - tMin) / Math.max(1e-9, (tMax - tMin)) * (W - 60) + 50;
+    const yToPx = (yy) => (1 - (yy - ymin) / Math.max(1e-9, (ymax - ymin))) * (H - 40) + 20;
+
+    // Labels
+    ctx.fillStyle = "#132033";
+    ctx.font = "12px system-ui, sans-serif";
+    ctx.fillText("x(t)", 12, 18);
+    ctx.fillText(`${ymax.toFixed(2)}`, 6, 34);
+    ctx.fillText(`${ymin.toFixed(2)}`, 6, H - 14);
+
+    // Zero line if visible
+    if (ymin < 0 && ymax > 0) {
+      ctx.strokeStyle = "#e3e9f3";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(50, yToPx(0));
+      ctx.lineTo(W - 10, yToPx(0));
+      ctx.stroke();
+      ctx.fillStyle = "#5b7fc9";
+      ctx.fillText("0", 30, yToPx(0) + 4);
+    }
+
+    // Curve
+    ctx.strokeStyle = "#2f5fb8";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(xToPx(samples[0].t), yToPx(samples[0].x));
+    for (let i = 1; i < samples.length; i++) {
+      ctx.lineTo(xToPx(samples[i].t), yToPx(samples[i].x));
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = "#5b7fc9";
+    ctx.fillText(`${(tMax - tMin).toFixed(1)} s window`, W - 140, 18);
+  }
+
+  // polyfill: roundRect for older browsers
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+      r = Math.min(r, w/2, h/2);
+      this.beginPath();
+      this.moveTo(x+r, y);
+      this.arcTo(x+w, y, x+w, y+h, r);
+      this.arcTo(x+w, y+h, x, y+h, r);
+      this.arcTo(x, y+h, x, y, r);
+      this.arcTo(x, y, x+w, y, r);
+      this.closePath();
+      return this;
+    };
+  }
+
+  function frame(ts) {
+    if (lastTs == null) lastTs = ts;
+    const dtReal = Math.min(0.05, (ts - lastTs) / 1000);
+    lastTs = ts;
+    accumulator += dtReal;
+
+    while (accumulator >= dt) {
+      step();
+      accumulator -= dt;
+    }
+
+    renderSim();
+    renderPlot();
+    requestAnimationFrame(frame);
+  }
+
+  reset();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

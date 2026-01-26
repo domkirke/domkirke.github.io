@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WebAudio Oscillator + Frequency Slider + Oscilloscope</title>
+  <style>
+    body { margin:0; font-family:system-ui, sans-serif; background:#f6f8fb; color:#132033; }
+    .wrap { max-width: 860px; margin: 24px auto; padding: 0 14px; }
+    .card {
+      background:#fff; border:1px solid #d3dbe6; border-radius:12px;
+      padding:16px;
+    }
+    h2 { margin:0 0 8px 0; font-size:18px; }
+    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    label { display:flex; gap:10px; align-items:center; flex:1; min-width: 280px; }
+    input[type="range"] { width: 100%; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    button {
+      background:#fff; color:#132033;
+      border:1px solid #c7d1df; padding:8px 10px; border-radius:10px; cursor:pointer;
+    }
+    button:hover { background:#eef3fa; }
+    canvas { background:#ffffff; border:1px solid #d3dbe6; border-radius:12px; }
+    .note { opacity:.8; font-size:14px; margin-top:10px; line-height:1.35; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h2>Oscillator with frequency slider + oscilloscope</h2>
+
+      <div class="row" style="margin:12px 0;">
+        <button id="start">Start</button>
+        <button id="stop" disabled>Stop</button>
+
+        <label>
+          Frequency
+          <input id="freq" type="range" min="50" max="2000" value="440" step="1" />
+        </label>
+        <div class="mono" style="min-width:120px;">
+          <span id="freqVal">440</span> Hz
+        </div>
+      </div>
+
+      <div class="row" style="margin:0 0 12px 0;">
+        <label>
+          Volume
+          <input id="vol" type="range" min="0" max="1" value="0.15" step="0.01" />
+        </label>
+        <div class="mono" style="min-width:120px;">
+          <span id="volVal">0.15</span>
+        </div>
+
+        <label style="min-width:220px; flex:0 0 auto;">
+          Waveform
+          <select id="wave">
+            <option value="sine" selected>sine</option>
+            <option value="square">square</option>
+            <option value="sawtooth">sawtooth</option>
+            <option value="triangle">triangle</option>
+          </select>
+        </label>
+      </div>
+
+      <canvas id="scope" width="820" height="240"></canvas>
+
+      <div class="note">
+        Click <b>Start</b> to enable audio (required by browsers). The scope shows the live output.
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const startBtn = document.getElementById('start');
+  const stopBtn  = document.getElementById('stop');
+  const freqEl   = document.getElementById('freq');
+  const volEl    = document.getElementById('vol');
+  const waveEl   = document.getElementById('wave');
+
+  const freqVal  = document.getElementById('freqVal');
+  const volVal   = document.getElementById('volVal');
+
+  const canvas = document.getElementById('scope');
+  const ctx = canvas.getContext('2d');
+
+  let audioCtx = null;
+  let osc = null;
+  let gain = null;
+  let analyser = null;
+  let data = null;
+  let raf = null;
+
+  function setUI() {
+    freqVal.textContent = String(freqEl.value);
+    volVal.textContent = Number(volEl.value).toFixed(2);
+  }
+  setUI();
+
+  function ensureAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  function start() {
+    ensureAudio();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+
+    osc = audioCtx.createOscillator();
+    gain = audioCtx.createGain();
+    analyser = audioCtx.createAnalyser();
+
+    // Oscilloscope setup
+    analyser.fftSize = 2048;               // time-domain buffer size
+    analyser.smoothingTimeConstant = 0.0;  // more "scope-like"
+    data = new Uint8Array(analyser.fftSize);
+
+    osc.type = waveEl.value;
+    osc.frequency.value = Number(freqEl.value);
+
+    // Avoid click on start
+    gain.gain.value = 0.0;
+    gain.gain.linearRampToValueAtTime(Number(volEl.value), audioCtx.currentTime + 0.02);
+
+    // Connect: osc -> gain -> analyser -> speakers
+    osc.connect(gain);
+    gain.connect(analyser);
+    analyser.connect(audioCtx.destination);
+
+    osc.start();
+
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+
+    if (!raf) raf = requestAnimationFrame(draw);
+  }
+
+  function stop() {
+    if (!audioCtx || !osc || !gain) return;
+
+    const now = audioCtx.currentTime;
+
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setValueAtTime(gain.gain.value, now);
+    gain.gain.linearRampToValueAtTime(0.0, now + 0.03);
+
+    osc.stop(now + 0.04);
+
+    osc.onended = () => {
+      try { osc.disconnect(); } catch {}
+      try { gain.disconnect(); } catch {}
+      try { analyser.disconnect(); } catch {}
+      osc = null;
+      gain = null;
+      analyser = null;
+      data = null;
+
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    };
+  }
+
+  function updateFreq() {
+    setUI();
+    if (!audioCtx || !osc) return;
+    const now = audioCtx.currentTime;
+    const f = Number(freqEl.value);
+    osc.frequency.cancelScheduledValues(now);
+    osc.frequency.setTargetAtTime(f, now, 0.01);
+  }
+
+  function updateVol() {
+    setUI();
+    if (!audioCtx || !gain) return;
+    const now = audioCtx.currentTime;
+    const v = Number(volEl.value);
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setTargetAtTime(v, now, 0.01);
+  }
+
+  function updateWave() {
+    if (!osc) return;
+    osc.type = waveEl.value;
+  }
+
+  startBtn.addEventListener('click', start);
+  stopBtn.addEventListener('click', stop);
+  freqEl.addEventListener('input', updateFreq);
+  volEl.addEventListener('input', updateVol);
+  waveEl.addEventListener('change', updateWave);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stop();
+  });
+
+  function drawGrid(W, H) {
+    ctx.clearRect(0, 0, W, H);
+
+    // background
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, W, H);
+
+    // grid
+    ctx.strokeStyle = "#e3e9f3";
+    ctx.lineWidth = 1;
+
+    const majorX = 10, majorY = 6;
+    for (let i = 0; i <= majorX; i++) {
+      const x = (i / majorX) * W;
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let j = 0; j <= majorY; j++) {
+      const y = (j / majorY) * H;
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+
+    // center line
+    ctx.strokeStyle = "#d3dbe6";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, H / 2);
+    ctx.lineTo(W, H / 2);
+    ctx.stroke();
+  }
+
+  function draw(ts) {
+    const W = canvas.width, H = canvas.height;
+
+    drawGrid(W, H);
+
+    // If not running, just show a label
+    if (!analyser || !data) {
+      ctx.fillStyle = "#132033";
+      ctx.font = "14px system-ui, sans-serif";
+      ctx.fillText("Scope: (click Start)", 12, 22);
+      raf = requestAnimationFrame(draw);
+      return;
+    }
+
+    analyser.getByteTimeDomainData(data);
+
+    // Draw waveform
+    ctx.strokeStyle = "#2f5fb8";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    for (let i = 0; i < data.length; i++) {
+      const x = (i / (data.length - 1)) * W;
+      const v = (data[i] - 128) / 128;         // -1..1
+      const y = (H / 2) - v * (H * 0.38);      // vertical scale
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // HUD text
+    ctx.fillStyle = "#132033";
+    ctx.font = "13px system-ui, sans-serif";
+    ctx.fillText(`Wave: ${waveEl.value}`, 12, 22);
+    ctx.fillText(`Freq: ${freqEl.value} Hz`, 12, 40);
+    ctx.fillText(`Vol: ${Number(volEl.value).toFixed(2)}`, 12, 58);
+
+    raf = requestAnimationFrame(draw);
+  }
+
+  // initial paint
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
