@@ -3,23 +3,39 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>cos + sin (compact 960×700)</title>
+  <title>cos + sin (960×700, scale CSS, échelle fixe commune)</title>
   <style>
     :root{
       --bg:#ffffff; --panel:#f6f7f9; --ink:#111827; --muted:#6b7280;
       --grid:#e5e7eb; --cCos:#2563eb; --cSin:#10b981; --cSum:#111827; --accent:#0ea5e9;
     }
-    body{ margin:0; background:var(--bg); color:var(--ink);
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
 
-    /* ---- contrainte 960x700 ---- */
+    /* écran -> centre la scène */
+    .viewport{
+      width:100vw; height:100vh;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden;
+    }
+
+    /* scène 960×700 (sera réduite si écran trop petit) */
+    #stage{
+      width:960px; height:700px;
+      transform-origin: top left;
+      will-change: transform;
+    }
+
+    /* cadre interne : padding inclus dans 960×700 */
     .frame{
       width:960px; height:700px;
-      margin: 0 auto;
-      padding: 10px;
+      padding:10px;
       box-sizing:border-box;
-      overflow:hidden; /* garantit que "tout tient" visuellement */
+      /* pas d’overflow hidden : avec les bonnes hauteurs, rien ne déborde,
+         et ça évite l'effet "coupé" si un navigateur rend légèrement différemment */
+      overflow:visible;
     }
 
     .card{
@@ -27,15 +43,19 @@
       border-radius:10px; padding:10px; box-sizing:border-box;
     }
 
-    /* Layout vertical en 4 bandes qui totalisent 700px (avec padding) */
+    /* IMPORTANT:
+       frame height = 700, padding vertical = 20 => contenu = 680
+       grid gap = 10*3 = 30
+       donc somme des rows doit être 680 - 30 = 650
+    */
     .layout{
       height:100%;
       display:grid;
-      grid-template-rows: 160px 200px 200px 120px; /* total = 680, + padding frame = 20 => 700 */
+      grid-template-rows: 150px 175px 175px 150px; /* somme 650 */
       gap:10px;
     }
 
-    /* ---- Controls compact ---- */
+    /* Controls compacts */
     .controls{
       display:grid;
       grid-template-columns: repeat(6, 1fr);
@@ -45,9 +65,7 @@
     label{ display:grid; gap:4px; font-size:12px; color:var(--muted); }
     input[type="range"]{ width:100%; }
     .val{ font-variant-numeric:tabular-nums; color:var(--ink); font-size:12px; }
-    .buttons{
-      display:flex; gap:8px; justify-content:flex-end; align-items:center;
-    }
+    .buttons{ display:flex; gap:8px; justify-content:flex-end; align-items:center; }
     button{
       border:1px solid var(--grid); background:#fff; color:var(--ink);
       padding:6px 9px; border-radius:9px; cursor:pointer; font-weight:650;
@@ -73,17 +91,17 @@
     }
     .swatch{ width:9px; height:9px; border-radius:999px; display:inline-block; }
 
-    /* ---- Canvases compact ---- */
+    /* Canvas plus bas pour laisser la place aux légendes dans 175px */
     .canv{
       width:100%;
-      height:160px;              /* clé pour tenir dans 960x700 */
+      height:125px;
       background:#fff;
       border-radius:10px;
       border:1px solid var(--grid);
       display:block;
     }
 
-    /* ---- Equations (2 colonnes pour gagner de la hauteur) ---- */
+    /* Equations en 2 colonnes */
     .eqGrid{
       height:100%;
       display:grid;
@@ -97,103 +115,121 @@
       overflow:hidden;
     }
     .eq .title{ color:var(--muted); font-size:11px; margin-bottom:6px; }
-    .eq .txt{ white-space:pre-wrap; font-size:12px; line-height:1.22; }
+    .eq .txt{ white-space:pre-wrap; font-size:12px; line-height:1.18; }
   </style>
 </head>
 
 <body>
-  <div class="frame">
-    <div class="layout">
+  <div class="viewport">
+    <div id="stage">
+      <div class="frame">
+        <div class="layout">
 
-      <!-- 1) CONTROLS -->
-      <div class="card">
-        <div class="controls">
-          <label>
-            Coeff cos A
-            <input id="A" type="range" min="-2" max="2" value="1" step="0.01">
-            <div class="val"><span id="AVal" class="mono"></span></div>
-          </label>
+          <!-- CONTROLS -->
+          <div class="card">
+            <div class="controls">
+              <label>
+                Coeff cos A
+                <input id="A" type="range" min="-2" max="2" value="1" step="0.01">
+                <div class="val"><span id="AVal" class="mono"></span></div>
+              </label>
 
-          <label>
-            Coeff sin B
-            <input id="B" type="range" min="-2" max="2" value="1" step="0.01">
-            <div class="val"><span id="BVal" class="mono"></span></div>
-          </label>
+              <label>
+                Coeff sin B
+                <input id="B" type="range" min="-2" max="2" value="1" step="0.01">
+                <div class="val"><span id="BVal" class="mono"></span></div>
+              </label>
 
-          <label>
-            Fréquence f (Hz)
-            <input id="f" type="range" min="0.05" max="3.00" value="0.60" step="0.01">
-            <div class="val"><span id="fVal" class="mono"></span></div>
-          </label>
+              <label>
+                Fréquence f (Hz)
+                <input id="f" type="range" min="0.05" max="3.00" value="0.60" step="0.01">
+                <div class="val"><span id="fVal" class="mono"></span></div>
+              </label>
 
-          <label>
-            Phase φ (rad)
-            <input id="phi" type="range" min="-3.1416" max="3.1416" value="0.00" step="0.01">
-            <div class="val"><span id="phiVal" class="mono"></span></div>
-          </label>
+              <label>
+                Phase φ (rad)
+                <input id="phi" type="range" min="-3.1416" max="3.1416" value="0.00" step="0.01">
+                <div class="val"><span id="phiVal" class="mono"></span></div>
+              </label>
 
-          <label>
-            Fenêtre temps (s)
-            <input id="Tw" type="range" min="1.0" max="12.0" value="6.0" step="0.1">
-            <div class="val"><span id="TwVal" class="mono"></span></div>
-          </label>
+              <label>
+                Fenêtre temps (s)
+                <input id="Tw" type="range" min="1.0" max="12.0" value="6.0" step="0.1">
+                <div class="val"><span id="TwVal" class="mono"></span></div>
+              </label>
 
-          <div class="buttons">
-            <button id="reset" class="primary">Reset t=0</button>
-            <button id="toggle">Pause</button>
+              <div class="buttons">
+                <button id="reset" class="primary">Reset t=0</button>
+                <button id="toggle">Pause</button>
+              </div>
+            </div>
+
+            <div class="legend">
+              <div class="pill"><span class="swatch" style="background:var(--cCos)"></span>cos</div>
+              <div class="pill"><span class="swatch" style="background:var(--cSin)"></span>sin</div>
+              <div class="pill"><span class="swatch" style="background:var(--cSum)"></span>somme</div>
+              <div class="mono" id="hint"></div>
+            </div>
           </div>
-        </div>
 
-        <div class="legend">
-          <div class="pill"><span class="swatch" style="background:var(--cCos)"></span>cos : A cos(ωt+φ)</div>
-          <div class="pill"><span class="swatch" style="background:var(--cSin)"></span>sin : B sin(ωt+φ)</div>
-          <div class="pill"><span class="swatch" style="background:var(--cSum)"></span>somme</div>
-          <div class="mono" id="hint"></div>
-        </div>
-      </div>
-
-      <!-- 2) OSCILLO: cos + sin -->
-      <div class="card">
-        <canvas id="scopeAB" class="canv"></canvas>
-        <div class="legend">
-          <div class="mono" id="exprAB"></div>
-          <div class="mono" id="infoAB"></div>
-        </div>
-      </div>
-
-      <!-- 3) OSCILLO: somme -->
-      <div class="card">
-        <canvas id="scopeSum" class="canv"></canvas>
-        <div class="legend">
-          <div class="mono" id="exprSum"></div>
-          <div class="mono" id="infoSum"></div>
-        </div>
-      </div>
-
-      <!-- 4) EQUATIONS -->
-      <div class="card">
-        <div class="eqGrid">
-          <div class="eq">
-            <div class="title">Forme trigonométrique (θ = ωt + φ)</div>
-            <div class="txt mono" id="trigForm"></div>
+          <!-- OSCILLO: cos + sin -->
+          <div class="card">
+            <canvas id="scopeAB" class="canv"></canvas>
+            <div class="legend">
+              <div class="mono" id="exprAB"></div>
+              <div class="mono" id="infoAB"></div>
+            </div>
           </div>
-          <div class="eq">
-            <div class="title">Amplitude / phase : y(t) = R cos(ωt + Φ)</div>
-            <div class="txt mono" id="magPhaseForm"></div>
+
+          <!-- OSCILLO: somme -->
+          <div class="card">
+            <canvas id="scopeSum" class="canv"></canvas>
+            <div class="legend">
+              <div class="mono" id="exprSum"></div>
+              <div class="mono" id="infoSum"></div>
+            </div>
           </div>
+
+          <!-- EQUATIONS -->
+          <div class="card">
+            <div class="eqGrid">
+              <div class="eq">
+                <div class="title">Forme trigonométrique (θ = ωt + φ)</div>
+                <div class="txt mono" id="trigForm"></div>
+              </div>
+              <div class="eq">
+                <div class="title">Amplitude / phase : y(t) = R cos(ωt + Φ)</div>
+                <div class="txt mono" id="magPhaseForm"></div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
-
     </div>
   </div>
 
 <script>
 (() => {
+  // ---------- CSS scale : tient dans l’écran (sans recadrage) ----------
+  const stage = document.getElementById('stage');
+  function applyStageScale(){
+    const W = 960, H = 700;
+    const sx = window.innerWidth / W;
+    const sy = window.innerHeight / H;
+    const s = Math.min(1, sx, sy);          // n’agrandit pas au-delà de 1
+    stage.style.transform = `scale(${s})`;
+  }
+  window.addEventListener('resize', applyStageScale);
+  applyStageScale();
+
+  // ---------- canvases ----------
   const scopeAB = document.getElementById('scopeAB');
   const scopeSum = document.getElementById('scopeSum');
   const ctxAB = scopeAB.getContext('2d');
   const ctxSum = scopeSum.getContext('2d');
 
+  // ---------- controls ----------
   const els = {
     A: document.getElementById('A'),
     B: document.getElementById('B'),
@@ -210,7 +246,6 @@
     TwVal: document.getElementById('TwVal'),
 
     hint: document.getElementById('hint'),
-
     exprAB: document.getElementById('exprAB'),
     infoAB: document.getElementById('infoAB'),
     exprSum: document.getElementById('exprSum'),
@@ -223,18 +258,22 @@
   const resetBtn = document.getElementById('reset');
   const toggleBtn = document.getElementById('toggle');
 
-  // Temps ralenti (défilement lent)
+  // Défilement lent
   const timeScale = 0.12;
   let running = true;
   let t = 0;
   let last = performance.now();
-  let dpr = 1;
 
+  // IMPORTANT: pour que le rendu reste net malgré le transform:scale(...)
+  // on dimensionne le canvas à partir de offsetWidth/offsetHeight (non affectés par transform),
+  // pas getBoundingClientRect().
+  let dpr = 1;
   function resizeOne(c){
     const d = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-    const r = c.getBoundingClientRect();
-    c.width = Math.round(r.width * d);
-    c.height = Math.round(r.height * d);
+    const w = c.offsetWidth;
+    const h = c.offsetHeight;
+    c.width = Math.round(w * d);
+    c.height = Math.round(h * d);
     return d;
   }
   function resizeAll(){
@@ -270,7 +309,7 @@
     ui.phiVal.textContent = fmt(P.phi,2);
     ui.TwVal.textContent = fmt(P.Tw,1);
 
-    ui.hint.textContent = `sin(θ)=cos(θ−π/2) : déphasage de 90°`;
+    ui.hint.textContent = `sin(θ)=cos(θ−π/2) : déphasage 90°`;
 
     ui.exprAB.textContent = `y_c=A cos(ωt+φ)   |   y_s=B sin(ωt+φ)`;
     ui.infoAB.textContent = `f=${fmt(P.f,2)}Hz  ω=${fmt(P.w,2)}rad/s`;
@@ -311,9 +350,9 @@
     ctx.beginPath(); ctx.moveTo(0,H/2); ctx.lineTo(W,H/2); ctx.stroke();
   }
 
-  function drawTraces(ctx, traces, maxAbs){
+  function drawTraces(ctx, traces, yRange){
     const W = ctx.canvas.width, H = ctx.canvas.height;
-    const scale = (H*0.38) / Math.max(1e-9, maxAbs);
+    const scale = (H*0.38) / Math.max(1e-9, yRange);
 
     for (const tr of traces) {
       ctx.strokeStyle = tr.color;
@@ -327,14 +366,15 @@
       ctx.stroke();
     }
 
-    // ligne "temps présent" (à droite)
+    // curseur temps (droite)
     ctx.strokeStyle = '#94a3b8';
     ctx.lineWidth = 2*dpr;
     ctx.beginPath(); ctx.moveTo(W-1,0); ctx.lineTo(W-1,H); ctx.stroke();
 
+    // échelle fixe affichée
     ctx.fillStyle = '#6b7280';
     ctx.font = `${11*dpr}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
-    ctx.fillText(`auto-scale: ±${fmt(maxAbs,3)}`, 8*dpr, 16*dpr);
+    ctx.fillText(`scale fixe commune: ±${fmt(yRange,2)}`, 8*dpr, 16*dpr);
   }
 
   function render(nowT){
@@ -346,9 +386,6 @@
     const sinArr = new Float64Array(samples);
     const sumArr = new Float64Array(samples);
 
-    let maxAB = 1e-9;
-    let maxSum = 1e-9;
-
     for(let i=0;i<samples;i++){
       const u = i/(samples-1);
       const tt = tLeft + u*P.Tw;
@@ -359,20 +396,22 @@
       const y  = yc + ys;
 
       cosArr[i]=yc; sinArr[i]=ys; sumArr[i]=y;
-      maxAB = Math.max(maxAB, Math.abs(yc), Math.abs(ys));
-      maxSum = Math.max(maxSum, Math.abs(y));
     }
+
+    // ---- même échelle FIXE sur les deux plots ----
+    // avec A,B ∈ [-2,2], la somme est dans [-4,4]
+    const yRangeCommon = 4.0;
 
     drawGrid(ctxAB);
     drawTraces(ctxAB, [
-      {data: cosArr, color:'#2563eb', width:2.4},
-      {data: sinArr, color:'#10b981', width:2.4},
-    ], maxAB);
+      {data: cosArr, color:'#2563eb', width:2.2},
+      {data: sinArr, color:'#10b981', width:2.2},
+    ], yRangeCommon);
 
     drawGrid(ctxSum);
     drawTraces(ctxSum, [
-      {data: sumArr, color:'#111827', width:2.8},
-    ], maxSum);
+      {data: sumArr, color:'#111827', width:2.6},
+    ], yRangeCommon);
   }
 
   function resetTime(){ t = 0; last = performance.now(); }

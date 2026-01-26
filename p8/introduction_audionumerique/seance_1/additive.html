@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Additive Synthesis (8 partials, stable scope)</title>
+  <style>
+    :root { --bg:#fff; --fg:#111; --muted:#666; --line:#e6e6e6; --panel:#fafafa; --accent:#111; }
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
+    .wrap{max-width:980px;margin:24px auto;padding:0 16px 32px;}
+    h1{font-size:18px;margin:0 0 12px;font-weight:650;}
+    .row{display:grid;grid-template-columns:1.2fr 0.8fr;gap:16px;align-items:start;}
+    .card{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:14px;}
+    .controls{display:grid;gap:12px;}
+    .ctrl{display:grid;grid-template-columns:160px 1fr 70px;gap:10px;align-items:center;}
+    label{font-size:13px;}
+    input[type="range"]{width:100%;accent-color:var(--accent);}
+    .value{font-variant-numeric:tabular-nums;font-size:12px;color:var(--muted);text-align:right;}
+    .buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+    button{border:1px solid var(--line);background:#fff;color:var(--fg);
+      padding:8px 10px;border-radius:10px;cursor:pointer;font-weight:600;}
+    button:disabled{opacity:.5;cursor:not-allowed;}
+    canvas{width:100%;height:260px;border:1px solid var(--line);border-radius:12px;background:#fff;}
+    .hint{margin-top:10px;color:var(--muted);font-size:12px;line-height:1.35;}
+    .partials{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px;
+      padding-top:10px;border-top:1px solid var(--line);}
+    .small{font-size:12px;color:var(--muted);}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>Additive synthesis (8 partials) — stable “ideal” oscilloscope</h1>
+
+    <div class="row">
+      <div class="card">
+        <canvas id="scope" width="980" height="260" aria-label="Waveform scope"></canvas>
+        <div class="hint">
+          The scope is an <b>ideal simulation</b> of the additive sum (drawn from the sliders), showing a fixed number
+          of cycles. This makes it perfectly stable (no blinking/jitter).
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="controls">
+          <div class="buttons">
+            <button id="playBtn">Play</button>
+            <button id="stopBtn" disabled>Stop</button>
+            <button id="resyncBtn" disabled>Resync (scope + audio)</button>
+          </div>
+
+          <div class="ctrl">
+            <label for="freq">Global frequency (Hz)</label>
+            <input id="freq" type="range" min="30" max="1000" value="220" step="1" />
+            <div class="value" id="freqVal">220</div>
+          </div>
+
+          <div class="ctrl">
+            <label for="master">Master level</label>
+            <input id="master" type="range" min="0" max="1" value="0.2" step="0.001" />
+            <div class="value" id="masterVal">0.200</div>
+          </div>
+
+          <div class="partials" id="partials"></div>
+          <div class="small">Partial n runs at n × fundamental frequency (phase-locked).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  const playBtn = $("playBtn");
+  const stopBtn = $("stopBtn");
+  const resyncBtn = $("resyncBtn");
+  const freqSlider = $("freq");
+  const freqVal = $("freqVal");
+  const masterSlider = $("master");
+  const masterVal = $("masterVal");
+  const partialsEl = $("partials");
+
+  const MAX_PARTIALS = 8;
+
+  // ---------------- UI build ----------------
+  function makePartialRow(i) {
+    const n = i + 1;
+    const row = document.createElement("div");
+    row.className = "ctrl";
+
+    const label = document.createElement("label");
+    label.textContent = `Partial ${n} amplitude`;
+    label.setAttribute("for", `amp${n}`);
+
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = "0";
+    slider.max = "1";
+    slider.step = "0.001";
+    slider.value = (n === 1) ? "1.0" : "0.0";
+    slider.id = `amp${n}`;
+
+    const val = document.createElement("div");
+    val.className = "value";
+    val.textContent = Number(slider.value).toFixed(3);
+
+    slider.addEventListener("input", () => {
+      val.textContent = Number(slider.value).toFixed(3);
+      if (running) setParam(`amp${n}`, Number(slider.value));
+      drawIdealScope(); // instant visual response
+    });
+
+    row.appendChild(label);
+    row.appendChild(slider);
+    row.appendChild(val);
+    partialsEl.appendChild(row);
+  }
+
+  for (let i = 0; i < MAX_PARTIALS; i++) makePartialRow(i);
+
+  freqSlider.addEventListener("input", () => {
+    freqVal.textContent = freqSlider.value;
+    if (running) setParam("f0", Number(freqSlider.value));
+    // ideal scope shows fixed cycles, so frequency doesn't change the drawing,
+    // but you might still want to redraw to reflect "resync"/phase choices.
+    drawIdealScope();
+  });
+
+  masterSlider.addEventListener("input", () => {
+    masterVal.textContent = Number(masterSlider.value).toFixed(3);
+    if (running) setParam("master", Number(masterSlider.value));
+    drawIdealScope();
+  });
+
+  // ---------------- AudioWorklet (for sound) ----------------
+  let ctx = null;
+  let synthNode = null;
+  let workletLoaded = false;
+  let running = false;
+
+  const workletSource = `
+    class AdditiveSynthProcessor extends AudioWorkletProcessor {
+      static get parameterDescriptors() {
+        const params = [
+          { name: 'f0', defaultValue: 220, minValue: 1, maxValue: 20000, automationRate: 'a-rate' },
+          { name: 'master', defaultValue: 0.2, minValue: 0, maxValue: 1, automationRate: 'a-rate' },
+          { name: 'sync', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'a-rate' },
+        ];
+        for (let i = 1; i <= 8; i++) {
+          params.push({ name: 'amp' + i, defaultValue: (i === 1 ? 1.0 : 1.0 / i), minValue: 0, maxValue: 1, automationRate: 'a-rate' });
+        }
+        return params;
+      }
+
+      constructor() {
+        super();
+        this.phase = 0;
+        this.prevSync = 0;
+      }
+
+      process(inputs, outputs, parameters) {
+        const out = outputs[0];
+        const ch0 = out[0];
+        const ch1 = out[1] || null;
+
+        const f0 = parameters.f0;
+        const master = parameters.master;
+        const sync = parameters.sync;
+
+        const amps = [];
+        for (let i = 1; i <= 8; i++) amps.push(parameters['amp' + i]);
+
+        const twoPi = 2 * Math.PI;
+
+        for (let i = 0; i < ch0.length; i++) {
+          const sNow = (sync.length === 1) ? sync[0] : sync[i];
+          if (sNow > 0.5 && this.prevSync <= 0.5) this.phase = 0;
+          this.prevSync = sNow;
+
+          const f = (f0.length === 1) ? f0[0] : f0[i];
+          const m = (master.length === 1) ? master[0] : master[i];
+
+          this.phase += twoPi * (f / sampleRate);
+          if (this.phase >= twoPi) this.phase -= twoPi;
+
+          let sum = 0;
+          let ampSum = 0;
+          for (let p = 0; p < 8; p++) {
+            const aArr = amps[p];
+            const a = (aArr.length === 1) ? aArr[0] : aArr[i];
+            ampSum += a;
+            sum += a * Math.sin((p + 1) * this.phase);
+          }
+
+          const norm = ampSum > 1 ? (1 / ampSum) : 1;
+          const y = m * norm * sum;
+
+          ch0[i] = y;
+          if (ch1) ch1[i] = y;
+        }
+
+        return true;
+      }
+    }
+    registerProcessor('additive-synth', AdditiveSynthProcessor);
+  `;
+
+  async function ensureAudio() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!workletLoaded) {
+      const blob = new Blob([workletSource], { type: "text/javascript" });
+      const url = URL.createObjectURL(blob);
+      await ctx.audioWorklet.addModule(url);
+      URL.revokeObjectURL(url);
+      workletLoaded = true;
+    }
+  }
+
+  function setParam(name, value) {
+    if (!synthNode) return;
+    const p = synthNode.parameters.get(name);
+    if (!p) return;
+    const t = ctx.currentTime;
+    p.cancelScheduledValues(t);
+    p.setTargetAtTime(value, t, 0.01);
+  }
+
+  function applyAllParams() {
+    setParam("f0", Number(freqSlider.value));
+    setParam("master", Number(masterSlider.value));
+    for (let i = 1; i <= 8; i++) setParam(`amp${i}`, Number($(`amp${i}`).value));
+  }
+
+  async function start() {
+    await ensureAudio();
+    if (ctx.state !== "running") await ctx.resume();
+
+    if (!synthNode) {
+      synthNode = new AudioWorkletNode(ctx, "additive-synth", {
+        numberOfInputs: 0,
+        numberOfOutputs: 1,
+        outputChannelCount: [2],
+      });
+      synthNode.connect(ctx.destination);
+    }
+
+    applyAllParams();
+
+    running = true;
+    playBtn.disabled = true;
+    stopBtn.disabled = false;
+    resyncBtn.disabled = false;
+  }
+
+  function stop() {
+    if (synthNode) {
+      try { synthNode.disconnect(); } catch {}
+      synthNode = null;
+    }
+    running = false;
+    playBtn.disabled = false;
+    stopBtn.disabled = true;
+    resyncBtn.disabled = true;
+  }
+
+  // ---------------- Ideal stable scope ----------------
+  const canvas = $("scope");
+  const g = canvas.getContext("2d");
+
+  // phase used only for drawing stability + resync
+  let scopePhase = 0;
+
+  function getAmps() {
+    const amps = [];
+    for (let i = 1; i <= 8; i++) amps.push(Number($(`amp${i}`).value));
+    return amps;
+  }
+
+  function drawIdealScope() {
+    const w = canvas.width, h = canvas.height;
+
+    // background
+    g.clearRect(0, 0, w, h);
+    g.fillStyle = "#ffffff";
+    g.fillRect(0, 0, w, h);
+
+    // midline
+    g.strokeStyle = "#e9e9e9";
+    g.lineWidth = 1;
+    g.beginPath();
+    g.moveTo(0, h / 2);
+    g.lineTo(w, h / 2);
+    g.stroke();
+
+    const amps = getAmps();
+    const master = Number(masterSlider.value);
+
+    // show exactly N cycles (fake scope timebase = cycles)
+    const cycles = 3;
+    const twoPi = 2 * Math.PI;
+
+    // normalize similar to audio (optional, avoids clipping in display)
+    let ampSum = amps.reduce((a,b)=>a+b, 0);
+    const norm = ampSum > 1 ? (1 / ampSum) : 1;
+
+    g.strokeStyle = "#111111";
+    g.lineWidth = 2;
+    g.beginPath();
+
+    for (let x = 0; x < w; x++) {
+      const t = x / (w - 1);             // 0..1 across canvas
+      const theta = twoPi * cycles * t + scopePhase;
+
+      let y = 0;
+      for (let p = 0; p < 8; p++) {
+        const n = p + 1;
+        y += amps[p] * Math.sin(n * theta);
+      }
+      y = master * norm * y; // match “overall level” feeling
+
+      // map [-1,1] -> canvas
+      const yy = (h / 2) - y * (h * 0.45);
+
+      if (x === 0) g.moveTo(x, yy);
+      else g.lineTo(x, yy);
+    }
+
+    g.stroke();
+  }
+
+  // Resync both: audio phase (scheduled pulse) + scopePhase reset
+  function resync() {
+    scopePhase = 0;
+    drawIdealScope();
+
+    if (!synthNode) return;
+    const syncParam = synthNode.parameters.get("sync");
+    const t0 = ctx.currentTime;
+    const t = t0 + 0.03;
+
+    syncParam.cancelScheduledValues(t0);
+    syncParam.setValueAtTime(0.0, t0);
+    syncParam.setValueAtTime(1.0, t);
+    syncParam.setValueAtTime(0.0, t + (4 / ctx.sampleRate));
+  }
+
+  playBtn.addEventListener("click", () => { start(); drawIdealScope(); });
+  stopBtn.addEventListener("click", stop);
+  resyncBtn.addEventListener("click", resync);
+
+  // Draw once initially, and also keep it “alive” in case you resize/zoom etc.
+  drawIdealScope();
+  requestAnimationFrame(function loop() {
+    // Not strictly necessary to redraw every frame, but cheap and keeps it responsive.
+    // If you prefer, remove this RAF and only call drawIdealScope() on input events.
+    drawIdealScope();
+    requestAnimationFrame(loop);
+  });
+</script>
+</body>
+</html>

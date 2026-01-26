@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Générateur d’ondes + FFT + écoute par bande (960×700) — bruit OK + oscillo sync</title>
+  <style>
+    :root{
+      --bg:#ffffff; --panel:#f6f7f9; --ink:#111827; --muted:#6b7280; --grid:#e5e7eb;
+      --accent:#0ea5e9; --wave:#2563eb; --fft:#10b981; --sel:rgba(14,165,233,.18);
+    }
+    body{ margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
+
+    .viewport{ width:100vw; height:100vh; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    #stage{ width:960px; height:700px; transform-origin: top left; will-change: transform; }
+
+    .frame{ width:960px; height:700px; padding:10px; box-sizing:border-box; overflow:visible; }
+    .card{ background:var(--panel); border:1px solid var(--grid); border-radius:10px; padding:10px; box-sizing:border-box; }
+
+    /* inner=680, gaps=30 => rows sum=650 */
+    .layout{ height:100%; display:grid; grid-template-rows: 150px 170px 230px 100px; gap:10px; }
+
+    .controls{ display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; align-items:end; }
+    label{ display:grid; gap:4px; font-size:12px; color:var(--muted); }
+    input[type="range"], select{ width:100%; }
+    select{ padding:6px 8px; border-radius:9px; border:1px solid var(--grid); background:#fff; color:var(--ink); font-weight:600; font-size:12px; }
+    .val{ font-variant-numeric:tabular-nums; color:var(--ink); font-size:12px; }
+    .buttons{ display:flex; gap:8px; justify-content:flex-end; align-items:center; flex-wrap:wrap; }
+    button{
+      border:1px solid var(--grid); background:#fff; color:var(--ink);
+      padding:6px 9px; border-radius:9px; cursor:pointer; font-weight:650; font-size:12px;
+    }
+    button.primary{
+      border-color: color-mix(in srgb, var(--accent) 35%, var(--grid));
+      background: color-mix(in srgb, var(--accent) 12%, #fff);
+    }
+    button.on{
+      border-color: color-mix(in srgb, #16a34a 35%, var(--grid));
+      background: color-mix(in srgb, #16a34a 12%, #fff);
+    }
+
+    .legend{
+      margin-top:6px;
+      display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      color:var(--muted); font-size:12px;
+    }
+    .mono{ font-variant-numeric:tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .pill{ display:inline-flex; align-items:center; gap:7px; padding:4px 8px; border-radius:999px; background:#fff; border:1px solid var(--grid); }
+    .swatch{ width:9px; height:9px; border-radius:999px; display:inline-block; }
+    .small{ font-size:11px; color:var(--muted); }
+
+    .canv{ width:100%; background:#fff; border-radius:10px; border:1px solid var(--grid); display:block; }
+    #timeCanvas{ height:125px; }
+    #fftCanvas{ height:175px; }
+  </style>
+</head>
+<body>
+<div class="viewport">
+  <div id="stage">
+    <div class="frame">
+      <div class="layout">
+
+        <!-- CONTROLS -->
+        <div class="card">
+          <div class="controls">
+            <label>
+              Forme d’onde
+              <select id="waveType">
+                <option value="sine">Sinus</option>
+                <option value="square">Carré</option>
+                <option value="triangle">Triangle</option>
+                <option value="phasor">Phasor (rampe / saw)</option>
+                <option value="noise">Bruit blanc</option>
+              </select>
+              <div class="val"><span id="typeVal" class="mono"></span></div>
+            </label>
+
+            <label>
+              Fréquence f (Hz)
+              <input id="freq" type="range" min="20" max="2000" value="220" step="1">
+              <div class="val"><span id="freqVal" class="mono"></span></div>
+            </label>
+
+            <label>
+              Volume
+              <input id="vol" type="range" min="0" max="1" value="0" step="0.001">
+              <div class="val"><span id="volVal" class="mono"></span></div>
+            </label>
+
+            <label>
+              FFT size
+              <input id="fftSize" type="range" min="9" max="13" value="12" step="1">
+              <div class="val"><span id="fftVal" class="mono"></span></div>
+            </label>
+
+            <label>
+              Fenêtre temps (ms)
+              <input id="twin" type="range" min="5" max="80" value="25" step="1">
+              <div class="val"><span id="twinVal" class="mono"></span></div>
+            </label>
+
+            <div class="buttons">
+              <button id="audioBtn" class="primary">Audio: OFF</button>
+              <button id="syncBtn" class="on">Sync oscillo: ON</button>
+              <button id="clearBand">Bande: full</button>
+            </div>
+          </div>
+
+          <div class="legend">
+            <div class="pill"><span class="swatch" style="background:var(--wave)"></span>signal (temps)</div>
+            <div class="pill"><span class="swatch" style="background:var(--fft)"></span>FFT (dB)</div>
+            <div class="mono" id="bandReadout"></div>
+            <div class="small">Sélection: glisser sur la FFT → écoute de cette bande</div>
+          </div>
+        </div>
+
+        <!-- TIME DOMAIN -->
+        <div class="card">
+          <canvas id="timeCanvas" class="canv"></canvas>
+          <div class="legend">
+            <div class="mono" id="timeInfo"></div>
+            <div class="mono" id="audioInfo"></div>
+          </div>
+        </div>
+
+        <!-- FFT -->
+        <div class="card">
+          <canvas id="fftCanvas" class="canv"></canvas>
+          <div class="legend">
+            <div class="mono">FFT (0 → Nyquist), échelle fixe: -100 dB … 0 dB</div>
+            <div class="mono" id="nyqInfo"></div>
+          </div>
+        </div>
+
+        <!-- HELP -->
+        <div class="card">
+          <div class="mono" id="help" style="white-space:pre-wrap; font-size:12px; line-height:1.2;"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ---------- stage scale ----------
+  const stage = document.getElementById('stage');
+  function applyStageScale(){
+    const W = 960, H = 700;
+    const s = Math.min(1, window.innerWidth/W, window.innerHeight/H);
+    stage.style.transform = `scale(${s})`;
+  }
+  window.addEventListener('resize', applyStageScale);
+  applyStageScale();
+
+  // ---------- elements ----------
+  const timeCanvas = document.getElementById('timeCanvas');
+  const fftCanvas  = document.getElementById('fftCanvas');
+  const tctx = timeCanvas.getContext('2d');
+  const fctx = fftCanvas.getContext('2d');
+
+  const waveTypeEl = document.getElementById('waveType');
+  const freqEl = document.getElementById('freq');
+  const volEl  = document.getElementById('vol');
+  const fftSizeEl = document.getElementById('fftSize');
+  const twinEl = document.getElementById('twin');
+
+  const audioBtn = document.getElementById('audioBtn');
+  const syncBtn = document.getElementById('syncBtn');
+  const clearBandBtn = document.getElementById('clearBand');
+
+  const ui = {
+    typeVal: document.getElementById('typeVal'),
+    freqVal: document.getElementById('freqVal'),
+    volVal: document.getElementById('volVal'),
+    fftVal: document.getElementById('fftVal'),
+    twinVal: document.getElementById('twinVal'),
+    bandReadout: document.getElementById('bandReadout'),
+    timeInfo: document.getElementById('timeInfo'),
+    audioInfo: document.getElementById('audioInfo'),
+    nyqInfo: document.getElementById('nyqInfo'),
+    help: document.getElementById('help'),
+  };
+
+  // ---------- canvas sizing (use offset sizes => stable with CSS transform scale) ----------
+  let dpr = 1;
+  function resizeCanvas(c){
+    const d = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    c.width  = Math.round(c.offsetWidth * d);
+    c.height = Math.round(c.offsetHeight * d);
+    return d;
+  }
+  function resizeAll(){
+    dpr = resizeCanvas(timeCanvas);
+    resizeCanvas(fftCanvas);
+  }
+  window.addEventListener('resize', resizeAll);
+  resizeAll();
+
+  // ---------- helpers ----------
+  const fmt = (x, d=2) => (Math.abs(x) < 5e-13 ? 0 : x).toFixed(d);
+  const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+
+  // ---------- Audio graph ----------
+  let syncEnabled = true;
+
+  let audio = {
+    ctx: null,
+    on: false,
+
+    // sources
+    osc: null,            // OscillatorNode
+    noiseSrc: null,       // AudioBufferSourceNode
+
+    // chain
+    hp: null,
+    lp: null,
+    gain: null,
+    analyser: null,
+
+    // buffers
+    fftFloat: null,
+    timeByte: null,
+    timeFloat: null,
+
+    nyquist: 22050,
+    band: { active:false, f1:20, f2:20000 },
+  };
+
+  async function ensureAudio(){
+    if (audio.ctx) return;
+    audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    audio.nyquist = audio.ctx.sampleRate / 2;
+
+    audio.hp = audio.ctx.createBiquadFilter();
+    audio.hp.type = 'highpass';
+    audio.hp.frequency.value = 20;
+
+    audio.lp = audio.ctx.createBiquadFilter();
+    audio.lp.type = 'lowpass';
+    audio.lp.frequency.value = audio.nyquist;
+
+    audio.gain = audio.ctx.createGain();
+    audio.gain.gain.value = 0;
+
+    audio.analyser = audio.ctx.createAnalyser();
+    audio.analyser.smoothingTimeConstant = 0.5;
+
+    // chain: src -> hp -> lp -> gain -> analyser -> destination
+    audio.hp.connect(audio.lp);
+    audio.lp.connect(audio.gain);
+    audio.gain.connect(audio.analyser);
+    audio.analyser.connect(audio.ctx.destination);
+
+    applyFFTSize();
+    updateBandFilters(true);
+
+    ui.help.textContent =
+`Oscilloscope synchronisé (trigger):
+- Pour les signaux périodiques (sin/carré/triangle/saw), l’oscillo se cale sur un passage par zéro (pente positive) → trace stable.
+- Pour le bruit, la synchro est ignorée (sinon ça saute).
+
+Bruit blanc:
+- Implémenté via un AudioBufferSource en boucle (très compatible, y compris en file://).
+
+Sélection FFT:
+- Clique-glisse sur la FFT pour écouter une bande.
+- "Bande: full" remet pleine bande.
+Conseil: active audio puis monte le volume (0 par défaut).`;
+  }
+
+  function applyFFTSize(){
+    if (!audio.analyser) return;
+    const pow = parseInt(fftSizeEl.value, 10);
+    const size = 1 << pow;
+    audio.analyser.fftSize = size;
+    audio.analyser.minDecibels = -100;
+    audio.analyser.maxDecibels = 0;
+
+    audio.fftFloat = new Float32Array(audio.analyser.frequencyBinCount);
+    audio.timeByte = new Uint8Array(audio.analyser.fftSize);
+    audio.timeFloat = new Float32Array(audio.analyser.fftSize);
+  }
+
+  function disconnectSource(){
+    if (audio.osc) {
+      try { audio.osc.stop(); } catch {}
+      try { audio.osc.disconnect(); } catch {}
+      audio.osc = null;
+    }
+    if (audio.noiseSrc) {
+      try { audio.noiseSrc.stop(); } catch {}
+      try { audio.noiseSrc.disconnect(); } catch {}
+      audio.noiseSrc = null;
+    }
+  }
+
+  function buildNoiseSource(){
+    // AudioBuffer 1 seconde de bruit, en boucle
+    const ctx = audio.ctx;
+    const seconds = 1.0;
+    const len = Math.floor(ctx.sampleRate * seconds);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1);
+
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+
+    src.connect(audio.hp);
+    src.start();
+
+    audio.noiseSrc = src;
+  }
+
+  async function buildSource(){
+    await ensureAudio();
+    disconnectSource();
+
+    const type = waveTypeEl.value;
+    if (type === 'noise') {
+      buildNoiseSource();
+      return;
+    }
+
+    const osc = audio.ctx.createOscillator();
+    if (type === 'phasor') osc.type = 'sawtooth';
+    else osc.type = type; // sine/square/triangle/sawtooth
+
+    osc.frequency.value = parseFloat(freqEl.value);
+    osc.connect(audio.hp);
+    osc.start();
+
+    audio.osc = osc;
+  }
+
+  function updateSourceParams(){
+    if (!audio.ctx) return;
+    const f = parseFloat(freqEl.value);
+    if (audio.osc) audio.osc.frequency.setValueAtTime(f, audio.ctx.currentTime);
+    // bruit: pas de fréquence
+  }
+
+  function updateGain(){
+    if (!audio.gain) return;
+    const v = parseFloat(volEl.value);
+    const now = audio.ctx.currentTime;
+    audio.gain.gain.cancelScheduledValues(now);
+    audio.gain.gain.setTargetAtTime(v, now, 0.02);
+  }
+
+  function updateBandFilters(forceFull=false){
+    if (!audio.hp || !audio.lp) return;
+    const nyq = audio.nyquist;
+
+    if (forceFull || !audio.band.active) {
+      audio.hp.frequency.value = 20;
+      audio.lp.frequency.value = nyq;
+      audio.band.active = false;
+      audio.band.f1 = 20;
+      audio.band.f2 = nyq;
+      return;
+    }
+
+    const lo = clamp(Math.min(audio.band.f1, audio.band.f2), 20, nyq-1);
+    const hi = clamp(Math.max(audio.band.f1, audio.band.f2), lo+1, nyq);
+    audio.hp.frequency.value = lo;
+    audio.lp.frequency.value = hi;
+    audio.band.f1 = lo;
+    audio.band.f2 = hi;
+    audio.band.active = true;
+  }
+
+  async function setAudioOn(on){
+    if (on) {
+      await ensureAudio();
+      await audio.ctx.resume();
+      await buildSource();
+      updateSourceParams();
+      updateGain();
+      audio.on = true;
+      audioBtn.textContent = 'Audio: ON';
+      audioBtn.classList.add('on');
+    } else {
+      audio.on = false;
+      audioBtn.textContent = 'Audio: OFF';
+      audioBtn.classList.remove('on');
+      if (audio.ctx && audio.gain) {
+        const now = audio.ctx.currentTime;
+        audio.gain.gain.cancelScheduledValues(now);
+        audio.gain.gain.setTargetAtTime(0, now, 0.02);
+      }
+      disconnectSource();
+    }
+  }
+
+  // ---------- UI ----------
+  function updateUI(){
+    ui.typeVal.textContent = waveTypeEl.options[waveTypeEl.selectedIndex].text;
+    ui.freqVal.textContent = `${fmt(parseFloat(freqEl.value),0)} Hz`;
+    ui.volVal.textContent  = fmt(parseFloat(volEl.value),3);
+    ui.fftVal.textContent  = `2^${fftSizeEl.value}`;
+    ui.twinVal.textContent = `${fmt(parseFloat(twinEl.value),0)} ms`;
+
+    const nyq = audio.ctx ? audio.nyquist : 22050;
+    ui.nyqInfo.textContent = `Nyquist ≈ ${fmt(nyq,0)} Hz`;
+
+    ui.bandReadout.textContent = audio.band.active
+      ? `Bande écoutée: ${fmt(audio.band.f1,0)}–${fmt(audio.band.f2,0)} Hz`
+      : `Bande écoutée: full (20–Nyquist)`;
+
+    syncBtn.textContent = syncEnabled ? 'Sync oscillo: ON' : 'Sync oscillo: OFF';
+    syncBtn.classList.toggle('on', syncEnabled);
+
+    ui.timeInfo.textContent = `Temps: échelle fixe ±1 — mode: ${syncEnabled ? 'trigger' : 'libre'}`;
+    ui.audioInfo.textContent =
+      `${waveTypeEl.value === 'noise' ? 'Bruit' : 'f=' + fmt(parseFloat(freqEl.value),0) + ' Hz'} | Volume=${fmt(parseFloat(volEl.value),3)}`;
+  }
+
+  // ---------- Drawing ----------
+  function drawGrid(ctx){
+    const W = ctx.canvas.width, H = ctx.canvas.height;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0,0,W,H);
+
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1*dpr;
+
+    const stepX = Math.round(W/10);
+    const stepY = Math.round(H/6);
+
+    for(let x=0;x<=W;x+=stepX){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+    for(let y=0;y<=H;y+=stepY){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 2*dpr;
+    ctx.beginPath(); ctx.moveTo(0,H/2); ctx.lineTo(W,H/2); ctx.stroke();
+  }
+
+  function findTriggerIndex(buf, N, trigLevel=0){
+    const L = buf.length;
+    const maxStart = L - N - 1;
+    if (maxStart <= 2) return -1;
+
+    let idx = -1;
+    for (let i = 1; i <= maxStart; i++){
+      const a = buf[i-1], b = buf[i];
+      if (a < trigLevel && b >= trigLevel) idx = i; // last rising crossing
+    }
+    return idx;
+  }
+
+  function drawTime(){
+    const W = timeCanvas.width, H = timeCanvas.height;
+    drawGrid(tctx);
+
+    if (!audio.on || !audio.analyser) {
+      tctx.fillStyle = '#6b7280';
+      tctx.font = `${12*dpr}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
+      tctx.fillText('Audio OFF (active audio puis monte le volume)', 10*dpr, 18*dpr);
+      return;
+    }
+
+    if (typeof audio.analyser.getFloatTimeDomainData === 'function') {
+      audio.analyser.getFloatTimeDomainData(audio.timeFloat);
+    } else {
+      audio.analyser.getByteTimeDomainData(audio.timeByte);
+      for (let i=0;i<audio.timeByte.length;i++){
+        audio.timeFloat[i] = (audio.timeByte[i] - 128) / 128;
+      }
+    }
+
+    const twinMs = parseFloat(twinEl.value);
+    const sr = audio.ctx.sampleRate;
+    const N = clamp(Math.floor((twinMs/1000) * sr), 128, audio.timeFloat.length);
+
+    const isNoise = (waveTypeEl.value === 'noise');
+    const doSync = syncEnabled && !isNoise;
+
+    let start = audio.timeFloat.length - N;
+    if (doSync) {
+      const trig = findTriggerIndex(audio.timeFloat, N, 0.0);
+      if (trig >= 0) start = trig;
+    }
+
+    tctx.strokeStyle = '#2563eb';
+    tctx.lineWidth = 2.2*dpr;
+    tctx.beginPath();
+    for (let i=0;i<N;i++){
+      const x = (i/(N-1))*W;
+      const v = audio.timeFloat[start + i];
+      const y = (H/2) - v*(H*0.38);
+      if (i===0) tctx.moveTo(x,y); else tctx.lineTo(x,y);
+    }
+    tctx.stroke();
+  }
+
+  function drawFFT(){
+    const W = fftCanvas.width, H = fftCanvas.height;
+    drawGrid(fctx);
+
+    if (!audio.on || !audio.analyser) {
+      fctx.fillStyle = '#6b7280';
+      fctx.font = `${12*dpr}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
+      fctx.fillText('FFT (audio OFF)', 10*dpr, 18*dpr);
+      return;
+    }
+
+    audio.analyser.getFloatFrequencyData(audio.fftFloat);
+    const nyq = audio.nyquist;
+
+    const dbMin = -100, dbMax = 0;
+    const mapY = (db) => {
+      const u = (db - dbMin) / (dbMax - dbMin);
+      return H - u*H;
+    };
+
+    fctx.strokeStyle = '#10b981';
+    fctx.lineWidth = 2.0*dpr;
+    fctx.beginPath();
+    const N = audio.fftFloat.length;
+    for (let i=0;i<N;i++){
+      const x = (i/(N-1))*W;
+      const y = mapY(audio.fftFloat[i]);
+      if (i===0) fctx.moveTo(x,y); else fctx.lineTo(x,y);
+    }
+    fctx.stroke();
+
+    if (audio.band.active) {
+      const x1 = (audio.band.f1 / nyq) * W;
+      const x2 = (audio.band.f2 / nyq) * W;
+      const left = Math.min(x1,x2), right = Math.max(x1,x2);
+      fctx.fillStyle = 'rgba(14,165,233,0.18)';
+      fctx.fillRect(left, 0, right-left, H);
+      fctx.strokeStyle = 'rgba(14,165,233,0.55)';
+      fctx.lineWidth = 2*dpr;
+      fctx.strokeRect(left, 0, right-left, H);
+    }
+
+    // harmonic markers (ideal) — no markers for noise
+    const type = waveTypeEl.value;
+    const f0 = parseFloat(freqEl.value);
+    if (type !== 'noise' && f0 > 0) {
+      fctx.strokeStyle = 'rgba(17,24,39,0.22)';
+      fctx.lineWidth = 1*dpr;
+      const maxH = Math.floor(nyq / f0);
+      const Nlines = Math.min(maxH, 80);
+      for (let n=1; n<=Nlines; n++){
+        let show = true;
+        if (type === 'square' || type === 'triangle') show = (n % 2 === 1);
+        if (!show) continue;
+        const fn = n * f0;
+        const x = (fn / nyq) * W;
+        fctx.beginPath(); fctx.moveTo(x, 0); fctx.lineTo(x, H); fctx.stroke();
+      }
+    }
+
+    fctx.fillStyle = '#6b7280';
+    fctx.font = `${11*dpr}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
+    fctx.fillText('0 dB', 8*dpr, 14*dpr);
+    fctx.fillText('-100 dB', 8*dpr, H - 6*dpr);
+  }
+
+  // ---------- Band selection on FFT ----------
+  let selecting = false;
+  let selStartX = 0;
+
+  function xToFreq(x){
+    const rectW = fftCanvas.offsetWidth;
+    const nx = clamp(x / rectW, 0, 1);
+    const nyq = audio.ctx ? audio.nyquist : 22050;
+    return nx * nyq;
+  }
+
+  function getLocalX(e){
+    const r = fftCanvas.getBoundingClientRect();
+    return e.clientX - r.left;
+  }
+
+  fftCanvas.addEventListener('mousedown', (e) => {
+    selecting = true;
+    selStartX = getLocalX(e);
+    const f = xToFreq(selStartX);
+    audio.band.active = true;
+    audio.band.f1 = f;
+    audio.band.f2 = f;
+    updateBandFilters(false);
+    updateUI();
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!selecting) return;
+    const x = getLocalX(e);
+    const f = xToFreq(x);
+    audio.band.active = true;
+    audio.band.f2 = f;
+    updateBandFilters(false);
+    updateUI();
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (!selecting) return;
+    selecting = false;
+
+    const span = Math.abs(audio.band.f2 - audio.band.f1);
+    if (span < 10) {
+      const f = audio.band.f1;
+      const lo = f / Math.pow(2, 1/12);
+      const hi = f * Math.pow(2, 1/12);
+      audio.band.f1 = lo; audio.band.f2 = hi; audio.band.active = true;
+      updateBandFilters(false);
+      updateUI();
+    }
+  });
+
+  clearBandBtn.addEventListener('click', () => {
+    audio.band.active = false;
+    updateBandFilters(true);
+    updateUI();
+  });
+
+  // ---------- Control events ----------
+  waveTypeEl.addEventListener('change', async () => {
+    updateUI();
+    if (audio.on) await buildSource();
+  });
+
+  freqEl.addEventListener('input', () => { updateSourceParams(); updateUI(); });
+  volEl.addEventListener('input', () => { updateGain(); updateUI(); });
+
+  fftSizeEl.addEventListener('input', () => { applyFFTSize(); updateUI(); });
+  twinEl.addEventListener('input', updateUI);
+
+  audioBtn.addEventListener('click', async () => { await setAudioOn(!audio.on); updateUI(); });
+
+  syncBtn.addEventListener('click', () => { syncEnabled = !syncEnabled; updateUI(); });
+
+  // ---------- animation loop ----------
+  function frame(){
+    updateUI();
+    drawTime();
+    drawFFT();
+    requestAnimationFrame(frame);
+  }
+
+  updateUI();
+  frame();
+})();
+</script>
+</body>
+</html>
