@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Corde vibrante (superposition de modes) + Oscilloscope + Son</title>
+  <style>
+    :root{
+      --bg:#ffffff; --panel:#f6f7f9; --ink:#111827; --muted:#6b7280;
+      --grid:#e5e7eb; --trace:#2563eb; --accent:#0ea5e9;
+    }
+    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--ink); }
+    .wrap{ max-width:980px; margin:18px auto; padding:0 14px 18px; }
+    .card{ background:var(--panel); border:1px solid var(--grid); border-radius:12px; padding:12px; }
+    .row{ display:grid; grid-template-columns:1fr; gap:12px; }
+    .controls{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(170px, 1fr));
+      gap:10px; align-items:end;
+    }
+    label{ display:grid; gap:6px; font-size:13px; color:var(--muted); }
+    input[type="range"]{ width:100%; }
+    .val{ font-variant-numeric:tabular-nums; color:var(--ink); font-size:13px; }
+    .buttons{ display:flex; gap:10px; justify-content:flex-end; align-items:center; flex-wrap:wrap; }
+    button{
+      border:1px solid var(--grid); background:#fff; color:var(--ink);
+      padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:600;
+    }
+    button.primary{ border-color: color-mix(in srgb, var(--accent) 35%, var(--grid)); background: color-mix(in srgb, var(--accent) 12%, #fff); }
+    button.soundOn{ border-color: color-mix(in srgb, #16a34a 35%, var(--grid)); background: color-mix(in srgb, #16a34a 12%, #fff); }
+    .canv{ width:100%; height:260px; background:#fff; border-radius:10px; border:1px solid var(--grid); display:block; }
+    .scope{ height:220px; }
+    .legend{ display:flex; gap:14px; justify-content:space-between; align-items:baseline; margin-top:8px; color:var(--muted); font-size:13px; }
+    .mono{ font-variant-numeric:tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="row">
+      <div class="card">
+        <div class="controls">
+          <label>
+            Longueur L (m)
+            <input id="L" type="range" min="0.30" max="1.20" value="0.65" step="0.01">
+            <div class="val"><span id="LVal" class="mono"></span></div>
+          </label>
+
+          <label>
+            Vitesse d’onde c (m/s)
+            <input id="c" type="range" min="40" max="300" value="130" step="1">
+            <div class="val"><span id="cVal" class="mono"></span></div>
+          </label>
+
+          <label>
+            Harmoniques N
+            <input id="N" type="range" min="1" max="40" value="18" step="1">
+            <div class="val"><span id="NVal" class="mono"></span></div>
+          </label>
+
+          <label>
+            Amplitude pincement A (mm)
+            <input id="A" type="range" min="1" max="20" value="8" step="1">
+            <div class="val"><span id="AVal" class="mono"></span></div>
+          </label>
+
+          <label>
+            Position pincement p = x/L
+            <input id="p" type="range" min="0.05" max="0.95" value="0.18" step="0.01">
+            <div class="val"><span id="pVal" class="mono"></span></div>
+          </label>
+
+          <label>
+            Amortissement d (≈ 1/s)
+            <input id="d" type="range" min="0" max="6.0" value="1.2" step="0.05">
+            <div class="val"><span id="dVal" class="mono"></span></div>
+          </label>
+
+          <label>
+            Point “micro” q = x/L
+            <input id="q" type="range" min="0.05" max="0.95" value="0.80" step="0.01">
+            <div class="val"><span id="qVal" class="mono"></span></div>
+          </label>
+
+          <div class="buttons">
+            <button id="pluck" class="primary">Pincer (t=0)</button>
+            <button id="toggle">Pause</button>
+            <button id="sound">Son: OFF</button>
+          </div>
+        </div>
+
+        <div class="legend">
+          <div class="mono" id="eqn"></div>
+          <div>
+            <span>f₁ :</span> <span id="f1Val" class="mono"></span>
+            <span style="margin-left:10px;">ω₁ :</span> <span id="w1Val" class="mono"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <canvas id="sim" class="canv"></canvas>
+      </div>
+
+      <div class="card">
+        <canvas id="scope" class="canv scope"></canvas>
+        <div class="legend">
+          <div>Oscilloscope : <span class="mono">y(qL,t)</span></div>
+          <div><span>Fenêtre :</span> <span id="tWindowVal" class="mono"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ------------------ CANVAS ------------------
+  const sim = document.getElementById('sim');
+  const scope = document.getElementById('scope');
+  const ctx = sim.getContext('2d');
+  const sctx = scope.getContext('2d');
+
+  const els = {
+    L: document.getElementById('L'),
+    c: document.getElementById('c'),
+    N: document.getElementById('N'),
+    A: document.getElementById('A'),
+    p: document.getElementById('p'),
+    d: document.getElementById('d'),
+    q: document.getElementById('q'),
+  };
+
+  const ui = {
+    LVal: document.getElementById('LVal'),
+    cVal: document.getElementById('cVal'),
+    NVal: document.getElementById('NVal'),
+    AVal: document.getElementById('AVal'),
+    pVal: document.getElementById('pVal'),
+    dVal: document.getElementById('dVal'),
+    qVal: document.getElementById('qVal'),
+    f1Val: document.getElementById('f1Val'),
+    w1Val: document.getElementById('w1Val'),
+    eqn: document.getElementById('eqn'),
+    tWindowVal: document.getElementById('tWindowVal'),
+  };
+
+  const pluckBtn = document.getElementById('pluck');
+  const toggleBtn = document.getElementById('toggle');
+  const soundBtn = document.getElementById('sound');
+
+  let running = true;
+  let t = 0;               // temps depuis le dernier "pincement"
+  let last = performance.now();
+
+  // Oscilloscope
+  let trace = [];
+  const timeWindow = 0.08; // s (petite fenêtre pour voir des fréquences audio)
+  ui.tWindowVal.textContent = `${timeWindow.toFixed(2)} s`;
+
+  // Discrétisation corde
+  const XPTS = 360;
+  const NMAX = 40;
+
+  // Tables sin(nπu) avec u=x/L ∈ [0,1] (indépendant de L)
+  const uTable = new Float64Array(XPTS);
+  const sinTable = Array.from({ length: NMAX }, () => new Float64Array(XPTS));
+  for (let i = 0; i < XPTS; i++) {
+    const u = i / (XPTS - 1);
+    uTable[i] = u;
+    for (let n = 1; n <= NMAX; n++) {
+      sinTable[n-1][i] = Math.sin(n * Math.PI * u);
+    }
+  }
+
+  let dprSim = 1, dprScope = 1;
+  function resizeCanvas(c) {
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const rect = c.getBoundingClientRect();
+    c.width = Math.round(rect.width * dpr);
+    c.height = Math.round(rect.height * dpr);
+    return dpr;
+  }
+  function doResize() {
+    dprSim = resizeCanvas(sim);
+    dprScope = resizeCanvas(scope);
+    trace = new Array(scope.width).fill(scope.height / 2);
+  }
+  window.addEventListener('resize', doResize);
+  doResize();
+
+  // ------------------ MODELE ------------------
+  // On représente une corde fixée aux extrémités, avec une condition initiale de pincement
+  // triangulaire (déplacement initial), vitesse initiale nulle.
+  //
+  // y(u,t) = Σ_{n=1..N} a_n sin(nπu) cos(ω_n t) e^{-d n t}
+  // ω_n = n π c / L
+  //
+  // Coefficients (triangulaire, pic A à u=p) :
+  // a_n = (2A / (n^2 π^2 p(1-p))) * sin(nπp)
+  //
+  // (c’est un choix simple qui “montre” bien l’apparition des sin/cos.)
+
+  function params() {
+    const L = parseFloat(els.L.value);
+    const c = parseFloat(els.c.value);
+    const N = parseInt(els.N.value, 10);
+    const A = parseFloat(els.A.value) / 1000; // mm -> m
+    const p = parseFloat(els.p.value);
+    const d = parseFloat(els.d.value);
+    const q = parseFloat(els.q.value);
+
+    const f1 = c / (2 * L);
+    const w1 = 2 * Math.PI * f1;
+    return { L, c, N, A, p, d, q, f1, w1 };
+  }
+
+  function an(n, A, p) {
+    // éviter p trop proche de 0/1 (déjà borné par le slider)
+    const denom = (n*n) * (Math.PI*Math.PI) * p * (1 - p);
+    return (2 * A / denom) * Math.sin(n * Math.PI * p);
+  }
+
+  function yAt(u, tSec, P) {
+    // calcule y(u,t) (m) via superposition
+    const { L, c, N, A, p, d } = P;
+    let y = 0;
+    for (let n = 1; n <= N; n++) {
+      const a = an(n, A, p);
+      const omega = (n * Math.PI * c) / L;
+      const decay = (d === 0) ? 1 : Math.exp(-d * n * tSec);
+      y += a * Math.sin(n * Math.PI * u) * Math.cos(omega * tSec) * decay;
+    }
+    return y;
+  }
+
+  function updateUI() {
+    const { L, c, N, A, p, d, q, f1, w1 } = params();
+    ui.LVal.textContent = L.toFixed(2);
+    ui.cVal.textContent = c.toFixed(0);
+    ui.NVal.textContent = String(N);
+    ui.AVal.textContent = (A * 1000).toFixed(0);
+    ui.pVal.textContent = p.toFixed(2);
+    ui.dVal.textContent = d.toFixed(2);
+    ui.qVal.textContent = q.toFixed(2);
+    ui.f1Val.textContent = `${f1.toFixed(1)} Hz`;
+    ui.w1Val.textContent = `${w1.toFixed(1)} rad/s`;
+
+    ui.eqn.textContent =
+      `y(u,t)=Σ aₙ sin(nπu)·cos(ωₙ t)·e^{-d n t}  avec  ωₙ=nπc/L`;
+  }
+
+  function pluck() {
+    t = 0;
+    last = performance.now();
+    trace = new Array(scope.width).fill(scope.height / 2);
+    if (audio.on) scheduleAudioPluck(); // recale l’enveloppe audio
+  }
+
+  // ------------------ DESSIN ------------------
+  function drawString() {
+    const W = sim.width, H = sim.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    const margin = 28 * dprSim;
+    const x0 = margin, x1 = W - margin;
+    const yMid = H * 0.55;
+
+    // extrémités fixées
+    ctx.strokeStyle = '#111827';
+    ctx.lineWidth = 2 * dprSim;
+    ctx.beginPath();
+    ctx.moveTo(x0, yMid - 55*dprSim); ctx.lineTo(x0, yMid + 55*dprSim);
+    ctx.moveTo(x1, yMid - 55*dprSim); ctx.lineTo(x1, yMid + 55*dprSim);
+    ctx.stroke();
+
+    // ligne centrale
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.setLineDash([6*dprSim, 6*dprSim]);
+    ctx.beginPath(); ctx.moveTo(x0, yMid); ctx.lineTo(x1, yMid); ctx.stroke();
+    ctx.setLineDash([]);
+
+    const P = params();
+    const ampPx = H * 0.35;
+    const Aref = Math.max(1e-6, 1.2 * P.A);
+
+    // corde
+    ctx.strokeStyle = '#111827';
+    ctx.lineWidth = 2.2 * dprSim;
+    ctx.beginPath();
+    for (let i = 0; i < XPTS; i++) {
+      const u = uTable[i];
+      const x = x0 + u * (x1 - x0);
+      const yMeters = yAt(u, t, P);
+      const y = yMid - (yMeters / Aref) * ampPx;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // marqueurs p (pincement) et q (micro)
+    const xP = x0 + P.p * (x1 - x0);
+    const xQ = x0 + P.q * (x1 - x0);
+
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 2 * dprSim;
+    ctx.beginPath();
+    ctx.moveTo(xP, yMid - 70*dprSim); ctx.lineTo(xP, yMid + 70*dprSim);
+    ctx.stroke();
+
+    const yQm = yAt(P.q, t, P);
+    const yQ = yMid - (yQm / Aref) * ampPx;
+    ctx.fillStyle = '#2563eb';
+    ctx.beginPath();
+    ctx.arc(xQ, yQ, 4.2*dprSim, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawGridScope() {
+    const W = scope.width, H = scope.height;
+    sctx.clearRect(0, 0, W, H);
+    sctx.fillStyle = '#ffffff';
+    sctx.fillRect(0, 0, W, H);
+
+    sctx.strokeStyle = '#e5e7eb';
+    sctx.lineWidth = 1 * dprScope;
+    const stepX = Math.round(W / 10), stepY = Math.round(H / 6);
+    for (let x = 0; x <= W; x += stepX) { sctx.beginPath(); sctx.moveTo(x, 0); sctx.lineTo(x, H); sctx.stroke(); }
+    for (let y = 0; y <= H; y += stepY) { sctx.beginPath(); sctx.moveTo(0, y); sctx.lineTo(W, y); sctx.stroke(); }
+
+    sctx.strokeStyle = '#cbd5e1';
+    sctx.lineWidth = 2 * dprScope;
+    sctx.beginPath(); sctx.moveTo(0, H/2); sctx.lineTo(W, H/2); sctx.stroke();
+  }
+
+  function pushScopeSample(yMeters, Aref) {
+    const W = scope.width, H = scope.height;
+    const yPix = (H/2) - (yMeters / Aref) * (H * 0.40);
+
+    trace.push(yPix);
+    if (trace.length > W) trace.shift();
+
+    drawGridScope();
+    sctx.strokeStyle = '#2563eb';
+    sctx.lineWidth = 2.2 * dprScope;
+    sctx.beginPath();
+    for (let i = 0; i < trace.length; i++) {
+      if (i === 0) sctx.moveTo(i, trace[i]);
+      else sctx.lineTo(i, trace[i]);
+    }
+    sctx.stroke();
+
+    sctx.fillStyle = '#2563eb';
+    sctx.beginPath();
+    sctx.arc(trace.length - 1, trace[trace.length - 1], 3.2 * dprScope, 0, Math.PI*2);
+    sctx.fill();
+  }
+
+  // ------------------ AUDIO: superposition d'harmoniques ------------------
+  // On fait un synthèse additive simple : N oscillateurs sinusoïdaux à f_n = n f1,
+  // pondérés par (a_n * sin(nπq)), avec une enveloppe de décroissance ~ exp(-d n t).
+  let audio = {
+    ctx: null,
+    master: null,
+    on: false,
+    osc: [],     // OscillatorNode[]
+    gain: [],    // GainNode[]
+  };
+
+  const AUDIO_SCALE = 25; // facteur de conversion "m -> gain" (pédagogique)
+  function ensureAudio() {
+    if (!audio.ctx) audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!audio.master) {
+      audio.master = audio.ctx.createGain();
+      audio.master.gain.value = 0.0;
+      audio.master.connect(audio.ctx.destination);
+    }
+    if (audio.osc.length === 0) {
+      for (let n = 1; n <= NMAX; n++) {
+        const o = audio.ctx.createOscillator();
+        o.type = 'sine';
+        const g = audio.ctx.createGain();
+        g.gain.value = 0.0;
+        o.connect(g);
+        g.connect(audio.master);
+        o.start();
+        audio.osc.push(o);
+        audio.gain.push(g);
+      }
+    }
+  }
+
+  function harmonicBaseGain(n, P) {
+    // amplitude du signal "micro" pour l'harmonique n (avant enveloppe)
+    const a = an(n, P.A, P.p);
+    const spatialAtMic = Math.sin(n * Math.PI * P.q);
+    const amp = a * spatialAtMic; // mètres (signé)
+    return Math.abs(amp) * AUDIO_SCALE;
+  }
+
+  function applyAudioFrequencies() {
+    if (!audio.on) return;
+    const P = params();
+    const now = audio.ctx.currentTime;
+    for (let n = 1; n <= NMAX; n++) {
+      const fn = n * P.f1;
+      audio.osc[n-1].frequency.setValueAtTime(fn, now);
+    }
+  }
+
+  function scheduleAudioPluck() {
+    // Réinitialise les gains (enveloppe) comme si t=0
+    if (!audio.on) return;
+    const P = params();
+    const now = audio.ctx.currentTime;
+
+    // master on (petit fade-in)
+    audio.master.gain.cancelScheduledValues(now);
+    audio.master.gain.setTargetAtTime(0.25, now, 0.02);
+
+    for (let n = 1; n <= NMAX; n++) {
+      const gNode = audio.gain[n-1];
+      const active = (n <= P.N);
+      const g0 = active ? harmonicBaseGain(n, P) : 0.0;
+
+      gNode.gain.cancelScheduledValues(now);
+      gNode.gain.setValueAtTime(g0, now);
+
+      // exp(-d n t) : constante de temps ~ 1/(d n)
+      if (active && P.d > 0) {
+        const tau = 1 / (P.d * n);
+        gNode.gain.setTargetAtTime(0.0, now, tau);
+      }
+      // si d=0 -> pas de décroissance, on laisse constant
+      if (active && P.d === 0) {
+        // option: rien
+      }
+    }
+  }
+
+  async function setSound(on) {
+    if (on) {
+      ensureAudio();
+      await audio.ctx.resume();
+      audio.on = true;
+      soundBtn.textContent = 'Son: ON';
+      soundBtn.classList.add('soundOn');
+      applyAudioFrequencies();
+      scheduleAudioPluck(); // lance un son cohérent immédiatement
+    } else {
+      audio.on = false;
+      soundBtn.textContent = 'Son: OFF';
+      soundBtn.classList.remove('soundOn');
+      if (audio.master && audio.ctx) {
+        const now = audio.ctx.currentTime;
+        audio.master.gain.cancelScheduledValues(now);
+        audio.master.gain.setTargetAtTime(0.0, now, 0.02);
+      }
+    }
+  }
+
+  function onParamChange(repluckSound = true) {
+    updateUI();
+    if (audio.on) {
+      applyAudioFrequencies();
+      if (repluckSound) scheduleAudioPluck(); // simple et propre (évite clicks/états incohérents)
+    }
+  }
+
+  // ------------------ ANIMATION ------------------
+  function step(now) {
+    const dt = Math.min(0.033, (now - last) / 1000);
+    last = now;
+    if (running) t += dt;
+
+    const P = params();
+    const Aref = Math.max(1e-6, 1.2 * P.A);
+
+    drawString();
+    const yq = yAt(P.q, t, P);
+    pushScopeSample(yq, Aref);
+
+    requestAnimationFrame(step);
+  }
+
+  // ------------------ EVENTS ------------------
+  // Changer L/c/N/A/p/d/q -> recalcul implicite; pour l’audio on repluck pour rester simple
+  Object.values(els).forEach(el => el.addEventListener('input', () => onParamChange(true)));
+
+  pluckBtn.addEventListener('click', pluck);
+  toggleBtn.addEventListener('click', () => {
+    running = !running;
+    toggleBtn.textContent = running ? 'Pause' : 'Play';
+    // option: si pause, on coupe un peu le son
+    if (audio.on && audio.master && audio.ctx) {
+      const now = audio.ctx.currentTime;
+      audio.master.gain.setTargetAtTime(running ? 0.25 : 0.0, now, 0.02);
+    }
+  });
+  soundBtn.addEventListener('click', async () => { await setSound(!audio.on); });
+
+  // init
+  updateUI();
+  pluck(); // init t=0
+  requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>

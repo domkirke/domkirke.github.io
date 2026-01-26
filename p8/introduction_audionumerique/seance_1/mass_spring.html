@@ -1,275 +1,420 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mass–Spring Oscillator + Sine Plot (Light)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Masse-Ressort + Oscilloscope</title>
   <style>
-    body { margin: 0; font-family: system-ui, sans-serif; background:#f6f8fb; color:#132033; }
-    .wrap { display:flex; gap:12px; padding:12px; align-items:flex-start; }
-    canvas { background:#ffffff; border:1px solid #d3dbe6; border-radius:10px; }
-    .panel { max-width: 520px; line-height:1.35; }
-    button {
-      background:#ffffff; color:#132033;
-      border:1px solid #c7d1df; padding:8px 10px; border-radius:8px; cursor:pointer;
+    :root {
+      --bg: #ffffff;
+      --panel: #f6f7f9;
+      --ink: #111827;
+      --muted: #6b7280;
+      --grid: #e5e7eb;
+      --trace: #2563eb;
+      --spring: #111827;
+      --mass: #111827;
+      --accent: #0ea5e9;
     }
-    button:hover { background:#eef3fa; }
-    code { color:#2f5fb8; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 18px auto;
+      padding: 0 14px 18px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--grid);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: 10px;
+      align-items: end;
+    }
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    input[type="range"] { width: 100%; }
+    .val {
+      font-variant-numeric: tabular-nums;
+      color: var(--ink);
+      font-size: 13px;
+    }
+    .buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    button {
+      border: 1px solid var(--grid);
+      background: #fff;
+      color: var(--ink);
+      padding: 8px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.primary {
+      border-color: color-mix(in srgb, var(--accent) 35%, var(--grid));
+      background: color-mix(in srgb, var(--accent) 12%, #fff);
+    }
+    .canv {
+      width: 100%;
+      height: 260px;
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid var(--grid);
+      display: block;
+    }
+    .scope {
+      height: 220px;
+    }
+    .legend {
+      display: flex;
+      gap: 14px;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div>
-      <canvas id="sim" width="520" height="220"></canvas>
-      <div style="height:12px"></div>
-      <canvas id="plot" width="520" height="220"></canvas>
-    </div>
-    <div class="panel">
-      <h3 style="margin:0 0 8px 0;">Mass / Spring (free oscillation)</h3>
-      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:8px 0 12px;">
-        <button id="reset">Reset</button>
-        <button id="kick">Kick (add velocity)</button>
+    <div class="row">
+      <div class="card">
+        <div class="controls">
+          <label>
+            Masse m (kg)
+            <input id="m" type="range" min="0.2" max="5.0" value="1.0" step="0.1">
+            <div class="val"><span id="mVal" class="mono"></span></div>
+          </label>
+          <label>
+            Raideur k (N/m)
+            <input id="k" type="range" min="1" max="200" value="40" step="1">
+            <div class="val"><span id="kVal" class="mono"></span></div>
+          </label>
+          <label>
+            Amplitude A (m)
+            <input id="A" type="range" min="0.01" max="0.30" value="0.12" step="0.01">
+            <div class="val"><span id="AVal" class="mono"></span></div>
+          </label>
+          <div class="buttons">
+            <button id="reset" class="primary">Reset</button>
+            <button id="toggle">Pause</button>
+          </div>
+        </div>
+
+        <div class="legend">
+          <div>
+            Oscillation libre : <span class="mono">x(t) = A cos(ωt)</span>, avec <span class="mono">ω = √(k/m)</span>
+          </div>
+          <div>
+            <span>Fréquence : </span><span id="fVal" class="mono"></span>
+          </div>
+        </div>
       </div>
-      <div style="opacity:.95">
-        Undamped oscillator: <code>x'' + (k/m) x = 0</code><br/>
-        Integrator: Velocity Verlet.<br/>
-        Plot shows displacement <code>x(t)</code> (sinusoidal).
+
+      <div class="card">
+        <canvas id="sim" class="canv"></canvas>
       </div>
-      <div style="margin-top:12px; opacity:.8; font-size:14px;">
-        Tip: edit <code>m</code>, <code>k</code>, <code>x0</code>, <code>v0</code> in the script.
+
+      <div class="card">
+        <canvas id="scope" class="canv scope"></canvas>
+        <div class="legend">
+          <div>Oscilloscope : déplacement <span class="mono">x(t)</span> (défilement)</div>
+          <div><span>Temps (fenêtre) :</span> <span id="tWindowVal" class="mono"></span></div>
+        </div>
       </div>
     </div>
   </div>
 
 <script>
 (() => {
-  const simCanvas = document.getElementById('sim');
-  const plotCanvas = document.getElementById('plot');
-  const simCtx = simCanvas.getContext('2d');
-  const plotCtx = plotCanvas.getContext('2d');
+  const sim = document.getElementById('sim');
+  const scope = document.getElementById('scope');
+  const ctx = sim.getContext('2d');
+  const sctx = scope.getContext('2d');
 
-  // Physics parameters
-  const m = 1.0;
-  const k = 20.0;
+  const mEl = document.getElementById('m');
+  const kEl = document.getElementById('k');
+  const AEl = document.getElementById('A');
 
-  // Initial conditions (x relative to equilibrium)
-  let x0 = 0.7;
-  let v0 = 0.0;
+  const mVal = document.getElementById('mVal');
+  const kVal = document.getElementById('kVal');
+  const AVal = document.getElementById('AVal');
+  const fVal = document.getElementById('fVal');
+  const tWindowVal = document.getElementById('tWindowVal');
 
-  // State
-  let t = 0;
-  let x = x0;
-  let v = v0;
-  let a = -(k / m) * x;
+  const resetBtn = document.getElementById('reset');
+  const toggleBtn = document.getElementById('toggle');
 
-  // Fixed-timestep simulation
-  const dt = 1 / 240;
-  let accumulator = 0;
-  let lastTs = null;
+  let running = true;
 
-  // Plot buffer
-  const windowSeconds = 6;
-  const samples = [];
-  const maxSamples = Math.floor(windowSeconds / dt);
+  // État physique
+  let t = 0;              // temps (s)
+  let last = performance.now();
+
+  // Oscilloscope (buffer défilant)
+  let trace = [];
+  let timeWindow = 6.0;   // secondes visibles dans la largeur du scope
+
+  function resizeCanvas(c, hCss) {
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const rect = c.getBoundingClientRect();
+    c.width = Math.round(rect.width * dpr);
+    c.height = Math.round((hCss ?? rect.height) * dpr);
+    return dpr;
+  }
+
+  let dprSim = 1, dprScope = 1;
+
+  function doResize() {
+    dprSim = resizeCanvas(sim);
+    dprScope = resizeCanvas(scope);
+    // Réinitialiser le buffer pour correspondre à la nouvelle largeur
+    trace = new Array(scope.width).fill(0);
+  }
+
+  window.addEventListener('resize', doResize);
+  doResize();
+
+  function params() {
+    const m = parseFloat(mEl.value);
+    const k = parseFloat(kEl.value);
+    const A = parseFloat(AEl.value);
+    const w = Math.sqrt(k / m);      // rad/s
+    const f = w / (2 * Math.PI);     // Hz
+    return { m, k, A, w, f };
+  }
+
+  function updateUI() {
+    const { m, k, A, f } = params();
+    mVal.textContent = m.toFixed(1);
+    kVal.textContent = k.toFixed(0);
+    AVal.textContent = A.toFixed(2);
+    fVal.textContent = `${f.toFixed(2)} Hz`;
+    // fenêtre en secondes (dépend un peu du canvas, mais on l’affiche fixe)
+    tWindowVal.textContent = `${timeWindow.toFixed(1)} s`;
+  }
 
   function reset() {
     t = 0;
-    x = x0;
-    v = v0;
-    a = -(k / m) * x;
-    samples.length = 0;
+    last = performance.now();
+    trace = new Array(scope.width).fill(0);
   }
 
-  function kick() {
-    v += 2.0;
-  }
-
-  document.getElementById('reset').addEventListener('click', reset);
-  document.getElementById('kick').addEventListener('click', kick);
-
-  // Velocity Verlet integration
-  function step() {
-    x += v * dt + 0.5 * a * dt * dt;
-    const aNew = -(k / m) * x;
-    v += 0.5 * (a + aNew) * dt;
-    a = aNew;
-
-    t += dt;
-
-    samples.push({ t, x });
-    if (samples.length > maxSamples) samples.shift();
-  }
-
-  function drawSpring(ctx, x1, y1, x2, y2, coils = 12, amp = 10) {
-    const dx = x2 - x1, dy = y2 - y1;
-    const len = Math.hypot(dx, dy);
-    if (len < 1e-6) return;
-
-    const ux = dx / len, uy = dy / len;  // along
-    const px = -uy, py = ux;             // perpendicular
-
-    const start = 18, end = 18;
-    const inner = Math.max(0, len - start - end);
-    const stepLen = inner / coils;
-
+  // Dessin ressort en zig-zag
+  function drawSpring(ctx, x0, y0, x1, y1, coils = 12, amp = 10) {
     ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x1 + ux * start, y1 + uy * start);
+    ctx.moveTo(x0, y0);
+    const dx = x1 - x0;
+    const dy = y1 - y0;
 
-    for (let i = 0; i <= coils; i++) {
-      const s = start + i * stepLen;
-      const zig = (i % 2 === 0) ? 1 : -1;
-      ctx.lineTo(x1 + ux * s + px * amp * zig, y1 + uy * s + py * amp * zig);
+    for (let i = 1; i < coils; i++) {
+      const u = i / coils;
+      const x = x0 + dx * u;
+      const y = y0 + dy * u + (i % 2 === 0 ? -amp : amp);
+      ctx.lineTo(x, y);
     }
-
-    ctx.lineTo(x2 - ux * end, y2 - uy * end);
-    ctx.lineTo(x2, y2);
+    ctx.lineTo(x1, y1);
     ctx.stroke();
   }
 
-  function renderSim() {
-    const ctx = simCtx;
-    ctx.clearRect(0, 0, simCanvas.width, simCanvas.height);
-
-    // Map physics x to pixels
-    const anchorX = 50, anchorY = 110;
-    const eqLenPx = 220;
-    const pxPerUnit = 120;
-
-    const massX = anchorX + eqLenPx + x * pxPerUnit;
-    const massY = anchorY;
-
-    // Anchor
-    ctx.fillStyle = "#2f5fb8";
-    ctx.fillRect(anchorX - 6, anchorY - 25, 12, 50);
-
-    // Equilibrium marker
-    ctx.strokeStyle = "#d7e0ee";
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([6, 6]);
-    ctx.beginPath();
-    ctx.moveTo(anchorX + eqLenPx, 20);
-    ctx.lineTo(anchorX + eqLenPx, simCanvas.height - 20);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = "#5b7fc9";
-    ctx.font = "12px system-ui, sans-serif";
-    ctx.fillText("equilibrium", anchorX + eqLenPx + 8, 24);
-
-    // Spring
-    ctx.strokeStyle = "#3a4a5f";
-    ctx.lineWidth = 2.5;
-    drawSpring(ctx, anchorX, anchorY, massX - 22, massY, 14, 9);
-
-    // Mass
-    ctx.fillStyle = "#f0f4fb";
-    ctx.strokeStyle = "#7f91aa";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(massX - 22, massY - 22, 44, 44, 10);
-    ctx.fill();
-    ctx.stroke();
-
-    // Text
-    const omega = Math.sqrt(k / m);
-    ctx.fillStyle = "#132033";
-    ctx.font = "14px system-ui, sans-serif";
-    ctx.fillText(`t = ${t.toFixed(2)} s`, 12, 24);
-    ctx.fillText(`x = ${x.toFixed(3)}`, 12, 44);
-    ctx.fillText(`v = ${v.toFixed(3)}`, 12, 64);
-    ctx.fillText(`ω = √(k/m) = ${omega.toFixed(2)} rad/s`, 12, 84);
-  }
-
-  function renderPlot() {
-    const ctx = plotCtx;
-    const W = plotCanvas.width, H = plotCanvas.height;
+  function drawSim(xMeters) {
+    const W = sim.width, H = sim.height;
     ctx.clearRect(0, 0, W, H);
 
-    // Frame
-    ctx.strokeStyle = "#d3dbe6";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+    // Fond blanc
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
 
-    if (samples.length < 2) return;
+    // Repère
+    const margin = 28 * dprSim;
+    const yMid = H * 0.55;
+    const leftWallX = margin;
+    const eqX = margin + (W - 2 * margin) * 0.55;
 
-    const tMin = samples[0].t;
-    const tMax = samples[samples.length - 1].t;
+    // Conversion m -> px (échelle visuelle)
+    const pxPerMeter = (W - 2 * margin) * 0.9; // 1 m occuperait presque la largeur
+    const x = eqX + xMeters * pxPerMeter;
 
-    // auto-scale y with padding
-    let ymin = Infinity, ymax = -Infinity;
-    for (const s of samples) { ymin = Math.min(ymin, s.x); ymax = Math.max(ymax, s.x); }
-    const pad = 0.15 * Math.max(1e-6, (ymax - ymin));
-    ymin -= pad; ymax += pad;
-
-    const xToPx = (tt) => (tt - tMin) / Math.max(1e-9, (tMax - tMin)) * (W - 60) + 50;
-    const yToPx = (yy) => (1 - (yy - ymin) / Math.max(1e-9, (ymax - ymin))) * (H - 40) + 20;
-
-    // Labels
-    ctx.fillStyle = "#132033";
-    ctx.font = "12px system-ui, sans-serif";
-    ctx.fillText("x(t)", 12, 18);
-    ctx.fillText(`${ymax.toFixed(2)}`, 6, 34);
-    ctx.fillText(`${ymin.toFixed(2)}`, 6, H - 14);
-
-    // Zero line if visible
-    if (ymin < 0 && ymax > 0) {
-      ctx.strokeStyle = "#e3e9f3";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(50, yToPx(0));
-      ctx.lineTo(W - 10, yToPx(0));
-      ctx.stroke();
-      ctx.fillStyle = "#5b7fc9";
-      ctx.fillText("0", 30, yToPx(0) + 4);
-    }
-
-    // Curve
-    ctx.strokeStyle = "#2f5fb8";
-    ctx.lineWidth = 2;
+    // Mur
+    ctx.strokeStyle = '#111827';
+    ctx.lineWidth = 2 * dprSim;
     ctx.beginPath();
-    ctx.moveTo(xToPx(samples[0].t), yToPx(samples[0].x));
-    for (let i = 1; i < samples.length; i++) {
-      ctx.lineTo(xToPx(samples[i].t), yToPx(samples[i].x));
-    }
+    ctx.moveTo(leftWallX, yMid - 55 * dprSim);
+    ctx.lineTo(leftWallX, yMid + 55 * dprSim);
     ctx.stroke();
 
-    ctx.fillStyle = "#5b7fc9";
-    ctx.fillText(`${(tMax - tMin).toFixed(1)} s window`, W - 140, 18);
-  }
-
-  // polyfill: roundRect for older browsers
-  if (!CanvasRenderingContext2D.prototype.roundRect) {
-    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-      r = Math.min(r, w/2, h/2);
-      this.beginPath();
-      this.moveTo(x+r, y);
-      this.arcTo(x+w, y, x+w, y+h, r);
-      this.arcTo(x+w, y+h, x, y+h, r);
-      this.arcTo(x, y+h, x, y, r);
-      this.arcTo(x, y, x+w, y, r);
-      this.closePath();
-      return this;
-    };
-  }
-
-  function frame(ts) {
-    if (lastTs == null) lastTs = ts;
-    const dtReal = Math.min(0.05, (ts - lastTs) / 1000);
-    lastTs = ts;
-    accumulator += dtReal;
-
-    while (accumulator >= dt) {
-      step();
-      accumulator -= dt;
+    // Hachures du mur
+    ctx.lineWidth = 1 * dprSim;
+    for (let yy = yMid - 55 * dprSim; yy <= yMid + 55 * dprSim; yy += 10 * dprSim) {
+      ctx.beginPath();
+      ctx.moveTo(leftWallX - 10 * dprSim, yy);
+      ctx.lineTo(leftWallX, yy + 6 * dprSim);
+      ctx.stroke();
     }
 
-    renderSim();
-    renderPlot();
-    requestAnimationFrame(frame);
+    // Ligne d’équilibre (pointillée)
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.setLineDash([6 * dprSim, 6 * dprSim]);
+    ctx.lineWidth = 2 * dprSim;
+    ctx.beginPath();
+    ctx.moveTo(eqX, yMid - 90 * dprSim);
+    ctx.lineTo(eqX, yMid + 90 * dprSim);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Ressort
+    ctx.strokeStyle = '#111827';
+    ctx.lineWidth = 2.5 * dprSim;
+    drawSpring(ctx, leftWallX, yMid, x - 28 * dprSim, yMid, 14, 10 * dprSim);
+
+    // Masse (bloc)
+    const mw = 56 * dprSim, mh = 48 * dprSim;
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(x - mw/2, yMid - mh/2, mw, mh);
+
+    // Petit highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillRect(x - mw/2 + 6*dprSim, yMid - mh/2 + 6*dprSim, mw*0.35, mh*0.25);
+
+    // Texte x(t)
+    ctx.fillStyle = '#6b7280';
+    ctx.font = `${12 * dprSim}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
+    const label = `x = ${xMeters.toFixed(3)} m`;
+    ctx.fillText(label, margin, margin + 8 * dprSim);
   }
 
+  function drawGridScope() {
+    const W = scope.width, H = scope.height;
+    sctx.clearRect(0, 0, W, H);
+
+    // fond
+    sctx.fillStyle = '#ffffff';
+    sctx.fillRect(0, 0, W, H);
+
+    // grille
+    sctx.strokeStyle = '#e5e7eb';
+    sctx.lineWidth = 1 * dprScope;
+
+    const stepX = Math.round(W / 10);
+    const stepY = Math.round(H / 6);
+
+    for (let x = 0; x <= W; x += stepX) {
+      sctx.beginPath();
+      sctx.moveTo(x, 0);
+      sctx.lineTo(x, H);
+      sctx.stroke();
+    }
+    for (let y = 0; y <= H; y += stepY) {
+      sctx.beginPath();
+      sctx.moveTo(0, y);
+      sctx.lineTo(W, y);
+      sctx.stroke();
+    }
+
+    // axe central
+    sctx.strokeStyle = '#cbd5e1';
+    sctx.lineWidth = 2 * dprScope;
+    sctx.beginPath();
+    sctx.moveTo(0, H/2);
+    sctx.lineTo(W, H/2);
+    sctx.stroke();
+  }
+
+  function drawTrace(xMeters) {
+    const W = scope.width, H = scope.height;
+
+    // normalisation: on mappe +/-Amax vers hauteur
+    const { A } = params();
+    const Amax = Math.max(0.01, A); // éviter division par 0
+    const y = (H/2) - (xMeters / Amax) * (H * 0.40);
+
+    // buffer: défilement vers la gauche, nouvel échantillon à droite
+    trace.push(y);
+    if (trace.length > W) trace.shift();
+
+    // dessin
+    drawGridScope();
+
+    sctx.strokeStyle = '#2563eb';
+    sctx.lineWidth = 2.2 * dprScope;
+    sctx.beginPath();
+    for (let i = 0; i < trace.length; i++) {
+      const yy = trace[i];
+      if (i === 0) sctx.moveTo(i, yy);
+      else sctx.lineTo(i, yy);
+    }
+    sctx.stroke();
+
+    // petit point "tête de lecture"
+    sctx.fillStyle = '#2563eb';
+    sctx.beginPath();
+    sctx.arc(trace.length - 1, trace[trace.length - 1], 3.2 * dprScope, 0, Math.PI*2);
+    sctx.fill();
+  }
+
+  function step(now) {
+    const dt = Math.min(0.033, (now - last) / 1000); // clamp ~30ms
+    last = now;
+
+    if (running) t += dt;
+
+    const { A, w } = params();
+    // Oscillation libre non amortie:
+    const x = A * Math.cos(w * t);
+
+    drawSim(x);
+
+    // cadence du scope : on veut environ W points sur timeWindow secondes
+    // => on avance le buffer "virtuellement" à chaque frame; ici on pousse 1 point/frame,
+    // mais on ajuste timeWindow affichée selon FPS réel.
+    // Pour rester simple: on pousse 1 point/frame et on affiche timeWindow fixe.
+    drawTrace(x);
+
+    requestAnimationFrame(step);
+  }
+
+  function onParamChange() {
+    updateUI();
+    // Option: redémarrer pour éviter les sauts de phase visuels
+    reset();
+  }
+
+  mEl.addEventListener('input', onParamChange);
+  kEl.addEventListener('input', onParamChange);
+  AEl.addEventListener('input', onParamChange);
+
+  resetBtn.addEventListener('click', () => reset());
+  toggleBtn.addEventListener('click', () => {
+    running = !running;
+    toggleBtn.textContent = running ? 'Pause' : 'Play';
+  });
+
+  updateUI();
   reset();
-  requestAnimationFrame(frame);
+  requestAnimationFrame(step);
 })();
 </script>
 </body>
