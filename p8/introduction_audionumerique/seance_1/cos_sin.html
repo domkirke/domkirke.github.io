@@ -3,133 +3,197 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>cos + sin (même oscilloscope) + somme + amplitude/phase</title>
+  <title>cos + sin (compact 960×700)</title>
   <style>
     :root{
       --bg:#ffffff; --panel:#f6f7f9; --ink:#111827; --muted:#6b7280;
       --grid:#e5e7eb; --cCos:#2563eb; --cSin:#10b981; --cSum:#111827; --accent:#0ea5e9;
     }
-    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--ink); }
-    .wrap{ max-width:1050px; margin:18px auto; padding:0 14px 18px; }
-    .card{ background:var(--panel); border:1px solid var(--grid); border-radius:12px; padding:12px; }
-    .row{ display:grid; gap:12px; }
+    body{ margin:0; background:var(--bg); color:var(--ink);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+
+    /* ---- contrainte 960x700 ---- */
+    .frame{
+      width:960px; height:700px;
+      margin: 0 auto;
+      padding: 10px;
+      box-sizing:border-box;
+      overflow:hidden; /* garantit que "tout tient" visuellement */
+    }
+
+    .card{
+      background:var(--panel); border:1px solid var(--grid);
+      border-radius:10px; padding:10px; box-sizing:border-box;
+    }
+
+    /* Layout vertical en 4 bandes qui totalisent 700px (avec padding) */
+    .layout{
+      height:100%;
+      display:grid;
+      grid-template-rows: 160px 200px 200px 120px; /* total = 680, + padding frame = 20 => 700 */
+      gap:10px;
+    }
+
+    /* ---- Controls compact ---- */
     .controls{
       display:grid;
-      grid-template-columns: repeat(6, minmax(160px, 1fr));
-      gap:10px; align-items:end;
+      grid-template-columns: repeat(6, 1fr);
+      gap:8px;
+      align-items:end;
     }
-    label{ display:grid; gap:6px; font-size:13px; color:var(--muted); }
+    label{ display:grid; gap:4px; font-size:12px; color:var(--muted); }
     input[type="range"]{ width:100%; }
-    .val{ font-variant-numeric:tabular-nums; color:var(--ink); font-size:13px; }
-    .buttons{ display:flex; gap:10px; justify-content:flex-end; align-items:center; flex-wrap:wrap; }
+    .val{ font-variant-numeric:tabular-nums; color:var(--ink); font-size:12px; }
+    .buttons{
+      display:flex; gap:8px; justify-content:flex-end; align-items:center;
+    }
     button{
       border:1px solid var(--grid); background:#fff; color:var(--ink);
-      padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:600;
+      padding:6px 9px; border-radius:9px; cursor:pointer; font-weight:650;
+      font-size:12px;
     }
     button.primary{
       border-color: color-mix(in srgb, var(--accent) 35%, var(--grid));
       background: color-mix(in srgb, var(--accent) 12%, #fff);
     }
-    .canv{ width:100%; height:220px; background:#fff; border-radius:10px; border:1px solid var(--grid); display:block; }
-    .legend{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; color:var(--muted); font-size:13px; margin-top:8px; }
-    .mono{ font-variant-numeric:tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-    .pill{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#fff; border:1px solid var(--grid); }
-    .swatch{ width:10px; height:10px; border-radius:999px; display:inline-block; }
-    .eq{ padding:10px; background:#fff; border:1px solid var(--grid); border-radius:10px; }
-    .eq .title{ color:var(--muted); font-size:12px; margin-bottom:6px; }
-    .eq .txt{ white-space:pre-wrap; }
+
+    .legend{
+      margin-top:6px;
+      display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      color:var(--muted); font-size:12px;
+    }
+    .mono{
+      font-variant-numeric:tabular-nums;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:7px;
+      padding:4px 8px; border-radius:999px; background:#fff; border:1px solid var(--grid);
+    }
+    .swatch{ width:9px; height:9px; border-radius:999px; display:inline-block; }
+
+    /* ---- Canvases compact ---- */
+    .canv{
+      width:100%;
+      height:160px;              /* clé pour tenir dans 960x700 */
+      background:#fff;
+      border-radius:10px;
+      border:1px solid var(--grid);
+      display:block;
+    }
+
+    /* ---- Equations (2 colonnes pour gagner de la hauteur) ---- */
+    .eqGrid{
+      height:100%;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .eq{
+      background:#fff; border:1px solid var(--grid); border-radius:10px;
+      padding:8px; box-sizing:border-box;
+      height:100%;
+      overflow:hidden;
+    }
+    .eq .title{ color:var(--muted); font-size:11px; margin-bottom:6px; }
+    .eq .txt{ white-space:pre-wrap; font-size:12px; line-height:1.22; }
   </style>
 </head>
+
 <body>
-<div class="wrap">
-  <div class="row">
+  <div class="frame">
+    <div class="layout">
 
-    <div class="card">
-      <div class="controls">
-        <label>
-          Coeff cos : A
-          <input id="A" type="range" min="-2" max="2" value="1" step="0.01">
-          <div class="val"><span id="AVal" class="mono"></span></div>
-        </label>
+      <!-- 1) CONTROLS -->
+      <div class="card">
+        <div class="controls">
+          <label>
+            Coeff cos A
+            <input id="A" type="range" min="-2" max="2" value="1" step="0.01">
+            <div class="val"><span id="AVal" class="mono"></span></div>
+          </label>
 
-        <label>
-          Coeff sin : B
-          <input id="B" type="range" min="-2" max="2" value="1" step="0.01">
-          <div class="val"><span id="BVal" class="mono"></span></div>
-        </label>
+          <label>
+            Coeff sin B
+            <input id="B" type="range" min="-2" max="2" value="1" step="0.01">
+            <div class="val"><span id="BVal" class="mono"></span></div>
+          </label>
 
-        <label>
-          Fréquence commune : f (Hz)
-          <input id="f" type="range" min="0.05" max="3.00" value="0.60" step="0.01">
-          <div class="val"><span id="fVal" class="mono"></span></div>
-        </label>
+          <label>
+            Fréquence f (Hz)
+            <input id="f" type="range" min="0.05" max="3.00" value="0.60" step="0.01">
+            <div class="val"><span id="fVal" class="mono"></span></div>
+          </label>
 
-        <label>
-          Phase commune : φ (rad)
-          <input id="phi" type="range" min="-3.1416" max="3.1416" value="0.00" step="0.01">
-          <div class="val"><span id="phiVal" class="mono"></span></div>
-        </label>
+          <label>
+            Phase φ (rad)
+            <input id="phi" type="range" min="-3.1416" max="3.1416" value="0.00" step="0.01">
+            <div class="val"><span id="phiVal" class="mono"></span></div>
+          </label>
 
-        <label>
-          Fenêtre temps (s)
-          <input id="Tw" type="range" min="1.0" max="12.0" value="6.0" step="0.1">
-          <div class="val"><span id="TwVal" class="mono"></span></div>
-        </label>
+          <label>
+            Fenêtre temps (s)
+            <input id="Tw" type="range" min="1.0" max="12.0" value="6.0" step="0.1">
+            <div class="val"><span id="TwVal" class="mono"></span></div>
+          </label>
 
-        <div class="buttons">
-          <button id="reset" class="primary">Reset (t=0)</button>
-          <button id="toggle">Pause</button>
+          <div class="buttons">
+            <button id="reset" class="primary">Reset t=0</button>
+            <button id="toggle">Pause</button>
+          </div>
+        </div>
+
+        <div class="legend">
+          <div class="pill"><span class="swatch" style="background:var(--cCos)"></span>cos : A cos(ωt+φ)</div>
+          <div class="pill"><span class="swatch" style="background:var(--cSin)"></span>sin : B sin(ωt+φ)</div>
+          <div class="pill"><span class="swatch" style="background:var(--cSum)"></span>somme</div>
+          <div class="mono" id="hint"></div>
         </div>
       </div>
 
-      <div class="legend">
-        <div class="pill"><span class="swatch" style="background:var(--cCos)"></span>cos : A cos(ωt+φ)</div>
-        <div class="pill"><span class="swatch" style="background:var(--cSin)"></span>sin : B sin(ωt+φ)</div>
-        <div class="pill"><span class="swatch" style="background:var(--cSum)"></span>somme</div>
-        <div class="mono" id="hint"></div>
+      <!-- 2) OSCILLO: cos + sin -->
+      <div class="card">
+        <canvas id="scopeAB" class="canv"></canvas>
+        <div class="legend">
+          <div class="mono" id="exprAB"></div>
+          <div class="mono" id="infoAB"></div>
+        </div>
       </div>
-    </div>
 
-    <div class="card">
-      <canvas id="scopeAB" class="canv"></canvas>
-      <div class="legend">
-        <div class="mono" id="exprAB"></div>
-        <div class="mono" id="infoAB"></div>
+      <!-- 3) OSCILLO: somme -->
+      <div class="card">
+        <canvas id="scopeSum" class="canv"></canvas>
+        <div class="legend">
+          <div class="mono" id="exprSum"></div>
+          <div class="mono" id="infoSum"></div>
+        </div>
       </div>
-    </div>
 
-    <div class="card">
-      <canvas id="scopeSum" class="canv"></canvas>
-      <div class="legend">
-        <div class="mono" id="exprSum"></div>
-        <div class="mono" id="infoSum"></div>
+      <!-- 4) EQUATIONS -->
+      <div class="card">
+        <div class="eqGrid">
+          <div class="eq">
+            <div class="title">Forme trigonométrique (θ = ωt + φ)</div>
+            <div class="txt mono" id="trigForm"></div>
+          </div>
+          <div class="eq">
+            <div class="title">Amplitude / phase : y(t) = R cos(ωt + Φ)</div>
+            <div class="txt mono" id="magPhaseForm"></div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div class="card">
-      <div class="eq">
-        <div class="title">Forme trigonométrique (même θ) : y(t) = A cos(θ) + B sin(θ), θ = ωt+φ</div>
-        <div class="txt mono" id="trigForm"></div>
-      </div>
-      <div style="height:10px"></div>
-      <div class="eq">
-        <div class="title">Forme amplitude / phase : y(t) = R cos(ωt + Φ)</div>
-        <div class="txt mono" id="magPhaseForm"></div>
-      </div>
     </div>
-
   </div>
-</div>
 
 <script>
 (() => {
-  // --------- canvases ----------
   const scopeAB = document.getElementById('scopeAB');
   const scopeSum = document.getElementById('scopeSum');
   const ctxAB = scopeAB.getContext('2d');
   const ctxSum = scopeSum.getContext('2d');
 
-  // --------- controls ----------
   const els = {
     A: document.getElementById('A'),
     B: document.getElementById('B'),
@@ -159,8 +223,8 @@
   const resetBtn = document.getElementById('reset');
   const toggleBtn = document.getElementById('toggle');
 
-  // --------- time (slow scrolling) ----------
-  const timeScale = 0.12; // ralentit le "défilement"
+  // Temps ralenti (défilement lent)
+  const timeScale = 0.12;
   let running = true;
   let t = 0;
   let last = performance.now();
@@ -188,7 +252,6 @@
     const pi = Math.PI;
     return ((x + pi) % (2*pi) + (2*pi)) % (2*pi) - pi;
   }
-
   function params(){
     const A = parseFloat(els.A.value);
     const B = parseFloat(els.B.value);
@@ -207,31 +270,28 @@
     ui.phiVal.textContent = fmt(P.phi,2);
     ui.TwVal.textContent = fmt(P.Tw,1);
 
-    ui.hint.textContent = `sin(θ) = cos(θ − π/2) ⇒ sin et cos sont déphasés de 90° (quadrature)`;
+    ui.hint.textContent = `sin(θ)=cos(θ−π/2) : déphasage de 90°`;
 
-    ui.exprAB.textContent = `y_c(t)=A cos(ωt+φ),  y_s(t)=B sin(ωt+φ)`;
-    ui.infoAB.textContent = `f=${fmt(P.f,2)} Hz, ω=${fmt(P.w,2)} rad/s`;
+    ui.exprAB.textContent = `y_c=A cos(ωt+φ)   |   y_s=B sin(ωt+φ)`;
+    ui.infoAB.textContent = `f=${fmt(P.f,2)}Hz  ω=${fmt(P.w,2)}rad/s`;
 
-    ui.exprSum.textContent = `y(t)=A cos(ωt+φ) + B sin(ωt+φ)`;
-    // amplitude/phase équivalente
+    ui.exprSum.textContent = `y = A cos(ωt+φ) + B sin(ωt+φ)`;
+
     const R = Math.hypot(P.A, P.B);
-    const delta = Math.atan2(P.B, P.A); // y = R cos(θ - delta)
-    const Phi = wrapPi(P.phi - delta);  // y = R cos(ωt + Phi)
-    ui.infoSum.textContent = `R=${fmt(R,3)}, Φ=${fmt(Phi,3)} rad`;
+    const delta = Math.atan2(P.B, P.A); // y = R cos(θ - δ)
+    const Phi = wrapPi(P.phi - delta);  // y = R cos(ωt + Φ)
+    ui.infoSum.textContent = `R=${fmt(R,3)}  Φ=${fmt(Phi,3)}rad`;
 
     ui.trigForm.textContent =
       `θ = ωt + φ\n` +
       `y(t) = A cos(θ) + B sin(θ)\n` +
-      `A=${fmt(P.A,4)}, B=${fmt(P.B,4)}, ω=${fmt(P.w,4)}\n\n` +
-      `Astuce : B sin(θ) = B cos(θ − π/2)\n` +
-      `⇒ somme de deux cosinus déphasés de π/2.`;
+      `A=${fmt(P.A,3)}, B=${fmt(P.B,3)}`;
 
     ui.magPhaseForm.textContent =
-      `R = √(A² + B²) = ${fmt(R,4)}\n` +
-      `δ = atan2(B, A) = ${fmt(delta,4)} rad (${fmt(delta*180/Math.PI,1)}°)\n` +
-      `y(t) = R cos(θ − δ) = R cos(ωt + (φ − δ))\n` +
-      `Φ = φ − δ = ${fmt(Phi,4)} rad (${fmt(Phi*180/Math.PI,1)}°)\n\n` +
-      `⇒ y(t) = ${fmt(R,4)} cos(ωt + ${fmt(Phi,4)})`;
+      `R = √(A²+B²) = ${fmt(R,4)}\n` +
+      `δ = atan2(B,A) = ${fmt(delta,4)} rad\n` +
+      `Φ = φ − δ = ${fmt(Phi,4)} rad\n` +
+      `y(t) = ${fmt(R,4)} cos(ωt + ${fmt(Phi,4)})`;
   }
 
   function drawGrid(ctx){
@@ -243,7 +303,6 @@
     ctx.lineWidth = 1*dpr;
     const stepX = Math.round(W/10);
     const stepY = Math.round(H/6);
-
     for(let x=0; x<=W; x+=stepX){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
     for(let y=0; y<=H; y+=stepY){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
 
@@ -252,7 +311,7 @@
     ctx.beginPath(); ctx.moveTo(0,H/2); ctx.lineTo(W,H/2); ctx.stroke();
   }
 
-  function drawMultiTrace(ctx, traces, maxAbs){
+  function drawTraces(ctx, traces, maxAbs){
     const W = ctx.canvas.width, H = ctx.canvas.height;
     const scale = (H*0.38) / Math.max(1e-9, maxAbs);
 
@@ -273,57 +332,51 @@
     ctx.lineWidth = 2*dpr;
     ctx.beginPath(); ctx.moveTo(W-1,0); ctx.lineTo(W-1,H); ctx.stroke();
 
-    // indic max
     ctx.fillStyle = '#6b7280';
-    ctx.font = `${12*dpr}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
-    ctx.fillText(`auto-scale: ±${fmt(maxAbs,3)}`, 10*dpr, 18*dpr);
+    ctx.font = `${11*dpr}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
+    ctx.fillText(`auto-scale: ±${fmt(maxAbs,3)}`, 8*dpr, 16*dpr);
   }
 
   function render(nowT){
     const P = params();
-    const Tw = P.Tw;
-    const tLeft = nowT - Tw;
-    const samples = 900;
+    const tLeft = nowT - P.Tw;
+    const samples = 800;
 
     const cosArr = new Float64Array(samples);
     const sinArr = new Float64Array(samples);
     const sumArr = new Float64Array(samples);
 
-    let maxAbsAB = 1e-9;
-    let maxAbsSum = 1e-9;
+    let maxAB = 1e-9;
+    let maxSum = 1e-9;
 
     for(let i=0;i<samples;i++){
       const u = i/(samples-1);
-      const tt = tLeft + u*Tw;
+      const tt = tLeft + u*P.Tw;
       const theta = P.w*tt + P.phi;
 
       const yc = P.A * Math.cos(theta);
       const ys = P.B * Math.sin(theta);
-      const y = yc + ys;
+      const y  = yc + ys;
 
       cosArr[i]=yc; sinArr[i]=ys; sumArr[i]=y;
-
-      maxAbsAB = Math.max(maxAbsAB, Math.abs(yc), Math.abs(ys));
-      maxAbsSum = Math.max(maxAbsSum, Math.abs(y));
+      maxAB = Math.max(maxAB, Math.abs(yc), Math.abs(ys));
+      maxSum = Math.max(maxSum, Math.abs(y));
     }
 
-    // 1) cos+sin sur le même oscilloscope
     drawGrid(ctxAB);
-    drawMultiTrace(ctxAB, [
-      { data: cosArr, color: '#2563eb', width: 2.6 },
-      { data: sinArr, color: '#10b981', width: 2.6 },
-    ], maxAbsAB);
+    drawTraces(ctxAB, [
+      {data: cosArr, color:'#2563eb', width:2.4},
+      {data: sinArr, color:'#10b981', width:2.4},
+    ], maxAB);
 
-    // 2) somme à part
     drawGrid(ctxSum);
-    drawMultiTrace(ctxSum, [
-      { data: sumArr, color: '#111827', width: 3.0 },
-    ], maxAbsSum);
+    drawTraces(ctxSum, [
+      {data: sumArr, color:'#111827', width:2.8},
+    ], maxSum);
   }
 
   function resetTime(){ t = 0; last = performance.now(); }
 
-  // events
   Object.values(els).forEach(el => el.addEventListener('input', updateUI));
   resetBtn.addEventListener('click', resetTime);
   toggleBtn.addEventListener('click', () => {
@@ -337,7 +390,7 @@
   function loop(now){
     const dt = Math.min(0.033, Math.max(0, (now - last)/1000));
     last = now;
-    if (running) t += dt * timeScale; // ralentissement
+    if (running) t += dt * timeScale;
     render(t);
     requestAnimationFrame(loop);
   }
