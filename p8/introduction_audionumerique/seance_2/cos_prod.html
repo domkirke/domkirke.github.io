@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Battements — 2 sinus + somme</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --panel:#fff; --border:rgba(15,23,42,.14);
+      --grid:rgba(15,23,42,.08); --text:#0f172a; --muted:rgba(15,23,42,.65);
+      --a:#9aa3b2;        /* sinus 1 (gris) */
+      --b:#2563eb;        /* sinus 2 (bleu) */
+      --sum:#16a34a;      /* somme (vert) */
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; padding:16px;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg); color:var(--text);
+      display:flex; justify-content:center;
+    }
+    .card{
+      width:min(900px, 96vw);
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px;
+      box-shadow:0 10px 22px rgba(15,23,42,.06);
+    }
+    h1{ margin:0 0 10px; font-size:16px; }
+
+    .plots{ display:grid; grid-template-columns:1fr; gap:10px; }
+    canvas{
+      width:100%;
+      height:260px;
+      display:block;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:linear-gradient(180deg, rgba(15,23,42,.02), transparent);
+    }
+
+    .controls{ margin-top:10px; display:grid; gap:8px; }
+    .row{
+      display:grid;
+      grid-template-columns: 150px 1fr 210px;
+      gap:10px; align-items:center;
+    }
+    label{ color:var(--muted); font-size:13px; }
+    input[type="range"]{ width:100%; }
+    .val{
+      text-align:right;
+      font-variant-numeric:tabular-nums;
+      font-size:13px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    .legend{
+      margin-top:8px;
+      display:flex; gap:14px; flex-wrap:wrap;
+      color:var(--muted); font-size:13px;
+    }
+    .swatch{
+      display:inline-block; width:12px; height:12px; border-radius:3px;
+      margin-right:6px; vertical-align:-2px;
+      border:1px solid rgba(15,23,42,.18);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Battements : deux sinus de fréquences proches + somme</h1>
+
+    <div class="plots">
+      <canvas id="plot12"></canvas>
+      <canvas id="plotSum"></canvas>
+    </div>
+
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--a)"></span>y₁(x) = sin(f·x)</span>
+      <span><span class="swatch" style="background:var(--b)"></span>y₂(x) = sin((f+Δf)·x)</span>
+      <span><span class="swatch" style="background:var(--sum)"></span>y₁(x)+y₂(x)</span>
+      <span style="opacity:.9;">(x ∈ [0, 40π])</span>
+    </div>
+
+    <div class="controls">
+      <div class="row">
+        <label for="f">Fréquence de base f</label>
+        <input id="f" type="range" min="0.5" max="8" step="0.1" value="2.0" />
+        <div class="val" id="fVal"></div>
+      </div>
+
+      <div class="row">
+        <label for="df">Décalage fréquentiel Δf</label>
+        <input id="df" type="range" min="0.00" max="1.50" step="0.01" value="0.20" />
+        <div class="val" id="dfVal"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const c12 = document.getElementById('plot12');
+  const cS  = document.getElementById('plotSum');
+
+  const fEl  = document.getElementById('f');
+  const dfEl = document.getElementById('df');
+  const fVal = document.getElementById('fVal');
+  const dfVal= document.getElementById('dfVal');
+
+  const css = getComputedStyle(document.documentElement);
+  const COL_A = css.getPropertyValue('--a').trim();
+  const COL_B = css.getPropertyValue('--b').trim();
+  const COL_S = css.getPropertyValue('--sum').trim();
+
+  const XMAX = 40 * Math.PI; // domaine large pour voir l'enveloppe des battements
+
+  function setupHiDPI(canvas){
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const r = canvas.getBoundingClientRect();
+    canvas.width  = Math.round(r.width * dpr);
+    canvas.height = Math.round(r.height * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return ctx;
+  }
+
+  let ctx12 = setupHiDPI(c12);
+  let ctxS  = setupHiDPI(cS);
+
+  window.addEventListener('resize', () => {
+    ctx12 = setupHiDPI(c12);
+    ctxS  = setupHiDPI(cS);
+    drawAll();
+  });
+
+  const fmt = (n,d=2) => {
+    const x = Math.abs(n) < 1e-12 ? 0 : n;
+    return x.toFixed(d);
+  };
+
+  function drawGridAndAxes(ctx, w, h, pad, yRange, title){
+    const {L,R,T,B} = pad;
+    const x0=L, y0=T, pw=w-L-R, ph=h-T-B;
+    const yMid = y0 + ph/2;
+
+    // grille
+    ctx.save();
+    ctx.strokeStyle = 'rgba(15,23,42,0.07)';
+    ctx.lineWidth = 1;
+    const stepX = 70, stepY = 50;
+    for (let x=x0; x<=x0+pw; x+=stepX){ ctx.beginPath(); ctx.moveTo(x,y0); ctx.lineTo(x,y0+ph); ctx.stroke(); }
+    for (let y=y0; y<=y0+ph; y+=stepY){ ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(x0+pw,y); ctx.stroke(); }
+    ctx.restore();
+
+    // axes
+    ctx.save();
+    ctx.strokeStyle = 'rgba(15,23,42,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x0,yMid); ctx.lineTo(x0+pw,yMid);
+    ctx.moveTo(x0,y0);   ctx.lineTo(x0,y0+ph);
+    ctx.stroke();
+    ctx.restore();
+
+    // labels x (0, milieu, fin)
+    ctx.save();
+    ctx.fillStyle = 'rgba(15,23,42,0.65)';
+    ctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.fillText(String(yRange),  x0-20, y0+10);
+    ctx.fillText('0',             x0-14, yMid+4);
+    ctx.fillText(String(-yRange), x0-28, y0+ph-4);
+
+    ctx.fillText('0',  x0-3, y0+ph+20);
+    ctx.fillText('20π', x0 + pw/2 - 12, y0+ph+20);
+    ctx.fillText('40π', x0 + pw - 18, y0+ph+20);
+
+    // titre
+    ctx.fillStyle = 'rgba(15,23,42,0.75)';
+    ctx.fillText(title, x0+6, y0-4);
+    ctx.restore();
+
+    return {x0,y0,pw,ph};
+  }
+
+  function drawCurve(ctx, X, Y, color, fn){
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.8;
+    ctx.beginPath();
+    const N = 1600;
+    for (let i=0;i<=N;i++){
+      const x = (i/N)*XMAX;
+      const px = X(x);
+      const py = Y(fn(x));
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawAll(){
+    const f  = Number(fEl.value);
+    const df = Number(dfEl.value);
+    const f2 = f + df;
+
+    // indicateurs
+    fVal.textContent  = `f = ${fmt(f,1)}   →   f₂ = f+Δf = ${fmt(f2,2)}`;
+    dfVal.textContent = `Δf = ${fmt(df,2)}   (battements ~ période ≈ 2π/Δf)`;
+
+    const y1 = (x) => Math.sin(f * x);
+    const y2 = (x) => Math.sin((f + df) * x);
+    const ys = (x) => y1(x) + y2(x);
+
+    // --- plot des 2 sinusoïdes
+    {
+      const w = c12.getBoundingClientRect().width;
+      const h = c12.getBoundingClientRect().height;
+      ctx12.clearRect(0,0,w,h);
+
+      const pad = {L:46, R:16, T:18, B:34};
+      const {x0,y0,pw,ph} = drawGridAndAxes(ctx12, w, h, pad, 1, 'y₁ et y₂');
+
+      const X = (x) => x0 + (x / XMAX) * pw;
+      const Y = (v) => y0 + (1 - (v + 1)/2) * ph; // [-1,1]
+
+      drawCurve(ctx12, X, Y, 'rgba(120,130,150,0.90)', y1);
+      drawCurve(ctx12, X, Y, COL_B, y2);
+    }
+
+    // --- plot de la somme (battements)
+    {
+      const w = cS.getBoundingClientRect().width;
+      const h = cS.getBoundingClientRect().height;
+      ctxS.clearRect(0,0,w,h);
+
+      const pad = {L:46, R:16, T:18, B:34};
+      const {x0,y0,pw,ph} = drawGridAndAxes(ctxS, w, h, pad, 2, 'Somme : y₁ + y₂ (battements)');
+
+      const X = (x) => x0 + (x / XMAX) * pw;
+      const Y = (v) => y0 + (1 - (v + 2)/4) * ph; // [-2,2]
+
+      drawCurve(ctxS, X, Y, COL_S, ys);
+    }
+  }
+
+  fEl.addEventListener('input', drawAll);
+  dfEl.addEventListener('input', drawAll);
+  drawAll();
+})();
+</script>
+</body>
+</html>
