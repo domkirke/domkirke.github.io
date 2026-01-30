@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deux haut-parleurs — décalage d’onde</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --panel:#fff; --border:rgba(15,23,42,.14);
+      --grid:rgba(15,23,42,.08); --text:#0f172a; --muted:rgba(15,23,42,.65);
+      --s1:#9aa3b2; --s2:#2563eb; --sum:#16a34a; --accent:#7c3aed;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; padding:14px;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg); color:var(--text);
+    }
+    .wrap{ width:min(980px, 98vw); margin:0 auto; }
+    h1{ margin:0 0 10px; font-size:16px; }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap:10px;
+      align-items:start;
+    }
+    @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+      box-shadow:0 10px 22px rgba(15,23,42,.06);
+    }
+    canvas{
+      width:100%;
+      height:360px;
+      display:block;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:linear-gradient(180deg, rgba(15,23,42,.02), transparent);
+      touch-action:none; /* drag sur mobile */
+    }
+    .controls{
+      margin-top:10px;
+      display:grid;
+      gap:8px;
+    }
+    .row{
+      display:grid;
+      grid-template-columns: 140px 1fr 200px;
+      gap:10px;
+      align-items:center;
+    }
+    label{ color:var(--muted); font-size:13px; }
+    input[type="range"]{ width:100%; }
+    .val{
+      text-align:right;
+      font-variant-numeric: tabular-nums;
+      font-size:13px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .stats{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:13px;
+      font-variant-numeric: tabular-nums;
+      display:grid;
+      gap:4px;
+    }
+    .legend{
+      margin-top:8px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .swatch{
+      display:inline-block; width:12px; height:12px; border-radius:3px;
+      margin-right:6px; vertical-align:-2px;
+      border:1px solid rgba(15,23,42,.18);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Simulation : 2 haut-parleurs + personnage déplaçable + décalage de phase</h1>
+
+    <div class="grid">
+      <div class="card">
+        <canvas id="space" aria-label="Espace avec 2 haut-parleurs et un personnage"></canvas>
+        <div class="stats" id="stats"></div>
+        <div class="controls">
+          <div class="row">
+            <label for="freq">Fréquence f (Hz)</label>
+            <input id="freq" type="range" min="50" max="1200" step="1" value="220" />
+            <div class="val" id="freqVal"></div>
+          </div>
+          <div class="row">
+            <label for="scale">Échelle (px/m)</label>
+            <input id="scale" type="range" min="60" max="180" step="1" value="110" />
+            <div class="val" id="scaleVal"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <canvas id="plot" aria-label="Graph des deux ondes au personnage"></canvas>
+        <div class="legend">
+          <span><span class="swatch" style="background:var(--s1)"></span>onde reçue S1</span>
+          <span><span class="swatch" style="background:var(--s2)"></span>onde reçue S2</span>
+          <span><span class="swatch" style="background:var(--sum)"></span>somme</span>
+        </div>
+        <div class="stats" id="stats2"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const space = document.getElementById('space');
+  const plot  = document.getElementById('plot');
+
+  const freqEl = document.getElementById('freq');
+  const scaleEl= document.getElementById('scale');
+  const freqVal= document.getElementById('freqVal');
+  const scaleVal=document.getElementById('scaleVal');
+
+  const statsEl = document.getElementById('stats');
+  const stats2El= document.getElementById('stats2');
+
+  const css = getComputedStyle(document.documentElement);
+  const COL1 = css.getPropertyValue('--s1').trim();
+  const COL2 = css.getPropertyValue('--s2').trim();
+  const COLS = css.getPropertyValue('--sum').trim();
+  const GRID = css.getPropertyValue('--grid').trim();
+  const TXT  = css.getPropertyValue('--text').trim();
+  const MUT  = css.getPropertyValue('--muted').trim();
+  const ACC  = css.getPropertyValue('--accent').trim();
+
+  const C = 343; // vitesse du son (m/s)
+
+  function setupHiDPI(canvas){
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const r = canvas.getBoundingClientRect();
+    canvas.width  = Math.round(r.width * dpr);
+    canvas.height = Math.round(r.height * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return ctx;
+  }
+
+  let sctx = setupHiDPI(space);
+  let pctx = setupHiDPI(plot);
+  window.addEventListener('resize', () => {
+    sctx = setupHiDPI(space);
+    pctx = setupHiDPI(plot);
+    drawAll();
+  });
+
+  const state = {
+    f: Number(freqEl.value),
+    pxPerM: Number(scaleEl.value),
+    // positions en pixels (dans le canvas space)
+    s1: { x: 130, y: 190 },
+    s2: { x: 430, y: 190 },
+    listener: { x: 280, y: 220 },
+    dragging: false
+  };
+
+  const fmt = (n,d=3) => {
+    const x = Math.abs(n) < 1e-12 ? 0 : n;
+    return x.toFixed(d);
+  };
+  const clamp = (v,a,b) => Math.max(a, Math.min(b,v));
+
+  function distPx(a,b){
+    const dx=a.x-b.x, dy=a.y-b.y;
+    return Math.hypot(dx,dy);
+  }
+
+  function phaseWrapPi(phi){
+    // ramène dans [-π, π]
+    phi = ((phi + Math.PI) % (2*Math.PI) + (2*Math.PI)) % (2*Math.PI) - Math.PI;
+    return phi;
+  }
+
+  function compute(){
+    const d1m = distPx(state.s1, state.listener) / state.pxPerM;
+    const d2m = distPx(state.s2, state.listener) / state.pxPerM;
+    const ddm = d2m - d1m;
+    const dt  = ddm / C;                     // retard (s) entre arrivées
+    const phi = 2*Math.PI * state.f * dt;    // décalage de phase (rad), signé
+    const phiW= phaseWrapPi(phi);
+
+    // amplitude théorique de la somme de 2 sinusoïdes de même amplitude:
+    // y1+y2 = 2 cos(phi/2) * sin(...)
+    const gain = 2 * Math.cos(phi/2);
+    const gainAbs = Math.abs(gain);
+
+    return { d1m,d2m,ddm,dt,phi,phiW,gain,gainAbs };
+  }
+
+  function drawGrid(ctx,w,h,step=50){
+    ctx.save();
+    ctx.strokeStyle = GRID;
+    ctx.lineWidth = 1;
+    for(let x=0;x<=w;x+=step){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+    for(let y=0;y<=h;y+=step){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+    ctx.restore();
+  }
+
+  function drawSpace(){
+    const w = space.getBoundingClientRect().width;
+    const h = space.getBoundingClientRect().height;
+    sctx.clearRect(0,0,w,h);
+    drawGrid(sctx,w,h,55);
+
+    // murs / zone
+    sctx.save();
+    sctx.strokeStyle = 'rgba(15,23,42,0.18)';
+    sctx.lineWidth = 2;
+    sctx.strokeRect(10,10,w-20,h-20);
+    sctx.restore();
+
+    // lignes vers le personnage
+    sctx.save();
+    sctx.lineWidth = 2.5;
+
+    sctx.strokeStyle = 'rgba(154,163,178,0.55)';
+    sctx.beginPath(); sctx.moveTo(state.s1.x,state.s1.y); sctx.lineTo(state.listener.x,state.listener.y); sctx.stroke();
+
+    sctx.strokeStyle = 'rgba(37,99,235,0.55)';
+    sctx.beginPath(); sctx.moveTo(state.s2.x,state.s2.y); sctx.lineTo(state.listener.x,state.listener.y); sctx.stroke();
+    sctx.restore();
+
+    // haut-parleurs
+    function drawSpeaker(p, label, color){
+      sctx.save();
+      sctx.fillStyle = color;
+      sctx.strokeStyle = 'rgba(15,23,42,0.25)';
+      sctx.lineWidth = 2;
+      sctx.beginPath(); sctx.arc(p.x,p.y,14,0,Math.PI*2); sctx.fill(); sctx.stroke();
+
+      sctx.fillStyle = TXT;
+      sctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+      sctx.fillText(label, p.x-10, p.y-20);
+      sctx.restore();
+    }
+    drawSpeaker(state.s1, "S1", COL1);
+    drawSpeaker(state.s2, "S2", COL2);
+
+    // personnage (déplaçable)
+    sctx.save();
+    sctx.fillStyle = ACC;
+    sctx.strokeStyle = 'rgba(15,23,42,0.25)';
+    sctx.lineWidth = 2;
+    sctx.beginPath(); sctx.arc(state.listener.x,state.listener.y,10,0,Math.PI*2); sctx.fill(); sctx.stroke();
+
+    sctx.fillStyle = TXT;
+    sctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    sctx.fillText("Vous", state.listener.x+12, state.listener.y+4);
+    sctx.fillStyle = MUT;
+    sctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    sctx.fillText("glisser-déposer", 14, 24);
+    sctx.restore();
+
+    // petit repère d'échelle
+    const barM = 1;
+    const barPx = barM * state.pxPerM;
+    sctx.save();
+    sctx.strokeStyle = 'rgba(15,23,42,0.35)';
+    sctx.lineWidth = 3;
+    sctx.beginPath();
+    sctx.moveTo(18, h-20);
+    sctx.lineTo(18+barPx, h-20);
+    sctx.stroke();
+    sctx.fillStyle = MUT;
+    sctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    sctx.fillText("1 m", 18, h-26);
+    sctx.restore();
+  }
+
+  function drawPlot(){
+    const w = plot.getBoundingClientRect().width;
+    const h = plot.getBoundingClientRect().height;
+    pctx.clearRect(0,0,w,h);
+    drawGrid(pctx,w,h,55);
+
+    const pad = {L:44, R:14, T:16, B:30};
+    const x0=pad.L, y0=pad.T, pw=w-pad.L-pad.R, ph=h-pad.T-pad.B;
+    const yMid = y0 + ph/2;
+
+    // axes
+    pctx.save();
+    pctx.strokeStyle = 'rgba(15,23,42,0.25)';
+    pctx.lineWidth = 1.5;
+    pctx.beginPath();
+    pctx.moveTo(x0, yMid); pctx.lineTo(x0+pw, yMid);
+    pctx.moveTo(x0, y0);   pctx.lineTo(x0, y0+ph);
+    pctx.stroke();
+    pctx.restore();
+
+    const {dt, phiW} = compute();
+    const f = state.f;
+
+    // Fenêtre temporelle affichée (en secondes)
+    // On choisit ~6 périodes si possible, sinon un max de 20 ms.
+    const T = 1 / f;
+    const tSpan = Math.min(0.020, Math.max(6*T, 0.006)); // 6ms à 20ms
+    const tMin = 0, tMax = tSpan;
+
+    const X = (t) => x0 + ((t - tMin)/(tMax - tMin)) * pw;
+
+    // amplitude plot: on met [-2.2, 2.2] pour voir la somme
+    const A = 2.2;
+    const Y = (v) => y0 + (1 - (v + A) / (2*A)) * ph;
+
+    // ondes au point d'écoute: y1=sin(2π f t), y2=sin(2π f (t - dt))
+    const y1 = (t) => Math.sin(2*Math.PI*f*t);
+    const y2 = (t) => Math.sin(2*Math.PI*f*(t - dt));
+    const ys = (t) => y1(t) + y2(t);
+
+    function curve(color, fn, width=2.6){
+      pctx.save();
+      pctx.strokeStyle = color;
+      pctx.lineWidth = width;
+      pctx.beginPath();
+      const N = 900;
+      for(let i=0;i<=N;i++){
+        const t = tMin + (i/N)*(tMax-tMin);
+        const x = X(t);
+        const y = Y(fn(t));
+        if(i===0) pctx.moveTo(x,y); else pctx.lineTo(x,y);
+      }
+      pctx.stroke();
+      pctx.restore();
+    }
+
+    curve('rgba(120,130,150,0.9)', y1, 2.4);
+    curve(COL2, y2, 2.6);
+    curve(COLS, ys, 3.0);
+
+    // annotation dt / phi
+    pctx.save();
+    pctx.fillStyle = MUT;
+    pctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    const ms = dt*1000;
+    pctx.fillText(`Δt = ${fmt(ms,3)} ms`, x0+6, y0-2);
+    pctx.fillText(`Δφ (wrap) = ${fmt(phiW,3)} rad = ${fmt(phiW*180/Math.PI,1)}°`, x0+6, y0+14);
+
+    // repère t (0, milieu, fin)
+    pctx.fillText('t', x0+pw+6, yMid+4);
+    pctx.fillText('0', x0-3, y0+ph+20);
+    pctx.fillText(`${fmt((tMax*1000)/2,1)} ms`, x0+pw/2-18, y0+ph+20);
+    pctx.fillText(`${fmt(tMax*1000,1)} ms`, x0+pw-22, y0+ph+20);
+    pctx.restore();
+  }
+
+  function updateText(){
+    freqVal.textContent = `f = ${fmt(state.f,0)} Hz`;
+    scaleVal.textContent = `${fmt(state.pxPerM,0)} px/m`;
+
+    const {d1m,d2m,ddm,dt,phiW,gainAbs} = compute();
+    statsEl.innerHTML = `
+      <div>d(S1→Vous) = <b>${fmt(d1m,3)}</b> m &nbsp;&nbsp; d(S2→Vous) = <b>${fmt(d2m,3)}</b> m</div>
+      <div>Δd = d2 − d1 = <b>${fmt(ddm,3)}</b> m &nbsp;&nbsp; Δt = <b>${fmt(dt*1000,3)}</b> ms</div>
+    `;
+    stats2El.innerHTML = `
+      <div>Δφ = 2π f Δt (ramené dans [-π,π]) = <b>${fmt(phiW,3)}</b> rad = <b>${fmt(phiW*180/Math.PI,1)}</b>°</div>
+      <div>Amplitude relative de la somme ≈ |2·cos(Δφ/2)| = <b>${fmt(gainAbs,3)}</b> (max 2, min 0)</div>
+    `;
+  }
+
+  function drawAll(){
+    updateText();
+    drawSpace();
+    drawPlot();
+  }
+
+  // Interaction: drag du personnage
+  function canvasPosFromEvent(ev){
+    const r = space.getBoundingClientRect();
+    const x = (ev.clientX - r.left);
+    const y = (ev.clientY - r.top);
+    return {x,y};
+  }
+  function hitListener(p){
+    const dx = p.x - state.listener.x;
+    const dy = p.y - state.listener.y;
+    return (dx*dx + dy*dy) <= (14*14);
+  }
+
+  space.addEventListener('pointerdown', (ev) => {
+    const p = canvasPosFromEvent(ev);
+    if (hitListener(p)) {
+      state.dragging = true;
+      space.setPointerCapture(ev.pointerId);
+    }
+  });
+
+  space.addEventListener('pointermove', (ev) => {
+    if (!state.dragging) return;
+    const r = space.getBoundingClientRect();
+    const p = canvasPosFromEvent(ev);
+
+    // garder dans le cadre
+    const margin = 20;
+    state.listener.x = clamp(p.x, margin, r.width - margin);
+    state.listener.y = clamp(p.y, margin, r.height - margin);
+
+    drawAll();
+  });
+
+  space.addEventListener('pointerup', () => { state.dragging = false; });
+  space.addEventListener('pointercancel', () => { state.dragging = false; });
+
+  // Sliders
+  freqEl.addEventListener('input', () => { state.f = Number(freqEl.value); drawAll(); });
+  scaleEl.addEventListener('input', () => { state.pxPerM = Number(scaleEl.value); drawAll(); });
+
+  // init
+  drawAll();
+})();
+</script>
+</body>
+</html>
