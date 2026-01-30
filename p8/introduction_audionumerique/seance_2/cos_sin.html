@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sinus & Cosinus</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --panel:#ffffff;
+      --border: rgba(15, 23, 42, 0.12);
+      --grid: rgba(15, 23, 42, 0.07);
+      --text:#0f172a;
+      --muted: rgba(15, 23, 42, 0.68);
+
+      --cos:#0284c7;   /* bleu */
+      --sin:#e11d48;   /* rose/rouge */
+      --accent:#7c3aed;/* violet */
+    }
+
+    * { box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap{
+      width: 960px;          /* cible 960x700 */
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 10px 12px 14px;
+    }
+
+    h1{
+      margin: 2px 0 8px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .card{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      box-shadow: 0 8px 18px rgba(15,23,42,0.06);
+    }
+
+    .controls{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .row{
+      display: grid;
+      grid-template-columns: 140px 1fr 90px;
+      gap: 10px;
+      align-items: center;
+    }
+    label{ color: var(--muted); font-size: 12.5px; }
+    input[type="range"]{ width: 100%; }
+    .value{
+      text-align:right;
+      font-variant-numeric: tabular-nums;
+      font-size: 12.5px;
+      color: var(--text);
+    }
+
+    .buttons{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+    button{
+      border: 1px solid var(--border);
+      background: #f2f4f8;
+      color: var(--text);
+      padding: 7px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button:hover{ background:#e9edf6; }
+    button.primary{
+      border-color: rgba(124,58,237,0.35);
+      background: rgba(124,58,237,0.10);
+    }
+    .badge{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* Canvas: hauteur pensée pour tenir dans 700px avec contrôles + marges */
+    canvas{
+      width:100%;
+      height: 360px;
+      display:block;
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(15,23,42,0.02), rgba(15,23,42,0.00));
+      border: 1px solid var(--border);
+    }
+
+    .math{
+      margin-top: 8px;
+      display: grid;
+      gap: 4px;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+    .math b{ color: var(--text); font-weight: 700; }
+
+    .legend{
+      display:flex;
+      gap: 12px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12.5px;
+      flex-wrap: wrap;
+    }
+    .dot{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align: -1px; }
+    .dot.cos{ background: var(--cos); }
+    .dot.sin{ background: var(--sin); }
+    .dot.acc{ background: var(--accent); }
+
+    /* si viewport plus petit, on empile */
+    @media (max-width: 880px){
+      .wrap{ width: 100%; }
+      .grid{ grid-template-columns: 1fr; }
+      canvas{ height: 330px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>Sinus & Cosinus — cercle trigonométrique + courbes (light)</h1>
+
+    <div class="card controls">
+      <div class="row">
+        <label for="angle">Angle θ (degrés)</label>
+        <input id="angle" type="range" min="0" max="360" value="45" step="1" />
+        <div class="value" id="angleVal">45°</div>
+      </div>
+
+      <div class="row">
+        <label for="radius">Rayon r</label>
+        <input id="radius" type="range" min="60" max="170" value="130" step="1" />
+        <div class="value" id="radiusVal">130</div>
+      </div>
+
+      <div class="row">
+        <label for="speed">Vitesse (°/s)</label>
+        <input id="speed" type="range" min="5" max="180" value="45" step="1" />
+        <div class="value" id="speedVal">45</div>
+      </div>
+
+      <div class="buttons">
+        <button class="primary" id="toggle">Animer</button>
+        <button id="reset">Reset (θ=0°)</button>
+        <span class="badge">Animation linéaire : θ(t) augmente à vitesse constante</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <canvas id="circle"></canvas>
+        <div class="math" id="math"></div>
+        <div class="legend">
+          <span><span class="dot cos"></span>x = r·cos(θ)</span>
+          <span><span class="dot sin"></span>y = r·sin(θ)</span>
+          <span><span class="dot acc"></span>rayon & angle</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <canvas id="plot"></canvas>
+        <div class="legend">
+          <span><span class="dot cos"></span>cos(θ)</span>
+          <span><span class="dot sin"></span>sin(θ)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const angleEl  = document.getElementById('angle');
+  const radiusEl = document.getElementById('radius');
+  const speedEl  = document.getElementById('speed');
+
+  const angleVal  = document.getElementById('angleVal');
+  const radiusVal = document.getElementById('radiusVal');
+  const speedVal  = document.getElementById('speedVal');
+
+  const toggleBtn = document.getElementById('toggle');
+  const resetBtn  = document.getElementById('reset');
+
+  const circleCanvas = document.getElementById('circle');
+  const plotCanvas   = document.getElementById('plot');
+  const mathEl       = document.getElementById('math');
+
+  const css = getComputedStyle(document.documentElement);
+  const COS = css.getPropertyValue('--cos').trim();
+  const SIN = css.getPropertyValue('--sin').trim();
+  const ACC = css.getPropertyValue('--accent').trim();
+  const GRID= css.getPropertyValue('--grid').trim();
+  const TXT = css.getPropertyValue('--text').trim();
+  const MUT = css.getPropertyValue('--muted').trim();
+
+  function setupHiDPI(canvas){
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const rect = canvas.getBoundingClientRect();
+    canvas.width  = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return ctx;
+  }
+
+  let circleCtx = setupHiDPI(circleCanvas);
+  let plotCtx   = setupHiDPI(plotCanvas);
+
+  window.addEventListener('resize', () => {
+    circleCtx = setupHiDPI(circleCanvas);
+    plotCtx   = setupHiDPI(plotCanvas);
+    drawAll();
+  });
+
+  const state = {
+    angleDeg: Number(angleEl.value),
+    radius: Number(radiusEl.value),
+    speedDegPerSec: Number(speedEl.value),
+    anim: false,
+    lastT: null
+  };
+
+  const degToRad = (deg) => deg * Math.PI / 180;
+
+  function fmt(n, digits=3){
+    const x = Math.abs(n) < 1e-12 ? 0 : n;
+    return x.toFixed(digits);
+  }
+
+  function updateUI(){
+    angleVal.textContent  = `${Math.round(state.angleDeg)}°`;
+    radiusVal.textContent = `${Math.round(state.radius)}`;
+    speedVal.textContent  = `${Math.round(state.speedDegPerSec)}`;
+
+    const th = degToRad(state.angleDeg);
+    const x = state.radius * Math.cos(th);
+    const y = state.radius * Math.sin(th);
+
+    mathEl.innerHTML = `
+      <div>θ = <b>${fmt(th,3)}</b> rad = <b>${Math.round(state.angleDeg)}°</b></div>
+      <div>cos(θ) = <b>${fmt(Math.cos(th),3)}</b> &nbsp;&nbsp; sin(θ) = <b>${fmt(Math.sin(th),3)}</b></div>
+      <div>x = r·cos(θ) = <b>${fmt(x,1)}</b> &nbsp;&nbsp; y = r·sin(θ) = <b>${fmt(y,1)}</b></div>
+    `;
+  }
+
+  function clear(ctx,w,h){ ctx.clearRect(0,0,w,h); }
+
+  function drawGrid(ctx,w,h,step=45){
+    ctx.save();
+    ctx.strokeStyle = GRID;
+    ctx.lineWidth = 1;
+    for(let x=0;x<=w;x+=step){
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+    }
+    for(let y=0;y<=h;y+=step){
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawCirclePanel(){
+    const ctx = circleCtx;
+    const w = circleCanvas.getBoundingClientRect().width;
+    const h = circleCanvas.getBoundingClientRect().height;
+
+    clear(ctx,w,h);
+    drawGrid(ctx,w,h,48);
+
+    // centre un peu bas pour laisser place à l'arc d'angle
+    const cx = w*0.5;
+    const cy = h*0.56;
+    const r  = state.radius;
+
+    // axes
+    ctx.save();
+    ctx.strokeStyle = 'rgba(15,23,42,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0,cy); ctx.lineTo(w,cy);
+    ctx.moveTo(cx,0); ctx.lineTo(cx,h);
+    ctx.stroke();
+    ctx.restore();
+
+    // cercle
+    ctx.save();
+    ctx.strokeStyle = 'rgba(15,23,42,0.28)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+
+    const theta = degToRad(state.angleDeg);
+    const px = cx + r*Math.cos(theta);
+    const py = cy - r*Math.sin(theta); // y inversé
+
+    // petit arc d'angle
+    ctx.save();
+    ctx.strokeStyle = ACC;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(cx,cy,Math.min(48, r*0.42), 0, -theta, true);
+    ctx.stroke();
+    ctx.restore();
+
+    // rayon
+    ctx.save();
+    ctx.strokeStyle = ACC;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(px,py);
+    ctx.stroke();
+    ctx.restore();
+
+    // projections pointillées
+    ctx.save();
+    ctx.setLineDash([6,6]);
+    ctx.lineWidth = 2.5;
+
+    ctx.strokeStyle = COS;
+    ctx.beginPath();
+    ctx.moveTo(px,py); ctx.lineTo(px,cy);
+    ctx.stroke();
+
+    ctx.strokeStyle = SIN;
+    ctx.beginPath();
+    ctx.moveTo(px,py); ctx.lineTo(cx,py);
+    ctx.stroke();
+
+    ctx.restore();
+
+    // segments sur axes (x et y)
+    ctx.save();
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+
+    ctx.strokeStyle = COS;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(px,cy);
+    ctx.stroke();
+
+    ctx.strokeStyle = SIN;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(cx,py);
+    ctx.stroke();
+    ctx.restore();
+
+    // point M
+    ctx.save();
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(px,py,6,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    // labels
+    ctx.save();
+    ctx.fillStyle = MUT;
+    ctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.fillText('x', w-14, cy-8);
+    ctx.fillText('y', cx+8, 14);
+
+    ctx.fillStyle = TXT;
+    ctx.fillText('O', cx+6, cy+16);
+    ctx.fillText('M', px+8, py-8);
+    ctx.restore();
+  }
+
+  function drawPlotPanel(){
+    const ctx = plotCtx;
+    const w = plotCanvas.getBoundingClientRect().width;
+    const h = plotCanvas.getBoundingClientRect().height;
+
+    clear(ctx,w,h);
+    drawGrid(ctx,w,h,48);
+
+    const padL=46, padR=14, padT=16, padB=30;
+    const x0=padL, y0=padT;
+    const pw=w-padL-padR;
+    const ph=h-padT-padB;
+    const yMid = y0 + ph/2;
+
+    // axes
+    ctx.save();
+    ctx.strokeStyle = 'rgba(15,23,42,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x0,yMid); ctx.lineTo(x0+pw,yMid);
+    ctx.moveTo(x0,y0);   ctx.lineTo(x0,y0+ph);
+    ctx.stroke();
+    ctx.restore();
+
+    const X = (t) => x0 + (t/(2*Math.PI))*pw;
+    const Y = (v) => y0 + (1 - (v+1)/2)*ph;
+
+    function plot(color, fn){
+      ctx.save();
+      ctx.strokeStyle=color;
+      ctx.lineWidth=3;
+      ctx.beginPath();
+      const N = Math.max(240, Math.floor(pw*1.3));
+      for(let i=0;i<=N;i++){
+        const t = (i/N)*(2*Math.PI);
+        const x = X(t);
+        const y = Y(fn(t));
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    plot(COS, Math.cos);
+    plot(SIN, Math.sin);
+
+    // marqueur angle
+    const theta = degToRad(state.angleDeg) % (2*Math.PI);
+    const mx = X(theta);
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(124,58,237,0.45)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6,6]);
+    ctx.beginPath();
+    ctx.moveTo(mx,y0); ctx.lineTo(mx,y0+ph);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    function dot(x,y,color){
+      ctx.save();
+      ctx.fillStyle=color;
+      ctx.beginPath();
+      ctx.arc(x,y,5.5,0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    dot(mx, Y(Math.cos(theta)), COS);
+    dot(mx, Y(Math.sin(theta)), SIN);
+
+    // labels
+    ctx.save();
+    ctx.fillStyle = MUT;
+    ctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.fillText('1',  x0-16, Y(1)+4);
+    ctx.fillText('0',  x0-16, Y(0)+4);
+    ctx.fillText('-1', x0-22, Y(-1)+4);
+
+    ctx.fillText('0',  X(0)-3, y0+ph+20);
+    ctx.fillText('π',  X(Math.PI)-4, y0+ph+20);
+    ctx.fillText('2π', X(2*Math.PI)-13, y0+ph+20);
+    ctx.restore();
+  }
+
+  function drawAll(){
+    updateUI();
+    drawCirclePanel();
+    drawPlotPanel();
+  }
+
+  angleEl.addEventListener('input', () => { state.angleDeg = Number(angleEl.value); drawAll(); });
+  radiusEl.addEventListener('input', () => { state.radius   = Number(radiusEl.value); drawAll(); });
+  speedEl.addEventListener('input', () => { state.speedDegPerSec = Number(speedEl.value); drawAll(); });
+
+  toggleBtn.addEventListener('click', () => {
+    state.anim = !state.anim;
+    toggleBtn.textContent = state.anim ? 'Stop' : 'Animer';
+    state.lastT = null;
+    if(state.anim) requestAnimationFrame(tick);
+  });
+
+  resetBtn.addEventListener('click', () => {
+    state.angleDeg = 0;
+    angleEl.value = '0';
+    drawAll();
+  });
+
+  function tick(t){
+    if(!state.anim) return;
+    if(state.lastT==null) state.lastT=t;
+    const dt = (t - state.lastT)/1000;
+    state.lastT = t;
+
+    state.angleDeg = (state.angleDeg + state.speedDegPerSec * dt) % 360;
+    angleEl.value = String(state.angleDeg);
+    drawAll();
+
+    requestAnimationFrame(tick);
+  }
+
+  drawAll();
+})();
+</script>
+</body>
+</html>
