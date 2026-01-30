@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Applet — Angle sur un cercle</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --panel:#fff; --border:rgba(15,23,42,.14);
+      --grid:rgba(15,23,42,.08); --text:#0f172a; --muted:rgba(15,23,42,.65);
+      --accent:#7c3aed;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg); color:var(--text);
+      display:flex; justify-content:center; padding:16px;
+    }
+    .card{
+      width:min(520px, 95vw);
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px;
+      box-shadow:0 10px 22px rgba(15,23,42,.06);
+    }
+    h1{ margin:0 0 10px; font-size:16px; }
+    canvas{
+      width:100%; height:360px; display:block;
+      border:1px solid var(--border); border-radius:10px;
+      background:linear-gradient(180deg, rgba(15,23,42,.02), transparent);
+    }
+    .row{
+      margin-top:10px;
+      display:grid; grid-template-columns: 110px 1fr 120px;
+      gap:10px; align-items:center;
+    }
+    label{ color:var(--muted); font-size:13px; }
+    input[type="range"]{ width:100%; }
+    .val{
+      text-align:right;
+      font-variant-numeric:tabular-nums;
+      color:var(--text);
+      font-size:13px;
+      line-height:1.25;
+    }
+    .val div:last-child{ color:var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Angle θ sur un cercle</h1>
+    <canvas id="c"></canvas>
+
+    <div class="row">
+      <label for="angle">Angle θ</label>
+      <input id="angle" type="range" min="0" max="360" value="45" step="1">
+      <div class="val" id="val"></div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('c');
+  const angleEl = document.getElementById('angle');
+  const valEl = document.getElementById('val');
+
+  function setupHiDPI() {
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // unités en px CSS
+    return ctx;
+  }
+
+  let ctx = setupHiDPI();
+  window.addEventListener('resize', () => { ctx = setupHiDPI(); draw(); });
+
+  function degToRad(deg){ return deg * Math.PI / 180; }
+  function fmt(n, d=3){
+    const x = Math.abs(n) < 1e-12 ? 0 : n;
+    return x.toFixed(d);
+  }
+
+  function draw() {
+    const w = canvas.getBoundingClientRect().width;
+    const h = canvas.getBoundingClientRect().height;
+    ctx.clearRect(0, 0, w, h);
+
+    // paramètres
+    const angleDeg = Number(angleEl.value);
+    const theta = degToRad(angleDeg);
+
+    // affichage texte
+    valEl.innerHTML = `
+      <div>${Math.round(angleDeg)}°</div>
+      <div>${fmt(theta, 3)} rad</div>
+    `;
+
+    // centre & rayon
+    const cx = w * 0.5;
+    const cy = h * 0.55;
+    const r = Math.min(w, h) * 0.38;
+
+    // grille légère
+    ctx.save();
+    ctx.strokeStyle = 'rgba(15,23,42,0.08)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= w; x += 50) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+    for (let y = 0; y <= h; y += 50) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+    ctx.restore();
+
+    // axes
+    ctx.save();
+    ctx.strokeStyle = 'rgba(15,23,42,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, cy); ctx.lineTo(w, cy);
+    ctx.moveTo(cx, 0); ctx.lineTo(cx, h);
+    ctx.stroke();
+    ctx.restore();
+
+    // cercle
+    ctx.save();
+    ctx.strokeStyle = 'rgba(15,23,42,0.30)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // point sur le cercle (attention: y vers le bas en canvas)
+    const px = cx + r * Math.cos(theta);
+    const py = cy - r * Math.sin(theta);
+
+    // arc d'angle
+    ctx.save();
+    ctx.strokeStyle = '#7c3aed';
+    ctx.lineWidth = 4;
+    const arcR = Math.min(48, r * 0.45);
+    ctx.beginPath();
+    ctx.arc(cx, cy, arcR, 0, -theta, true);
+    ctx.stroke();
+    ctx.restore();
+
+    // rayon
+    ctx.save();
+    ctx.strokeStyle = '#7c3aed';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(px, py);
+    ctx.stroke();
+    ctx.restore();
+
+    // point
+    ctx.save();
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(px, py, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // labels
+    ctx.save();
+    ctx.fillStyle = 'rgba(15,23,42,0.65)';
+    ctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.fillText('x', w - 14, cy - 8);
+    ctx.fillText('y', cx + 8, 14);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillText('O', cx + 6, cy + 16);
+    ctx.fillText('M', px + 8, py - 8);
+    ctx.restore();
+  }
+
+  angleEl.addEventListener('input', draw);
+  draw();
+})();
+</script>
+</body>
+</html>
