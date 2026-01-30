@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Battements — 2 sinus + somme</title>
+  <title>Battements — 2 sinus + somme + enveloppe</title>
   <style>
     :root{
       --bg:#f6f7fb; --panel:#fff; --border:rgba(15,23,42,.14);
@@ -11,6 +11,7 @@
       --a:#9aa3b2;        /* sinus 1 (gris) */
       --b:#2563eb;        /* sinus 2 (bleu) */
       --sum:#16a34a;      /* somme (vert) */
+      --env:#f59e0b;      /* enveloppe (orange) */
     }
     *{ box-sizing:border-box; }
     body{
@@ -42,7 +43,7 @@
     .controls{ margin-top:10px; display:grid; gap:8px; }
     .row{
       display:grid;
-      grid-template-columns: 150px 1fr 210px;
+      grid-template-columns: 150px 1fr 260px;
       gap:10px; align-items:center;
     }
     label{ color:var(--muted); font-size:13px; }
@@ -69,7 +70,7 @@
 </head>
 <body>
   <div class="card">
-    <h1>Battements : deux sinus de fréquences proches + somme</h1>
+    <h1>Battements : deux sinus de fréquences proches + somme + enveloppe</h1>
 
     <div class="plots">
       <canvas id="plot12"></canvas>
@@ -79,7 +80,8 @@
     <div class="legend">
       <span><span class="swatch" style="background:var(--a)"></span>y₁(x) = sin(f·x)</span>
       <span><span class="swatch" style="background:var(--b)"></span>y₂(x) = sin((f+Δf)·x)</span>
-      <span><span class="swatch" style="background:var(--sum)"></span>y₁(x)+y₂(x)</span>
+      <span><span class="swatch" style="background:var(--sum)"></span>y₁+y₂</span>
+      <span><span class="swatch" style="background:var(--env)"></span>enveloppe ±2·cos(Δf·x/2)</span>
       <span style="opacity:.9;">(x ∈ [0, 40π])</span>
     </div>
 
@@ -112,8 +114,9 @@
   const COL_A = css.getPropertyValue('--a').trim();
   const COL_B = css.getPropertyValue('--b').trim();
   const COL_S = css.getPropertyValue('--sum').trim();
+  const COL_E = css.getPropertyValue('--env').trim();
 
-  const XMAX = 40 * Math.PI; // domaine large pour voir l'enveloppe des battements
+  const XMAX = 40 * Math.PI; // domaine large pour voir l'enveloppe
 
   function setupHiDPI(canvas){
     const dpr = Math.max(1, window.devicePixelRatio || 1);
@@ -163,7 +166,7 @@
     ctx.stroke();
     ctx.restore();
 
-    // labels x (0, milieu, fin)
+    // labels
     ctx.save();
     ctx.fillStyle = 'rgba(15,23,42,0.65)';
     ctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
@@ -171,11 +174,10 @@
     ctx.fillText('0',             x0-14, yMid+4);
     ctx.fillText(String(-yRange), x0-28, y0+ph-4);
 
-    ctx.fillText('0',  x0-3, y0+ph+20);
+    ctx.fillText('0',   x0-3, y0+ph+20);
     ctx.fillText('20π', x0 + pw/2 - 12, y0+ph+20);
     ctx.fillText('40π', x0 + pw - 18, y0+ph+20);
 
-    // titre
     ctx.fillStyle = 'rgba(15,23,42,0.75)';
     ctx.fillText(title, x0+6, y0-4);
     ctx.restore();
@@ -183,10 +185,14 @@
     return {x0,y0,pw,ph};
   }
 
-  function drawCurve(ctx, X, Y, color, fn){
+  function drawCurve(ctx, X, Y, color, fn, opt={}){
+    const {dash=null, width=2.8, alpha=1} = opt;
     ctx.save();
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2.8;
+    ctx.globalAlpha = alpha;
+    ctx.lineWidth = width;
+    if (dash) ctx.setLineDash(dash);
+
     ctx.beginPath();
     const N = 1600;
     for (let i=0;i<=N;i++){
@@ -204,13 +210,21 @@
     const df = Number(dfEl.value);
     const f2 = f + df;
 
-    // indicateurs
+    // période des battements (en variable x)
+    const beatPeriod = (df > 1e-9) ? (2*Math.PI/df) : Infinity;
+
     fVal.textContent  = `f = ${fmt(f,1)}   →   f₂ = f+Δf = ${fmt(f2,2)}`;
-    dfVal.textContent = `Δf = ${fmt(df,2)}   (battements ~ période ≈ 2π/Δf)`;
+    dfVal.textContent = `Δf = ${fmt(df,2)}   (période battements ≈ ${beatPeriod===Infinity ? '∞' : fmt(beatPeriod,1)})`;
 
     const y1 = (x) => Math.sin(f * x);
     const y2 = (x) => Math.sin((f + df) * x);
     const ys = (x) => y1(x) + y2(x);
+
+    // enveloppe théorique de la somme:
+    // sin(ax)+sin(bx) = 2 sin((a+b)x/2) cos((a-b)x/2)
+    // => amplitude = ±2 cos((a-b)x/2) = ±2 cos(Δf·x/2)
+    const env = (x) =>  2 * Math.cos(df * x / 2);
+    const envNeg = (x) => -2 * Math.cos(df * x / 2);
 
     // --- plot des 2 sinusoïdes
     {
@@ -224,23 +238,28 @@
       const X = (x) => x0 + (x / XMAX) * pw;
       const Y = (v) => y0 + (1 - (v + 1)/2) * ph; // [-1,1]
 
-      drawCurve(ctx12, X, Y, 'rgba(120,130,150,0.90)', y1);
-      drawCurve(ctx12, X, Y, COL_B, y2);
+      drawCurve(ctx12, X, Y, 'rgba(120,130,150,0.90)', y1, {width:2.8});
+      drawCurve(ctx12, X, Y, COL_B, y2, {width:2.8});
     }
 
-    // --- plot de la somme (battements)
+    // --- plot somme + enveloppe
     {
       const w = cS.getBoundingClientRect().width;
       const h = cS.getBoundingClientRect().height;
       ctxS.clearRect(0,0,w,h);
 
       const pad = {L:46, R:16, T:18, B:34};
-      const {x0,y0,pw,ph} = drawGridAndAxes(ctxS, w, h, pad, 2, 'Somme : y₁ + y₂ (battements)');
+      const {x0,y0,pw,ph} = drawGridAndAxes(ctxS, w, h, pad, 2, 'Somme : y₁ + y₂ + enveloppe');
 
       const X = (x) => x0 + (x / XMAX) * pw;
       const Y = (v) => y0 + (1 - (v + 2)/4) * ph; // [-2,2]
 
-      drawCurve(ctxS, X, Y, COL_S, ys);
+      // enveloppe (pointillé) derrière la somme
+      drawCurve(ctxS, X, Y, COL_E, env,    {dash:[7,6], width:2.4, alpha:0.95});
+      drawCurve(ctxS, X, Y, COL_E, envNeg, {dash:[7,6], width:2.4, alpha:0.95});
+
+      // somme
+      drawCurve(ctxS, X, Y, COL_S, ys, {width:3.0});
     }
   }
 
