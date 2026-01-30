@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Grande scène : Main PA + Delay tower (alignement temporel)</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --panel:#fff; --border:rgba(15,23,42,.14);
+      --grid:rgba(15,23,42,.08); --text:#0f172a; --muted:rgba(15,23,42,.65);
+      --main:#2563eb;     /* Main PA (bleu) */
+      --delay:#f59e0b;    /* Delay tower (orange) */
+      --sum:#16a34a;      /* somme (vert) */
+      --accent:#7c3aed;   /* audience point */
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; padding:14px;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg); color:var(--text);
+    }
+    .wrap{ width:min(1000px, 98vw); margin:0 auto; }
+    h1{ margin:0 0 10px; font-size:16px; }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap:10px;
+      align-items:start;
+    }
+    @media (max-width: 920px){ .grid{ grid-template-columns:1fr; } }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+      box-shadow:0 10px 22px rgba(15,23,42,.06);
+    }
+    canvas{
+      width:100%;
+      display:block;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:linear-gradient(180deg, rgba(15,23,42,.02), transparent);
+      touch-action:none;
+    }
+    #space{ height:360px; }
+    #plot{ height:360px; }
+
+    .controls{ margin-top:10px; display:grid; gap:8px; }
+    .row{
+      display:grid;
+      grid-template-columns: 170px 1fr 240px;
+      gap:10px;
+      align-items:center;
+    }
+    label{ color:var(--muted); font-size:13px; }
+    input[type="range"]{ width:100%; }
+    .val{
+      text-align:right;
+      font-variant-numeric: tabular-nums;
+      font-size:13px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .buttons{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:6px; }
+    button{
+      border:1px solid var(--border);
+      background:#f2f4f8;
+      color:var(--text);
+      padding:7px 10px;
+      border-radius:10px;
+      cursor:pointer;
+    }
+    button:hover{ background:#e9edf6; }
+    button.primary{
+      border-color: rgba(124,58,237,.35);
+      background: rgba(124,58,237,.10);
+    }
+
+    .stats{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:13px;
+      font-variant-numeric: tabular-nums;
+      display:grid;
+      gap:4px;
+    }
+    .legend{
+      margin-top:8px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .swatch{
+      display:inline-block; width:12px; height:12px; border-radius:3px;
+      margin-right:6px; vertical-align:-2px;
+      border:1px solid rgba(15,23,42,.18);
+    }
+    .pill{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid rgba(15,23,42,.14);
+      background: rgba(15,23,42,.03);
+      color: var(--muted);
+      font-size:12.5px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <h1>Profondeur / cohérence en grande scène : “Main PA” + “Delay tower” (décalage temporel)</h1>
+
+  <div class="grid">
+    <div class="card">
+      <canvas id="space"></canvas>
+      <div class="stats" id="stats"></div>
+
+      <div class="controls">
+        <div class="row">
+          <label for="freq">Fréquence (Hz)</label>
+          <input id="freq" type="range" min="50" max="800" step="1" value="200" />
+          <div class="val" id="freqVal"></div>
+        </div>
+
+        <div class="row">
+          <label for="delayMs">Délai électronique (ms)<br><span style="font-size:12px;color:var(--muted)">(sur la Delay tower)</span></label>
+          <input id="delayMs" type="range" min="0" max="80" step="0.1" value="20" />
+          <div class="val" id="delayVal"></div>
+        </div>
+
+        <div class="row">
+          <label for="offsetMs">Offset “Haas” cible (ms)<br><span style="font-size:12px;color:var(--muted)">(Delay tower après Main)</span></label>
+          <input id="offsetMs" type="range" min="0" max="25" step="0.5" value="7" />
+          <div class="val" id="offsetVal"></div>
+        </div>
+
+        <div class="row">
+          <label for="scale">Échelle (px/m)</label>
+          <input id="scale" type="range" min="70" max="180" step="1" value="120" />
+          <div class="val" id="scaleVal"></div>
+        </div>
+
+        <div class="buttons">
+          <button class="primary" id="auto">Auto-régler le délai</button>
+          <span class="pill">Glisse “Vous” dans l’audience</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <canvas id="plot"></canvas>
+      <div class="legend">
+        <span><span class="swatch" style="background:var(--main)"></span>Main PA reçue</span>
+        <span><span class="swatch" style="background:var(--delay)"></span>Delay tower reçue</span>
+        <span><span class="swatch" style="background:var(--sum)"></span>Somme</span>
+      </div>
+      <div class="stats" id="stats2"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const space = document.getElementById('space');
+  const plot  = document.getElementById('plot');
+
+  const freqEl = document.getElementById('freq');
+  const delayEl= document.getElementById('delayMs');
+  const offsetEl=document.getElementById('offsetMs');
+  const scaleEl= document.getElementById('scale');
+  const autoBtn= document.getElementById('auto');
+
+  const freqVal = document.getElementById('freqVal');
+  const delayVal= document.getElementById('delayVal');
+  const offsetVal=document.getElementById('offsetVal');
+  const scaleVal=document.getElementById('scaleVal');
+
+  const statsEl = document.getElementById('stats');
+  const stats2El= document.getElementById('stats2');
+
+  const css = getComputedStyle(document.documentElement);
+  const COL_MAIN = css.getPropertyValue('--main').trim();
+  const COL_DELAY= css.getPropertyValue('--delay').trim();
+  const COL_SUM  = css.getPropertyValue('--sum').trim();
+  const GRID     = css.getPropertyValue('--grid').trim();
+  const TXT      = css.getPropertyValue('--text').trim();
+  const MUT      = css.getPropertyValue('--muted').trim();
+  const ACC      = css.getPropertyValue('--accent').trim();
+
+  const C = 343; // m/s (air, ~20°C)
+
+  function setupHiDPI(canvas){
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const r = canvas.getBoundingClientRect();
+    canvas.width  = Math.round(r.width * dpr);
+    canvas.height = Math.round(r.height * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return ctx;
+  }
+  let sctx = setupHiDPI(space);
+  let pctx = setupHiDPI(plot);
+  window.addEventListener('resize', () => {
+    sctx = setupHiDPI(space);
+    pctx = setupHiDPI(plot);
+    drawAll();
+  });
+
+  const fmt = (n,d=3) => {
+    const x = Math.abs(n) < 1e-12 ? 0 : n;
+    return x.toFixed(d);
+  };
+  const clamp = (v,a,b) => Math.max(a, Math.min(b,v));
+
+  // État (positions en pixels dans le canvas "space")
+  const state = {
+    f: Number(freqEl.value),
+    delayMs: Number(delayEl.value),
+    offsetMs: Number(offsetEl.value),
+    pxPerM: Number(scaleEl.value),
+    dragging: false,
+    main:  { x: 120, y: 150 },  // main PA proche de la scène
+    delay: { x: 440, y: 150 },  // delay tower dans l’audience
+    you:   { x: 560, y: 250 }   // auditeur (déplaçable)
+  };
+
+  function distPx(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+
+  function compute(){
+    const dMain = distPx(state.main, state.you) / state.pxPerM;   // m
+    const dDel  = distPx(state.delay, state.you) / state.pxPerM;  // m
+
+    const tMain = dMain / C; // s
+    const tDelAcoustic = dDel / C; // s (sans délai électronique)
+    const tDelTotal = tDelAcoustic + state.delayMs/1000;
+
+    const dt = tDelTotal - tMain; // >0 : delay arrive après main
+
+    // lecture “grande scène” (simplifiée):
+    // - dt < 0 : le delay arrive trop tôt → image qui “tire” vers la tower (mauvais)
+    // - 0..~10 ms : alignement serré (cohérence/impact)
+    // - ~10..~35 ms : zone Haas (renfort sans déplacer trop la localisation)
+    // - > ~35 ms : on commence à percevoir un écho (selon niveau/programmation)
+    let interpretation = "";
+    if (dt < -0.002) interpretation = "Problème : la Delay tower arrive AVANT la Main (image tire vers l’arrière).";
+    else if (dt < 0.010) interpretation = "Alignement serré : impact/cohérence élevés (utile en zone de recouvrement).";
+    else if (dt < 0.035) interpretation = "Zone Haas : renfort de niveau/“profondeur” sans trop déplacer la localisation (si niveau delay contrôlé).";
+    else interpretation = "Risque d’écho/“double attaque” (à réduire via délai ou niveau).";
+
+    return { dMain, dDel, tMain, tDelAcoustic, tDelTotal, dt, interpretation };
+  }
+
+  function drawGrid(ctx,w,h,step=55){
+    ctx.save();
+    ctx.strokeStyle = GRID;
+    ctx.lineWidth = 1;
+    for(let x=0;x<=w;x+=step){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+    for(let y=0;y<=h;y+=step){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+    ctx.restore();
+  }
+
+  function drawSpace(){
+    const w = space.getBoundingClientRect().width;
+    const h = space.getBoundingClientRect().height;
+    sctx.clearRect(0,0,w,h);
+    drawGrid(sctx,w,h,55);
+
+    // cadre
+    sctx.save();
+    sctx.strokeStyle = 'rgba(15,23,42,0.18)';
+    sctx.lineWidth = 2;
+    sctx.strokeRect(10,10,w-20,h-20);
+    sctx.restore();
+
+    // scène (à gauche)
+    sctx.save();
+    sctx.fillStyle = 'rgba(15,23,42,0.05)';
+    sctx.strokeStyle = 'rgba(15,23,42,0.14)';
+    sctx.lineWidth = 1.5;
+    sctx.fillRect(16, 16, 150, h-32);
+    sctx.strokeRect(16, 16, 150, h-32);
+    sctx.fillStyle = MUT;
+    sctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    sctx.fillText('Scène', 24, 34);
+    sctx.restore();
+
+    // lignes vers "vous"
+    sctx.save();
+    sctx.lineWidth = 2.5;
+    sctx.strokeStyle = 'rgba(37,99,235,0.50)';
+    sctx.beginPath(); sctx.moveTo(state.main.x,state.main.y); sctx.lineTo(state.you.x,state.you.y); sctx.stroke();
+
+    sctx.strokeStyle = 'rgba(245,158,11,0.55)';
+    sctx.beginPath(); sctx.moveTo(state.delay.x,state.delay.y); sctx.lineTo(state.you.x,state.you.y); sctx.stroke();
+    sctx.restore();
+
+    function speaker(p, label, color){
+      sctx.save();
+      sctx.fillStyle = color;
+      sctx.strokeStyle = 'rgba(15,23,42,0.25)';
+      sctx.lineWidth = 2;
+      sctx.beginPath(); sctx.arc(p.x,p.y,14,0,Math.PI*2); sctx.fill(); sctx.stroke();
+      sctx.fillStyle = TXT;
+      sctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+      sctx.fillText(label, p.x-18, p.y-22);
+      sctx.restore();
+    }
+
+    speaker(state.main, "Main", COL_MAIN);
+    speaker(state.delay,"Delay",COL_DELAY);
+
+    // "Vous" (déplaçable)
+    sctx.save();
+    sctx.fillStyle = ACC;
+    sctx.strokeStyle = 'rgba(15,23,42,0.25)';
+    sctx.lineWidth = 2;
+    sctx.beginPath(); sctx.arc(state.you.x,state.you.y,10,0,Math.PI*2); sctx.fill(); sctx.stroke();
+    sctx.fillStyle = TXT;
+    sctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    sctx.fillText("Vous", state.you.x+12, state.you.y+4);
+    sctx.fillStyle = MUT;
+    sctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    sctx.fillText("glisser-déposer", 16, h-16);
+    sctx.restore();
+
+    // barre d'échelle 5 m
+    const barM = 5;
+    const barPx = barM * state.pxPerM;
+    sctx.save();
+    sctx.strokeStyle = 'rgba(15,23,42,0.35)';
+    sctx.lineWidth = 3;
+    sctx.beginPath();
+    sctx.moveTo(190, h-20);
+    sctx.lineTo(190+barPx, h-20);
+    sctx.stroke();
+    sctx.fillStyle = MUT;
+    sctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    sctx.fillText("5 m", 190, h-26);
+    sctx.restore();
+  }
+
+  function drawPlot(){
+    const w = plot.getBoundingClientRect().width;
+    const h = plot.getBoundingClientRect().height;
+    pctx.clearRect(0,0,w,h);
+    drawGrid(pctx,w,h,55);
+
+    const pad = {L:50, R:14, T:18, B:32};
+    const x0=pad.L, y0=pad.T, pw=w-pad.L-pad.R, ph=h-pad.T-pad.B;
+    const yMid=y0+ph/2;
+
+    // axes
+    pctx.save();
+    pctx.strokeStyle='rgba(15,23,42,0.25)';
+    pctx.lineWidth=1.5;
+    pctx.beginPath();
+    pctx.moveTo(x0,yMid); pctx.lineTo(x0+pw,yMid);
+    pctx.moveTo(x0,y0);   pctx.lineTo(x0,y0+ph);
+    pctx.stroke();
+    pctx.restore();
+
+    const {tMain, tDelTotal, dt} = compute();
+    const f = state.f;
+
+    // Fenêtre temporelle (ms) autour de l'arrivée main
+    const tMin = Math.min(tMain, tDelTotal) - 0.006; // -6 ms
+    const tMax = tMin + 0.030; // 30 ms de fenêtre
+
+    const X = (t) => x0 + ((t - tMin)/(tMax - tMin))*pw;
+    const A = 2.2;
+    const Y = (v) => y0 + (1 - (v + A)/(2*A))*ph;
+
+    // Signaux reçus (phase = retard d'arrivée)
+    const yMain = (t) => Math.sin(2*Math.PI*f*(t - tMain));
+    const yDel  = (t) => Math.sin(2*Math.PI*f*(t - tDelTotal));
+    const ySum  = (t) => yMain(t) + yDel(t);
+
+    function curve(color, fn, width=2.6, alpha=1){
+      pctx.save();
+      pctx.strokeStyle=color;
+      pctx.globalAlpha=alpha;
+      pctx.lineWidth=width;
+      pctx.beginPath();
+      const N = 1200;
+      for(let i=0;i<=N;i++){
+        const t = tMin + (i/N)*(tMax-tMin);
+        const x = X(t);
+        const y = Y(fn(t));
+        if(i===0) pctx.moveTo(x,y); else pctx.lineTo(x,y);
+      }
+      pctx.stroke();
+      pctx.restore();
+    }
+
+    curve(COL_MAIN, yMain, 2.4, 0.95);
+    curve(COL_DELAY, yDel, 2.4, 0.95);
+    curve(COL_SUM,  ySum,  3.0, 1.0);
+
+    // marqueurs d'arrivée
+    function vline(t, color, label){
+      const x = X(t);
+      pctx.save();
+      pctx.strokeStyle=color;
+      pctx.lineWidth=2;
+      pctx.setLineDash([6,6]);
+      pctx.beginPath();
+      pctx.moveTo(x,y0); pctx.lineTo(x,y0+ph);
+      pctx.stroke();
+      pctx.setLineDash([]);
+      pctx.fillStyle=MUT;
+      pctx.font='12px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+      pctx.fillText(label, x+6, y0+12);
+      pctx.restore();
+    }
+    vline(tMain, COL_MAIN, "arrivée Main");
+    vline(tDelTotal, COL_DELAY, "arrivée Delay");
+
+    // labels temps
+    pctx.save();
+    pctx.fillStyle=MUT;
+    pctx.font='12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    pctx.fillText('t (ms)', x0+pw+6, yMid+4);
+    pctx.fillText(`${fmt((tMin)*1000,1)}`, x0-10, y0+ph+20);
+    pctx.fillText(`${fmt(((tMin+tMax)/2)*1000,1)}`, x0+pw/2-16, y0+ph+20);
+    pctx.fillText(`${fmt((tMax)*1000,1)}`, x0+pw-22, y0+ph+20);
+
+    pctx.fillStyle='rgba(15,23,42,0.75)';
+    pctx.fillText(`Δt (Delay − Main) = ${fmt(dt*1000,2)} ms`, x0+6, y0-4);
+    pctx.restore();
+  }
+
+  function updateUI(){
+    freqVal.textContent  = `f = ${fmt(state.f,0)} Hz`;
+    delayVal.textContent = `delay = ${fmt(state.delayMs,1)} ms`;
+    offsetVal.textContent= `offset = ${fmt(state.offsetMs,1)} ms`;
+    scaleVal.textContent = `${fmt(state.pxPerM,0)} px/m`;
+
+    const {dMain,dDel,tMain,tDelAcoustic,tDelTotal,dt,interpretation} = compute();
+
+    statsEl.innerHTML = `
+      <div>d(Main→Vous) = <b>${fmt(dMain,2)}</b> m &nbsp;&nbsp; d(Delay→Vous) = <b>${fmt(dDel,2)}</b> m</div>
+      <div>t(Main) = <b>${fmt(tMain*1000,2)}</b> ms &nbsp;&nbsp; t(Delay acoust.) = <b>${fmt(tDelAcoustic*1000,2)}</b> ms</div>
+      <div>t(Delay total) = <b>${fmt(tDelTotal*1000,2)}</b> ms &nbsp;&nbsp; Δt = <b>${fmt(dt*1000,2)}</b> ms</div>
+      <div><b>Lecture :</b> ${interpretation}</div>
+    `;
+
+    // petite formule “réglage”
+    const delayRecommended = Math.max(
+      0,
+      (tMain + state.offsetMs/1000) - tDelAcoustic
+    );
+    stats2El.innerHTML = `
+      <div>Réglage conseillé (pour ce point) : delay ≈ (t(Main)+offset − t(Delay acoust.))</div>
+      <div>→ delay conseillé ≈ <b>${fmt(delayRecommended*1000,2)}</b> ms (offset = ${fmt(state.offsetMs,1)} ms)</div>
+      <div>Idée clé : on retarde la Delay tower pour que l’énergie “renforce” sans créer un double-arrivée perceptible.</div>
+    `;
+  }
+
+  function drawAll(){ updateUI(); drawSpace(); drawPlot(); }
+
+  // Drag "Vous"
+  function posFromEvent(ev){
+    const r = space.getBoundingClientRect();
+    return { x: ev.clientX - r.left, y: ev.clientY - r.top };
+  }
+  function hitYou(p){
+    const dx=p.x-state.you.x, dy=p.y-state.you.y;
+    return (dx*dx+dy*dy) <= (14*14);
+  }
+
+  space.addEventListener('pointerdown', (ev) => {
+    const p = posFromEvent(ev);
+    if (hitYou(p)) {
+      state.dragging = true;
+      space.setPointerCapture(ev.pointerId);
+    }
+  });
+  space.addEventListener('pointermove', (ev) => {
+    if (!state.dragging) return;
+    const r = space.getBoundingClientRect();
+    const p = posFromEvent(ev);
+    const margin = 20;
+    state.you.x = clamp(p.x, margin, r.width - margin);
+    state.you.y = clamp(p.y, margin, r.height - margin);
+    drawAll();
+  });
+  space.addEventListener('pointerup', () => state.dragging=false);
+  space.addEventListener('pointercancel', () => state.dragging=false);
+
+  // Sliders
+  freqEl.addEventListener('input', () => { state.f = Number(freqEl.value); drawAll(); });
+  delayEl.addEventListener('input', () => { state.delayMs = Number(delayEl.value); drawAll(); });
+  offsetEl.addEventListener('input', () => { state.offsetMs = Number(offsetEl.value); drawAll(); });
+  scaleEl.addEventListener('input', () => { state.pxPerM = Number(scaleEl.value); drawAll(); });
+
+  // Auto-réglage
+  autoBtn.addEventListener('click', () => {
+    const {tMain, tDelAcoustic} = compute();
+    const recommended = Math.max(0, (tMain + state.offsetMs/1000) - tDelAcoustic);
+    state.delayMs = clamp(recommended*1000, Number(delayEl.min), Number(delayEl.max));
+    delayEl.value = String(state.delayMs);
+    drawAll();
+  });
+
+  drawAll();
+})();
+</script>
+</body>
+</html>

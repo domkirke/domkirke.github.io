@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Applet — Angle sur un cercle</title>
+  <title>Angle θ sur un cercle (arc surligné)</title>
   <style>
     :root{
       --bg:#f6f7fb; --panel:#fff; --border:rgba(15,23,42,.14);
@@ -12,9 +12,10 @@
     }
     *{ box-sizing:border-box; }
     body{
-      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      margin:0; padding:16px;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:var(--bg); color:var(--text);
-      display:flex; justify-content:center; padding:16px;
+      display:flex; justify-content:center;
     }
     .card{
       width:min(520px, 95vw);
@@ -32,7 +33,7 @@
     }
     .row{
       margin-top:10px;
-      display:grid; grid-template-columns: 110px 1fr 120px;
+      display:grid; grid-template-columns: 110px 1fr 140px;
       gap:10px; align-items:center;
     }
     label{ color:var(--muted); font-size:13px; }
@@ -49,12 +50,12 @@
 </head>
 <body>
   <div class="card">
-    <h1>Angle θ sur un cercle</h1>
+    <h1>Angle θ sur un cercle (arc 0 → θ)</h1>
     <canvas id="c"></canvas>
 
     <div class="row">
       <label for="angle">Angle θ</label>
-      <input id="angle" type="range" min="0" max="360" value="45" step="1">
+      <input id="angle" type="range" min="0" max="360" value="60" step="1">
       <div class="val" id="val"></div>
     </div>
   </div>
@@ -71,38 +72,35 @@
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
     const ctx = canvas.getContext('2d');
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // unités en px CSS
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     return ctx;
   }
-
   let ctx = setupHiDPI();
   window.addEventListener('resize', () => { ctx = setupHiDPI(); draw(); });
 
-  function degToRad(deg){ return deg * Math.PI / 180; }
-  function fmt(n, d=3){
+  const degToRad = (deg) => deg * Math.PI / 180;
+  const fmt = (n, d=3) => {
     const x = Math.abs(n) < 1e-12 ? 0 : n;
     return x.toFixed(d);
-  }
+  };
 
   function draw() {
     const w = canvas.getBoundingClientRect().width;
     const h = canvas.getBoundingClientRect().height;
     ctx.clearRect(0, 0, w, h);
 
-    // paramètres
     const angleDeg = Number(angleEl.value);
     const theta = degToRad(angleDeg);
 
-    // affichage texte
     valEl.innerHTML = `
       <div>${Math.round(angleDeg)}°</div>
-      <div>${fmt(theta, 3)} rad</div>
+      <div>${fmt(theta,3)} rad</div>
     `;
 
-    // centre & rayon
+    // centre / rayon
     const cx = w * 0.5;
-    const cy = h * 0.55;
-    const r = Math.min(w, h) * 0.38;
+    const cy = h * 0.56;
+    const r  = Math.min(w, h) * 0.38;
 
     // grille légère
     ctx.save();
@@ -122,30 +120,42 @@
     ctx.stroke();
     ctx.restore();
 
-    // cercle
+    // cercle (fin)
     ctx.save();
-    ctx.strokeStyle = 'rgba(15,23,42,0.30)';
+    ctx.strokeStyle = 'rgba(15,23,42,0.28)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
 
-    // point sur le cercle (attention: y vers le bas en canvas)
-    const px = cx + r * Math.cos(theta);
-    const py = cy - r * Math.sin(theta);
-
-    // arc d'angle
+    // --- arc surligné sur le cercle : de 0 à θ, sens trigonométrique ---
+    // En canvas, les angles augmentent dans le sens horaire car y va vers le bas,
+    // donc on utilise -theta pour représenter le sens trigonométrique (anti-horaire).
     ctx.save();
     ctx.strokeStyle = '#7c3aed';
-    ctx.lineWidth = 4;
-    const arcR = Math.min(48, r * 0.45);
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+
+    // petit fond (halo) pour bien "souligner"
+    ctx.globalAlpha = 0.18;
     ctx.beginPath();
-    ctx.arc(cx, cy, arcR, 0, -theta, true);
+    ctx.arc(cx, cy, r, 0, -theta, true);
+    ctx.stroke();
+
+    // trait principal
+    ctx.globalAlpha = 1.0;
+    ctx.lineWidth = 4.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, -theta, true);
     ctx.stroke();
     ctx.restore();
 
-    // rayon
+    // point M correspondant à θ
+    const px = cx + r * Math.cos(theta);
+    const py = cy - r * Math.sin(theta);
+
+    // rayon OM
     ctx.save();
     ctx.strokeStyle = '#7c3aed';
     ctx.lineWidth = 3;
@@ -155,7 +165,17 @@
     ctx.stroke();
     ctx.restore();
 
-    // point
+    // petit arc interne (optionnel) pour matérialiser l'angle près du centre
+    ctx.save();
+    ctx.strokeStyle = 'rgba(124,58,237,0.75)';
+    ctx.lineWidth = 3;
+    const arcR = Math.min(48, r * 0.45);
+    ctx.beginPath();
+    ctx.arc(cx, cy, arcR, 0, -theta, true);
+    ctx.stroke();
+    ctx.restore();
+
+    // point M
     ctx.save();
     ctx.fillStyle = '#0f172a';
     ctx.beginPath();
@@ -169,9 +189,22 @@
     ctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
     ctx.fillText('x', w - 14, cy - 8);
     ctx.fillText('y', cx + 8, 14);
+
     ctx.fillStyle = '#0f172a';
     ctx.fillText('O', cx + 6, cy + 16);
     ctx.fillText('M', px + 8, py - 8);
+    ctx.restore();
+
+    // indication du point de départ θ=0 sur le cercle (à droite)
+    ctx.save();
+    const sx = cx + r;
+    const sy = cy;
+    ctx.fillStyle = 'rgba(15,23,42,0.75)';
+    ctx.beginPath();
+    ctx.arc(sx, sy, 3.5, 0, Math.PI*2);
+    ctx.fill();
+    ctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.fillText('θ=0', sx + 8, sy + 4);
     ctx.restore();
   }
 

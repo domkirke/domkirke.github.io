@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FFT globale — magnitude & phase (pédagogique)</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --panel:#fff; --border:rgba(15,23,42,.14);
+      --grid:rgba(15,23,42,.08); --text:#0f172a; --muted:rgba(15,23,42,.65);
+      --accent:#2563eb;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; padding:14px;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg); color:var(--text);
+    }
+    .wrap{ width:min(1080px, 98vw); margin:0 auto; }
+    h1{ margin:0 0 10px; font-size:18px; letter-spacing:.2px; }
+    .sub{ margin:-6px 0 10px; color:var(--muted); font-size:13.5px; line-height:1.35; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap:12px;
+      align-items:start;
+    }
+    @media (max-width: 980px){ .grid{ grid-template-columns:1fr; } }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      box-shadow:0 10px 22px rgba(15,23,42,.06);
+    }
+
+    canvas{
+      width:100%;
+      display:block;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:linear-gradient(180deg, rgba(15,23,42,.02), transparent);
+    }
+    #mag{ height:290px; }
+    #phs{ height:290px; margin-top:10px; }
+    #sig{ height:170px; margin-top:10px; }
+
+    .sectionTitle{
+      display:flex; align-items:baseline; justify-content:space-between;
+      margin:0 0 8px;
+      gap:10px;
+    }
+    .sectionTitle h2{ margin:0; font-size:14px; letter-spacing:.2px; }
+    .pill{
+      display:inline-block;
+      padding:2px 10px;
+      border-radius:999px;
+      border:1px solid rgba(15,23,42,.14);
+      background: rgba(15,23,42,.03);
+      color: var(--muted);
+      font-size:12.5px;
+      white-space:nowrap;
+    }
+
+    .controls{ display:grid; gap:10px; }
+    .ctrl{
+      border:1px solid rgba(15,23,42,.12);
+      background: rgba(15,23,42,.02);
+      border-radius:12px;
+      padding:10px;
+    }
+    .ctrlHead{
+      display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+      margin-bottom:8px;
+    }
+    .ctrlHead .name{ font-weight:700; font-size:13.5px; }
+    .ctrlHead .value{
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      font-size:13px;
+      white-space:nowrap;
+    }
+    .hint{ margin-top:6px; color:var(--muted); font-size:12.5px; line-height:1.35; }
+
+    /* Bigger sliders */
+    input[type="range"]{
+      width:100%;
+      height: 22px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      margin: 2px 0 0;
+    }
+    input[type="range"]::-webkit-slider-runnable-track{
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(37,99,235,.25), rgba(37,99,235,.10));
+      border: 1px solid rgba(15,23,42,.12);
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      appearance:none;
+      width: 20px;
+      height: 20px;
+      margin-top: -6px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid white;
+      box-shadow: 0 3px 10px rgba(15,23,42,.18);
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-track{
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(37,99,235,.25), rgba(37,99,235,.10));
+      border: 1px solid rgba(15,23,42,.12);
+    }
+    input[type="range"]::-moz-range-thumb{
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid white;
+      box-shadow: 0 3px 10px rgba(15,23,42,.18);
+      cursor:pointer;
+    }
+    select{
+      width:100%;
+      font-size:13.5px;
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid rgba(15,23,42,.14);
+      background:#fff;
+    }
+
+    .readout{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+    .readout b{ color:var(--text); }
+    .code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      background: rgba(15,23,42,.05);
+      border:1px solid rgba(15,23,42,.10);
+      padding:2px 6px;
+      border-radius:8px;
+      color: rgba(15,23,42,.85);
+      white-space:nowrap;
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <h1>FFT globale d’une sinusoïde : magnitude + phase (et pourquoi la phase dépend du “début”)</h1>
+  <div class="sub">
+    Ici on prend <b>un seul bloc</b> de N échantillons et on calcule une FFT (pas de STFT).
+    La magnitude montre où est l’énergie, et la phase au bin sélectionné correspond au déphasage de la sinusoïde dans ce bloc.
+    Essaie <b>Décalage temporel</b> : la magnitude change peu, mais la phase tourne fortement.
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sectionTitle">
+        <h2>Magnitude (dB, relatif au max)</h2>
+        <span class="pill">bins k = 0..N/2</span>
+      </div>
+      <canvas id="mag"></canvas>
+
+      <div class="sectionTitle" style="margin-top:10px;">
+        <h2>Phase (angle ∈ [-π,π])</h2>
+        <span class="pill">affichée surtout près du pic</span>
+      </div>
+      <canvas id="phs"></canvas>
+
+      <div class="sectionTitle" style="margin-top:10px;">
+        <h2>Signal temporel (extrait)</h2>
+        <span class="pill">le bloc analysé</span>
+      </div>
+      <canvas id="sig"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="sectionTitle">
+        <h2>Paramètres</h2>
+        <span class="pill">pédagogique</span>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl">
+          <div class="ctrlHead">
+            <div class="name">Fréquence f (Hz)</div>
+            <div class="value" id="freqVal"></div>
+          </div>
+          <input id="freq" type="range" min="50" max="2000" step="1" value="440">
+          <div class="hint">Change la position du pic (bin) : k ≈ f·N/f<sub>s</sub>.</div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrlHead">
+            <div class="name">Décalage temporel t<sub>0</sub> (ms)</div>
+            <div class="value" id="t0Val"></div>
+          </div>
+          <input id="t0" type="range" min="0" max="20" step="0.1" value="0">
+          <div class="hint">
+            Équivaut à analyser <span class="code">x[n] = sin(2π f (n/f<sub>s</sub> + t0))</span>.
+            La <b>phase</b> au bin près de f devient ≈ 2π f t0 (mod 2π).
+          </div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrlHead">
+            <div class="name">Taille FFT N</div>
+            <div class="value" id="nfftVal"></div>
+          </div>
+          <select id="nfft">
+            <option value="256">256</option>
+            <option value="512" selected>512</option>
+            <option value="1024">1024</option>
+            <option value="2048">2048</option>
+          </select>
+          <div class="hint">Plus N est grand, plus Δf = f<sub>s</sub>/N est petit (meilleure résolution).</div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrlHead">
+            <div class="name">Fenêtre</div>
+            <div class="value" id="winVal"></div>
+          </div>
+          <select id="win">
+            <option value="rect" selected>Rectangulaire (sans fenêtre)</option>
+            <option value="hann">Hann</option>
+          </select>
+          <div class="hint">La fenêtre réduit la fuite spectrale (lobes), mais change l’amplitude relative.</div>
+        </div>
+
+        <div class="ctrl">
+          <div class="ctrlHead">
+            <div class="name">f<sub>s</sub> (Hz)</div>
+            <div class="value" id="fsVal"></div>
+          </div>
+          <select id="fs">
+            <option value="8000" selected>8000</option>
+            <option value="16000">16000</option>
+            <option value="44100">44100</option>
+          </select>
+        </div>
+
+        <div class="readout" id="readout"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const magC = document.getElementById('mag');
+  const phsC = document.getElementById('phs');
+  const sigC = document.getElementById('sig');
+
+  const freqEl = document.getElementById('freq');
+  const t0El   = document.getElementById('t0');
+  const nfftEl = document.getElementById('nfft');
+  const winEl  = document.getElementById('win');
+  const fsEl   = document.getElementById('fs');
+
+  const freqVal= document.getElementById('freqVal');
+  const t0Val  = document.getElementById('t0Val');
+  const nfftVal= document.getElementById('nfftVal');
+  const winVal = document.getElementById('winVal');
+  const fsVal  = document.getElementById('fsVal');
+  const readout= document.getElementById('readout');
+
+  const css = getComputedStyle(document.documentElement);
+  const GRID = css.getPropertyValue('--grid').trim();
+  const MUT  = css.getPropertyValue('--muted').trim();
+  const TXT  = css.getPropertyValue('--text').trim();
+  const ACC  = css.getPropertyValue('--accent').trim();
+
+  function setupHiDPI(canvas){
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const r = canvas.getBoundingClientRect();
+    canvas.width  = Math.round(r.width * dpr);
+    canvas.height = Math.round(r.height * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return ctx;
+  }
+
+  let magCtx = setupHiDPI(magC);
+  let phsCtx = setupHiDPI(phsC);
+  let sigCtx = setupHiDPI(sigC);
+
+  window.addEventListener('resize', () => {
+    magCtx = setupHiDPI(magC);
+    phsCtx = setupHiDPI(phsC);
+    sigCtx = setupHiDPI(sigC);
+    recomputeAndDraw();
+  });
+
+  const fmt = (n,d=3) => {
+    const x = Math.abs(n) < 1e-12 ? 0 : n;
+    return x.toFixed(d);
+  };
+
+  function wrapPi(phi){
+    phi = ((phi + Math.PI) % (2*Math.PI) + (2*Math.PI)) % (2*Math.PI) - Math.PI;
+    return phi;
+  }
+
+  function drawGrid(ctx, w, h, step=60){
+    ctx.save();
+    ctx.strokeStyle = GRID;
+    ctx.lineWidth = 1;
+    for(let x=0;x<=w;x+=step){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+    for(let y=0;y<=h;y+=step){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+    ctx.restore();
+  }
+
+  // ----- FFT radix-2 (in-place) -----
+  function bitReversePermutation(re, im){
+    const n = re.length;
+    let j = 0;
+    for (let i=0; i<n; i++){
+      if (i < j){
+        [re[i], re[j]] = [re[j], re[i]];
+        [im[i], im[j]] = [im[j], im[i]];
+      }
+      let m = n >> 1;
+      while (m >= 1 && j >= m){ j -= m; m >>= 1; }
+      j += m;
+    }
+  }
+
+  function fft(re, im){
+    const n = re.length;
+    bitReversePermutation(re, im);
+    for (let len=2; len<=n; len<<=1){
+      const ang = -2*Math.PI/len;
+      const wlenRe = Math.cos(ang);
+      const wlenIm = Math.sin(ang);
+      for (let i=0; i<n; i+=len){
+        let wRe = 1, wIm = 0;
+        for (let j=0; j<len/2; j++){
+          const uRe = re[i+j], uIm = im[i+j];
+          const vRe = re[i+j+len/2]*wRe - im[i+j+len/2]*wIm;
+          const vIm = re[i+j+len/2]*wIm + im[i+j+len/2]*wRe;
+
+          re[i+j] = uRe + vRe;
+          im[i+j] = uIm + vIm;
+          re[i+j+len/2] = uRe - vRe;
+          im[i+j+len/2] = uIm - vIm;
+
+          const nextWRe = wRe*wlenRe - wIm*wlenIm;
+          const nextWIm = wRe*wlenIm + wIm*wlenRe;
+          wRe = nextWRe; wIm = nextWIm;
+        }
+      }
+    }
+  }
+
+  function windowFunc(type, N){
+    if (type === 'hann'){
+      const w = new Float32Array(N);
+      for (let n=0; n<N; n++) w[n] = 0.5 - 0.5*Math.cos(2*Math.PI*n/(N-1));
+      return w;
+    }
+    // rect
+    const w = new Float32Array(N);
+    w.fill(1);
+    return w;
+  }
+
+  function recomputeAndDraw(){
+    const fs = Number(fsEl.value);
+    const f  = Number(freqEl.value);
+    const N  = Number(nfftEl.value);
+    const t0ms = Number(t0El.value);
+    const t0 = t0ms / 1000;
+    const winType = winEl.value;
+
+    freqVal.textContent = `${fmt(f,0)} Hz`;
+    t0Val.textContent   = `${fmt(t0ms,1)} ms`;
+    nfftVal.textContent = `N = ${N} (Δf = ${fmt(fs/N,3)} Hz)`;
+    winVal.textContent  = winType === 'hann' ? 'Hann' : 'Rect';
+    fsVal.textContent   = `${fs} Hz`;
+
+    // signal bloc
+    const w = windowFunc(winType, N);
+    const re = new Float32Array(N);
+    const im = new Float32Array(N);
+    for (let n=0; n<N; n++){
+      const t = n/fs + t0;
+      const x = Math.sin(2*Math.PI*f*t);
+      re[n] = x * w[n];
+      im[n] = 0;
+    }
+
+    // FFT
+    fft(re, im);
+
+    const bins = N/2 + 1;
+    const mag = new Float32Array(bins);
+    const ph  = new Float32Array(bins);
+
+    let maxMag = 1e-12;
+    for (let k=0; k<bins; k++){
+      const a = Math.hypot(re[k], im[k]) / (N/2); // normalisation simple
+      mag[k] = a;
+      if (a > maxMag) maxMag = a;
+      ph[k] = Math.atan2(im[k], re[k]); // [-π,π]
+    }
+
+    // mag dB relative
+    const floorDB = -80;
+    const magDB = new Float32Array(bins);
+    for (let k=0; k<bins; k++){
+      magDB[k] = Math.max(floorDB, 20*Math.log10(mag[k]/maxMag + 1e-12));
+    }
+
+    // bin proche de f
+    const k0 = Math.round((f/fs)*N);
+    const kSel = Math.max(0, Math.min(bins-1, k0));
+    const fBin = kSel * fs / N;
+
+    // phase “attendue” si parfaitement sur un bin (ordre de grandeur)
+    const phiExpected = wrapPi(2*Math.PI*f*t0);
+
+    readout.innerHTML = `
+      <div><b>Bin proche :</b> k = <b>${kSel}</b> ⇒ f<sub>bin</sub> = <b>${fmt(fBin,2)}</b> Hz</div>
+      <div><b>Phase mesurée</b> au bin k : <b>${fmt(ph[kSel],3)}</b> rad (${fmt(ph[kSel]*180/Math.PI,1)}°)</div>
+      <div><b>Phase attendue (approx.)</b> ≈ 2π f t<sub>0</sub> mod 2π : <b>${fmt(phiExpected,3)}</b> rad</div>
+      <div style="margin-top:6px;">
+        À retenir : un décalage temporel multiplie le spectre par <span class="code">e^{j2π f t0}</span> ⇒
+        <b>la magnitude reste (presque) la même</b>, mais <b>la phase tourne linéairement</b> avec la fréquence.
+      </div>
+    `;
+
+    drawMagnitude(magCtx, magC, magDB, fs, N, kSel);
+    drawPhase(phsCtx, phsC, ph, magDB, fs, N, kSel);
+    drawSignal(sigCtx, sigC, fs, N, f, t0, w, winType);
+  }
+
+  function drawAxes(ctx, w, h, pad){
+    const {L,R,T,B} = pad;
+    const x0=L, y0=T, pw=w-L-R, ph=h-T-B;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(15,23,42,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0); ctx.lineTo(x0, y0+ph);
+    ctx.moveTo(x0, y0+ph); ctx.lineTo(x0+pw, y0+ph);
+    ctx.stroke();
+    ctx.restore();
+    return {x0,y0,pw,ph};
+  }
+
+  function drawMagnitude(ctx, canvas, magDB, fs, N, kSel){
+    const w = canvas.getBoundingClientRect().width;
+    const h = canvas.getBoundingClientRect().height;
+    ctx.clearRect(0,0,w,h);
+    drawGrid(ctx,w,h,60);
+
+    const pad = {L:56, R:14, T:18, B:30};
+    const {x0,y0,pw,ph} = drawAxes(ctx,w,h,pad);
+
+    // x: fréquence 0..fs/2, y: dB floor..0
+    const floorDB = -80;
+    const X = (k) => x0 + (k/(magDB.length-1))*pw;
+    const Y = (db)=> y0 + (1 - (db - floorDB)/(0 - floorDB))*ph;
+
+    // courbe
+    ctx.save();
+    ctx.strokeStyle = 'rgba(15,23,42,0.75)';
+    ctx.lineWidth = 2.3;
+    ctx.beginPath();
+    for (let k=0; k<magDB.length; k++){
+      const x = X(k);
+      const y = Y(magDB[k]);
+      if (k===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // marqueur bin sélectionné
+    const xs = X(kSel);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(37,99,235,0.9)';
+    ctx.lineWidth = 2.2;
+    ctx.setLineDash([7,6]);
+    ctx.beginPath(); ctx.moveTo(xs, y0); ctx.lineTo(xs, y0+ph); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // labels
+    const df = fs/N;
+    ctx.save();
+    ctx.fillStyle = MUT;
+    ctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.fillText('dB', 10, y0+12);
+    ctx.fillText('0', x0-10, y0+ph+20);
+    ctx.fillText(`${fmt((fs/4),0)} Hz`, x0+pw/2-20, y0+ph+20);
+    ctx.fillText(`${fmt((fs/2),0)} Hz`, x0+pw-30, y0+ph+20);
+
+    ctx.fillStyle = 'rgba(15,23,42,0.78)';
+    ctx.fillText(`Δf = ${fmt(df,3)} Hz`, x0+6, y0-4);
+    ctx.restore();
+  }
+
+  function drawPhase(ctx, canvas, phase, magDB, fs, N, kSel){
+    const w = canvas.getBoundingClientRect().width;
+    const h = canvas.getBoundingClientRect().height;
+    ctx.clearRect(0,0,w,h);
+    drawGrid(ctx,w,h,60);
+
+    const pad = {L:56, R:14, T:18, B:30};
+    const {x0,y0,pw,ph} = drawAxes(ctx,w,h,pad);
+
+    const X = (k) => x0 + (k/(phase.length-1))*pw;
+    const Y = (phi)=> y0 + (1 - (phi + Math.PI)/(2*Math.PI))*ph;
+
+    // on masque si magnitude trop faible (sinon phase “au hasard”)
+    const maskBelow = -35;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(15,23,42,0.55)';
+    ctx.lineWidth = 2.1;
+    ctx.beginPath();
+    let started = false;
+    for (let k=0; k<phase.length; k++){
+      if (magDB[k] < maskBelow){
+        started = false;
+        continue;
+      }
+      const x = X(k);
+      const y = Y(phase[k]);
+      if (!started){ ctx.moveTo(x,y); started = true; }
+      else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // marqueur bin sélectionné
+    const xs = X(kSel);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(37,99,235,0.9)';
+    ctx.lineWidth = 2.2;
+    ctx.setLineDash([7,6]);
+    ctx.beginPath(); ctx.moveTo(xs, y0); ctx.lineTo(xs, y0+ph); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // point phase sélectionnée
+    ctx.fillStyle = ACC;
+    ctx.beginPath();
+    ctx.arc(xs, Y(phase[kSel]), 5.5, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    // labels
+    ctx.save();
+    ctx.fillStyle = MUT;
+    ctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.fillText('+π', 12, y0+12);
+    ctx.fillText('0', 18, y0+ph/2+4);
+    ctx.fillText('-π', 12, y0+ph-2);
+
+    ctx.fillText('0', x0-10, y0+ph+20);
+    ctx.fillText(`${fmt((fs/4),0)} Hz`, x0+pw/2-20, y0+ph+20);
+    ctx.fillText(`${fmt((fs/2),0)} Hz`, x0+pw-30, y0+ph+20);
+    ctx.restore();
+  }
+
+  function drawSignal(ctx, canvas, fs, N, f, t0, win, winType){
+    const w = canvas.getBoundingClientRect().width;
+    const h = canvas.getBoundingClientRect().height;
+    ctx.clearRect(0,0,w,h);
+    drawGrid(ctx,w,h,60);
+
+    const pad = {L:56, R:14, T:18, B:26};
+    const x0=pad.L, y0=pad.T, pw=w-pad.L-pad.R, ph=h-pad.T-pad.B;
+    const yMid = y0 + ph/2;
+
+    // axes
+    ctx.save();
+    ctx.strokeStyle = 'rgba(15,23,42,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x0,yMid); ctx.lineTo(x0+pw,yMid);
+    ctx.moveTo(x0,y0);   ctx.lineTo(x0,y0+ph);
+    ctx.stroke();
+    ctx.restore();
+
+    const X = (n)=> x0 + (n/(N-1))*pw;
+    const Y = (v)=> y0 + (1 - (v+1)/2)*ph;
+
+    // signal (fenêtré) + enveloppe de fenêtre (optionnel)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(37,99,235,0.85)';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    for (let n=0; n<N; n++){
+      const t = n/fs + t0;
+      const x = Math.sin(2*Math.PI*f*t) * win[n];
+      const px = X(n), py = Y(x);
+      if (n===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    if (winType === 'hann'){
+      ctx.save();
+      ctx.strokeStyle = 'rgba(15,23,42,0.28)';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      for (let n=0; n<N; n++){
+        const px = X(n), py = Y(win[n]); // enveloppe + (0..1)
+        if (n===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+
+      ctx.beginPath();
+      for (let n=0; n<N; n++){
+        const px = X(n), py = Y(-win[n]);
+        if (n===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    const T = N/fs;
+    ctx.save();
+    ctx.fillStyle = MUT;
+    ctx.font = '12.5px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.fillText(`bloc: N=${N} échant. = ${fmt(1000*T,2)} ms`, x0+6, y0-4);
+    ctx.fillText('temps →', x0+pw-55, y0+ph+20);
+    ctx.restore();
+  }
+
+  function onAnyChange(){ recomputeAndDraw(); }
+  freqEl.addEventListener('input', onAnyChange);
+  t0El.addEventListener('input', onAnyChange);
+  nfftEl.addEventListener('change', onAnyChange);
+  winEl.addEventListener('change', onAnyChange);
+  fsEl.addEventListener('change', onAnyChange);
+
+  recomputeAndDraw();
+})();
+</script>
+</body>
+</html>
