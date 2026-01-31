@@ -1,132 +1,117 @@
 <!doctype html>
-<html>
+<html lang="fr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=960,height=700,initial-scale=1" />
-  <title>Riemann / Lebesgue Integration Visualizer</title>
+  <title>Nyquist–Shannon (échantillonnage & aliasing)</title>
   <style>
-    /* Force light mode */
     :root { color-scheme: light; }
-    html, body {
-      margin: 0;
-      width: 960px;
-      height: 700px;
-      overflow: hidden;
-      background: #ffffff;
-      color: #111;
+    html, body{
+      width: 960px; height: 700px; margin: 0; overflow: hidden;
+      background: #fff; color: #111;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
-
-    .app {
+    .app{
       box-sizing: border-box;
-      width: 960px;
-      height: 700px;
-      padding: 14px;
+      width: 960px; height: 700px;
+      padding: 12px;
       display: grid;
-      grid-template-columns: 1fr;
       grid-template-rows: auto 1fr;
-      gap: 12px;
+      gap: 10px;
     }
-
-    .panel {
-      border: 1px solid #d9d9d9;
-      border-radius: 10px;
-      padding: 10px 12px;
+    .panel{
+      border: 1px solid #d9d9d9; border-radius: 10px;
       background: #fff;
+      padding: 10px 12px;
     }
-
-    .controls {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
+    .row{ display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+    label{ display: inline-flex; gap: 8px; align-items: center; white-space: nowrap; }
+    input[type="range"]{ width: 220px; }
+    input[type="number"]{ width: 90px; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .small{ font-size: 13px; color: #333; line-height: 1.35; }
+    .status{
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
     }
-
-    label { display: inline-block; margin: 4px 10px 4px 0; }
-    input[type="number"] { width: 92px; }
-    input[type="text"] { width: 420px; max-width: 100%; }
-    select { max-width: 100%; }
-
-    canvas {
-      width: 960px;      /* CSS size */
-      height: 700px;     /* CSS size */
-      border: 1px solid #d9d9d9;
-      border-radius: 10px;
+    .ok{ color: #0b6b2c; border-color: #bfe6ca; background: #f1fbf4; }
+    .bad{ color: #8a3b00; border-color: #ffd5b5; background: #fff6ef; }
+    canvas{
+      width: 936px; height: 560px; /* CSS size */
+      border: 1px solid #d9d9d9; border-radius: 10px;
       background: #fff;
       display: block;
     }
-
-    .small { color: #333; font-size: 13px; line-height: 1.35; }
-    .warn { color: #8a4b00; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .btn{
+      border: 1px solid #d9d9d9; background: #fff;
+      border-radius: 8px; padding: 6px 10px;
+      cursor: pointer;
+    }
+    .btn:active{ transform: translateY(1px); }
   </style>
 </head>
 <body>
-
 <div class="app">
-  <div class="panel controls">
-    <div>
-      <label>
-        f(x) =
-        <input id="expr" type="text" value="sin(x)+1.5" />
+  <div class="panel">
+    <div class="row">
+      <span class="status" id="statusPill">
+        <span><b>Condition</b> : <span class="mono" id="condTxt"></span></span>
+        <span>→ <span id="condState"></span></span>
+      </span>
+
+      <button class="btn" id="toggleAnim">Pause</button>
+
+      <span class="small">
+        Idée : si le signal est bande limitée à <span class="mono">fmax</span>, alors
+        il est reconstructible parfaitement si <span class="mono">fs ≥ 2·fmax</span>.
+      </span>
+    </div>
+
+    <div class="row" style="margin-top:8px;">
+      <label>f₁ (Hz)
+        <input id="f1" type="range" min="0.2" max="30" step="0.1" value="6">
+        <span class="mono" id="f1v"></span>
       </label>
-      <label>
-        Presets:
-        <select id="preset">
-          <option value="sin(x)+1.5">sin(x)+1.5</option>
-          <option value="x*x">x^2</option>
-          <option value="exp(-x*x)">exp(-x^2)</option>
-          <option value="abs(x)">abs(x)</option>
-          <option value="1/(1+x*x)">1/(1+x^2)</option>
-          <option value="cos(3*x)+1.2">cos(3x)+1.2</option>
-        </select>
+
+      <label>f₂ (Hz)
+        <input id="f2" type="range" min="0" max="30" step="0.1" value="0">
+        <span class="mono" id="f2v"></span>
+      </label>
+
+      <label>A₂
+        <input id="a2" type="range" min="0" max="1" step="0.01" value="0.6">
+        <span class="mono" id="a2v"></span>
+      </label>
+
+      <label>fₛ (Hz)
+        <input id="fs" type="range" min="1" max="80" step="0.1" value="20">
+        <span class="mono" id="fsv"></span>
+      </label>
+
+      <label>T vue (s)
+        <input id="tview" type="range" min="0.3" max="3.0" step="0.05" value="1.2">
+        <span class="mono" id="tviewv"></span>
+      </label>
+
+      <label>Reconstruction (sinc)
+        <input id="recon" type="range" min="0" max="1" step="1" value="1">
+        <span class="mono" id="reconv"></span>
       </label>
     </div>
 
-    <div>
-      <label>a <input id="a" type="number" step="0.1" value="0"></label>
-      <label>b <input id="b" type="number" step="0.1" value="6.283185307"></label>
-      <label>
-        Mode
-        <select id="mode">
-          <option value="riemann">Riemann</option>
-          <option value="lebesgue">Lebesgue (squares)</option>
-        </select>
-      </label>
-      <label id="riemannRuleLabel">
-        Rule
-        <select id="rule">
-          <option value="left">Left</option>
-          <option value="mid" selected>Midpoint</option>
-          <option value="right">Right</option>
-        </select>
-      </label>
-    </div>
-
-    <div>
-      <label>
-        Step / square size (s)
-        <input id="step" type="range" min="0.01" max="1.0" step="0.01" value="0.15">
-        <span class="mono" id="stepVal"></span>
-      </label>
-      <label>
-        Plot samples
-        <input id="samples" type="range" min="200" max="5000" step="100" value="1200">
-        <span class="mono" id="samplesVal"></span>
-      </label>
-    </div>
-
-    <div class="small">
-      <div>Approx area: <span class="mono" id="approxArea"></span></div>
-      <div>Reference (fine trapezoid): <span class="mono" id="refArea"></span></div>
-      <div class="warn" id="warn"></div>
-      <div class="small">
-        Lebesgue mode draws <span class="mono">s × s</span> squares (Δx = Δy = s) stacked under the curve (negative values are clamped to 0 for this visualization).
-      </div>
+    <div class="small" style="margin-top:6px;">
+      <div><b>Affichage</b> : en haut <b>temps</b> (gris = continu, points = échantillons, bleu = reconstruction sinc), en bas <b>spectre</b> (pics + copies à ±k·fₛ).</div>
+      <div id="aliasTxt" class="mono" style="margin-top:4px;"></div>
     </div>
   </div>
 
-  <!-- Fixed 960x700 drawing buffer to match the requested viewport -->
-  <canvas id="cv" width="960" height="700"></canvas>
+  <!-- drawing buffer (match viewport style) -->
+  <canvas id="cv" width="936" height="560"></canvas>
 </div>
 
 <script>
@@ -135,256 +120,332 @@
   const ctx = cv.getContext('2d');
 
   const el = (id) => document.getElementById(id);
-  const exprEl = el('expr');
-  const presetEl = el('preset');
-  const modeEl = el('mode');
-  const ruleEl = el('rule');
-  const aEl = el('a');
-  const bEl = el('b');
-  const stepEl = el('step');
-  const samplesEl = el('samples');
+  const f1El = el('f1'), f2El = el('f2'), a2El = el('a2'), fsEl = el('fs'), tviewEl = el('tview');
+  const reconEl = el('recon');
+  const f1v = el('f1v'), f2v = el('f2v'), a2v = el('a2v'), fsv = el('fsv'), tviewv = el('tviewv'), reconv = el('reconv');
 
-  const stepValEl = el('stepVal');
-  const samplesValEl = el('samplesVal');
-  const approxAreaEl = el('approxArea');
-  const refAreaEl = el('refArea');
-  const warnEl = el('warn');
-  const riemannRuleLabel = el('riemannRuleLabel');
+  const statusPill = el('statusPill');
+  const condTxt = el('condTxt');
+  const condState = el('condState');
+  const aliasTxt = el('aliasTxt');
 
-  function parseFunc(expr) {
-    const body = `
-      "use strict";
-      const {sin,cos,tan,asin,acos,atan,atan2,exp,log,sqrt,pow,abs,min,max,floor,ceil,round,PI,E} = Math;
-      return (${expr});
-    `;
-    return new Function("x", body);
+  const toggleAnimBtn = el('toggleAnim');
+
+  let running = true;
+  let t0 = 0;
+
+  function sinc(x){
+    // sinc(pi x) convention: sinc(x) = sin(pi x)/(pi x)
+    if (Math.abs(x) < 1e-8) return 1;
+    const px = Math.PI * x;
+    return Math.sin(px) / px;
   }
 
-  function nicePad(min, max, padFrac=0.08) {
-    if (!isFinite(min) || !isFinite(max)) return [0, 1];
-    if (min === max) {
-      const d = (min === 0 ? 1 : Math.abs(min) * 0.2);
-      return [min - d, max + d];
-    }
-    const span = max - min;
-    return [min - span * padFrac, max + span * padFrac];
+  function aliasFrequency(f, fs){
+    // retourne la fréquence repliée dans [0, fs/2]
+    if (fs <= 0) return NaN;
+    // réduire modulo fs
+    let r = f % fs;
+    if (r < 0) r += fs;
+    // rabattre autour de fs/2
+    if (r > fs/2) r = fs - r;
+    return r;
   }
 
-  function trapzRef(f, a, b, n=20000) {
-    if (!(b > a)) return 0;
-    const h = (b - a) / n;
-    let s = 0;
-    let prev = f(a);
-    for (let i = 1; i <= n; i++) {
-      const x = a + i*h;
-      const y = f(x);
-      s += (prev + y) * 0.5;
-      prev = y;
-    }
-    return s * h;
+  function xContinuous(t, f1, f2, a2, phase){
+    const a1 = 1.0;
+    let x = a1 * Math.sin(2*Math.PI*f1*t + phase);
+    if (f2 > 0 && a2 > 0) x += a2 * Math.sin(2*Math.PI*f2*t + 0.6*phase);
+    return x;
   }
 
   function draw() {
-    const expr = exprEl.value.trim();
-    let a = Number(aEl.value), b = Number(bEl.value);
-    const mode = modeEl.value;
-    const rule = ruleEl.value;
-    const s = Number(stepEl.value);
-    const plotN = Number(samplesEl.value);
+    const f1 = Number(f1El.value);
+    const f2 = Number(f2El.value);
+    const a2 = Number(a2El.value);
+    const fs = Number(fsEl.value);
+    const Tview = Number(tviewEl.value);
+    const doRecon = Number(reconEl.value) === 1;
 
-    stepValEl.textContent = s.toFixed(2);
-    samplesValEl.textContent = String(plotN);
+    f1v.textContent = f1.toFixed(1);
+    f2v.textContent = f2.toFixed(1);
+    a2v.textContent = a2.toFixed(2);
+    fsv.textContent = fs.toFixed(1);
+    tviewv.textContent = Tview.toFixed(2);
+    reconv.textContent = doRecon ? "ON" : "OFF";
 
-    riemannRuleLabel.style.display = (mode === 'riemann') ? '' : 'none';
-    warnEl.textContent = "";
+    const fmax = Math.max(f1, f2);
+    const ok = fs >= 2*fmax && fmax > 0;
 
-    if (!(b > a)) [a, b] = [b, a];
-    if (b === a) b = a + 1;
+    condTxt.textContent = `fs (${fs.toFixed(1)}) ≥ 2·fmax (${(2*fmax).toFixed(1)})`;
+    condState.textContent = ok ? "OK (reconstruction idéale possible)" : "NON (aliasing)";
+    statusPill.classList.toggle('ok', ok);
+    statusPill.classList.toggle('bad', !ok);
 
-    let f;
-    try {
-      f = parseFunc(expr);
-      const t = f((a+b)/2);
-      if (!isFinite(t)) throw new Error("f(x) is not finite");
-    } catch (e) {
-      ctx.clearRect(0,0,cv.width,cv.height);
-      ctx.fillStyle = "#b00020";
-      ctx.font = "16px system-ui, sans-serif";
-      ctx.fillText("Error parsing f(x): " + e.message, 20, 30);
-      approxAreaEl.textContent = "—";
-      refAreaEl.textContent = "—";
-      return;
+    const fa1 = aliasFrequency(f1, fs);
+    const fa2 = (f2 > 0) ? aliasFrequency(f2, fs) : 0;
+
+    if (f2 > 0 && a2 > 0) {
+      aliasTxt.textContent =
+        `Alias: f1→${fa1.toFixed(3)} Hz, f2→${fa2.toFixed(3)} Hz (dans [0, fs/2])`;
+    } else {
+      aliasTxt.textContent =
+        `Alias: f1→${fa1.toFixed(3)} Hz (dans [0, fs/2])`;
     }
 
-    const xs = new Float64Array(plotN);
-    const ys = new Float64Array(plotN);
-    let yMin = +Infinity, yMax = -Infinity;
-    for (let i = 0; i < plotN; i++) {
-      const x = a + (b - a) * (i / (plotN - 1));
-      let y = f(x);
-      if (!isFinite(y)) y = NaN;
-      xs[i] = x;
-      ys[i] = y;
-      if (isFinite(y)) { yMin = Math.min(yMin, y); yMax = Math.max(yMax, y); }
-    }
-    if (!isFinite(yMin) || !isFinite(yMax)) { yMin = -1; yMax = 1; }
-    yMin = Math.min(yMin, 0);
-    yMax = Math.max(yMax, 0);
-    [yMin, yMax] = nicePad(yMin, yMax);
-
+    // --- Canvas layout ---
     const W = cv.width, H = cv.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0,0,W,H);
 
-    // Layout inside the canvas (leave room for axes labels)
-    const padL = 70, padR = 20, padT = 22, padB = 55;
+    const padL = 58, padR = 18, padT = 18, padB = 18;
+    const gap = 18;
+    const topH = Math.floor((H - padT - padB - gap) * 0.62);
+    const botH = (H - padT - padB - gap) - topH;
+
+    const topY0 = padT;
+    const botY0 = padT + topH + gap;
+
+    // axes rectangles
     const plotW = W - padL - padR;
-    const plotH = H - padT - padB;
 
-    const x2px = (x) => padL + (x - a) / (b - a) * plotW;
-    const y2py = (y) => padT + (yMax - y) / (yMax - yMin) * plotH;
+    // time plot ranges
+    const tMin = 0, tMax = Tview;
+    const x2px = (t) => padL + (t - tMin)/(tMax - tMin) * plotW;
+
+    // determine y range by sampling
+    const phase = running ? (t0 * 1.3) : t0; // small drift to animate
+    let yMin = +Infinity, yMax = -Infinity;
+    const scanN = 1200;
+    for (let i=0;i<scanN;i++){
+      const t = tMin + (tMax-tMin)*i/(scanN-1);
+      const y = xContinuous(t, f1, f2, a2, phase);
+      yMin = Math.min(yMin, y);
+      yMax = Math.max(yMax, y);
+    }
+    // include 0 and pad
+    yMin = Math.min(yMin, 0); yMax = Math.max(yMax, 0);
+    const span = Math.max(1e-6, (yMax - yMin));
+    yMin -= 0.15*span; yMax += 0.15*span;
+
+    const y2py = (y) => topY0 + (yMax - y)/(yMax - yMin) * topH;
     const y0 = y2py(0);
 
-    // Approximation
-    let approx = 0;
-
-    if (mode === 'riemann') {
-      const dx = s;
-      const n = Math.max(1, Math.floor((b - a) / dx));
-      for (let i = 0; i < n; i++) {
-        const x0 = a + i*dx;
-        const x1 = Math.min(b, x0 + dx);
-        let xSample = (rule === 'left') ? x0 : (rule === 'right') ? x1 : 0.5*(x0 + x1);
-        const y = f(xSample);
-        if (isFinite(y)) approx += y * (x1 - x0);
-      }
-    } else {
-      const dx = s, dy = s;
-      const n = Math.max(1, Math.floor((b - a) / dx));
-      let hadNegative = false;
-      for (let i = 0; i < n; i++) {
-        const x0 = a + i*dx;
-        const x1 = Math.min(b, x0 + dx);
-        const xm = 0.5*(x0 + x1);
-        let y = f(xm);
-        if (!isFinite(y)) continue;
-        if (y < 0) { hadNegative = true; y = 0; }
-        const k = Math.floor(y / dy);
-        approx += k * dy * (x1 - x0);
-      }
-      if (hadNegative) warnEl.textContent = "Lebesgue (squares) mode clamps negative f(x) to 0 for the visualization.";
-    }
-
-    const ref = trapzRef(f, a, b, 40000);
-    approxAreaEl.textContent = approx.toFixed(8);
-    refAreaEl.textContent = ref.toFixed(8);
-
-    // ---- Draw ----
-    ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, W, H);
-
-    // Grid
+    // --- draw grid (time) ---
     ctx.strokeStyle = "#eeeeee";
     ctx.lineWidth = 1;
-    const gridLines = 10;
-    for (let i = 1; i < gridLines; i++) {
-      const gx = padL + (plotW * i / gridLines);
-      const gy = padT + (plotH * i / gridLines);
-      ctx.beginPath(); ctx.moveTo(gx, padT); ctx.lineTo(gx, H - padB); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(W - padR, gy); ctx.stroke();
+    for (let i=1;i<10;i++){
+      const gx = padL + plotW*i/10;
+      ctx.beginPath(); ctx.moveTo(gx, topY0); ctx.lineTo(gx, topY0+topH); ctx.stroke();
+    }
+    for (let i=1;i<6;i++){
+      const gy = topY0 + topH*i/6;
+      ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(padL+plotW, gy); ctx.stroke();
     }
 
-    // Axes
+    // axes (time)
     ctx.strokeStyle = "#333";
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(padL, y0); ctx.lineTo(W - padR, y0); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(padL, y0); ctx.lineTo(padL+plotW, y0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(padL, topY0); ctx.lineTo(padL, topY0+topH); ctx.stroke();
 
-    // Labels
+    // title (time)
     ctx.fillStyle = "#111";
-    ctx.font = "13px system-ui, sans-serif";
-    ctx.fillText(`x ∈ [${a.toFixed(3)}, ${b.toFixed(3)}]`, padL, H - 18);
-    ctx.fillText(`y ∈ [${yMin.toFixed(3)}, ${yMax.toFixed(3)}]`, padL, 18);
+    ctx.font = "14px system-ui, sans-serif";
+    ctx.fillText("Domaine temporel : signal continu, échantillons, reconstruction", padL, topY0 + 14);
 
-    // Shapes
-    if (mode === 'riemann') {
-      const dx = s;
-      const n = Math.max(1, Math.floor((b - a) / dx));
-      ctx.fillStyle = "rgba(30, 136, 229, 0.22)";
-      ctx.strokeStyle = "rgba(30, 136, 229, 0.65)";
-      ctx.lineWidth = 1;
-      for (let i = 0; i < n; i++) {
-        const x0 = a + i*dx;
-        const x1 = Math.min(b, x0 + dx);
-        const xSample = (rule === 'left') ? x0 : (rule === 'right') ? x1 : 0.5*(x0 + x1);
-        const y = f(xSample);
-        if (!isFinite(y)) continue;
+    // continuous signal (gray)
+    ctx.strokeStyle = "rgba(0,0,0,0.45)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i=0;i<scanN;i++){
+      const t = tMin + (tMax-tMin)*i/(scanN-1);
+      const y = xContinuous(t, f1, f2, a2, phase);
+      const px = x2px(t), py = y2py(y);
+      if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
 
-        const px0 = x2px(x0), px1 = x2px(x1);
-        const py = y2py(y);
+    // sample points
+    const Ts = 1/fs;
+    const nMin = 0;
+    const nMax = Math.floor(Tview / Ts);
 
-        const top = Math.min(py, y0);
-        const bot = Math.max(py, y0);
-        ctx.fillRect(px0, top, Math.max(0.5, px1 - px0), Math.max(0.5, bot - top));
-        ctx.strokeRect(px0, top, Math.max(0.5, px1 - px0), Math.max(0.5, bot - top));
+    const samples = [];
+    for (let n=nMin;n<=nMax;n++){
+      const tn = n*Ts;
+      const yn = xContinuous(tn, f1, f2, a2, phase);
+      samples.push({n, tn, yn});
+    }
+
+    // stems + points
+    ctx.strokeStyle = "rgba(30,136,229,0.65)";
+    ctx.fillStyle = "rgba(30,136,229,0.85)";
+    ctx.lineWidth = 1.5;
+    for (const s of samples){
+      const px = x2px(s.tn);
+      const py = y2py(s.yn);
+      // stem to 0
+      ctx.beginPath();
+      ctx.moveTo(px, y0);
+      ctx.lineTo(px, py);
+      ctx.stroke();
+      // point
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, 2*Math.PI);
+      ctx.fill();
+    }
+
+    // sinc reconstruction (blue)
+    if (doRecon) {
+      // windowed sinc sum
+      const Nwin = Math.min(80, Math.max(12, Math.floor(samples.length/2)));
+      // choose n range around visible indices
+      const n0 = 0;
+      const n1 = nMax;
+
+      ctx.strokeStyle = "rgba(25, 86, 200, 0.95)";
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+
+      for (let i=0;i<scanN;i++){
+        const t = tMin + (tMax-tMin)*i/(scanN-1);
+        const nf = t / Ts;
+        const nCenter = Math.round(nf);
+
+        let yrec = 0;
+        let wsum = 0;
+        // local sum around nearest sample to keep it fast
+        for (let k = -Nwin; k <= Nwin; k++){
+          const n = nCenter + k;
+          if (n < n0 || n > n1) continue;
+          const yn = samples[n].yn;  // because n starts at 0
+          const u = (t - n*Ts)/Ts;   // (t/Ts - n)
+          const w = sinc(u);
+          yrec += yn * w;
+          // optional: could normalize, but ideal sinc doesn't need it; keep wsum for stability info
+          wsum += Math.abs(w);
+        }
+
+        const px = x2px(t), py = y2py(yrec);
+        if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
       }
-    } else {
-      const dx = s, dy = s;
-      const n = Math.max(1, Math.floor((b - a) / dx));
-      ctx.fillStyle = "rgba(67, 160, 71, 0.20)";
-      ctx.strokeStyle = "rgba(67, 160, 71, 0.55)";
-      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
 
-      for (let i = 0; i < n; i++) {
-        const x0 = a + i*dx;
-        const x1 = Math.min(b, x0 + dx);
-        const xm = 0.5*(x0 + x1);
-        let y = f(xm);
-        if (!isFinite(y)) continue;
-        y = Math.max(0, y);
+    // annotations (time)
+    ctx.fillStyle = "#111";
+    ctx.font = "12px system-ui, sans-serif";
+    ctx.fillText(`fs = ${fs.toFixed(1)} Hz, Ts = ${(1/fs).toFixed(4)} s, fmax = ${fmax.toFixed(1)} Hz`, padL, topY0 + topH - 8);
 
-        const k = Math.floor(y / dy);
-        for (let j = 0; j < k; j++) {
-          const yLo = j * dy;
-          const yHi = (j + 1) * dy;
+    // --- Frequency plot ---
+    const fMaxPlot = Math.max(1, Math.min(60, Math.max(3*fs/2, 2*fmax, 10)));
+    const fx2px = (f) => padL + (f + fMaxPlot) / (2*fMaxPlot) * plotW;
 
-          const px0 = x2px(x0), px1 = x2px(x1);
-          const pyTop = y2py(yHi);
-          const pyBot = y2py(yLo);
+    // freq plot grid
+    ctx.strokeStyle = "#eeeeee";
+    ctx.lineWidth = 1;
+    for (let i=1;i<10;i++){
+      const gx = padL + plotW*i/10;
+      ctx.beginPath(); ctx.moveTo(gx, botY0); ctx.lineTo(gx, botY0+botH); ctx.stroke();
+    }
+    // axes box
+    ctx.strokeStyle = "#333";
+    ctx.beginPath(); ctx.moveTo(padL, botY0+botH-24); ctx.lineTo(padL+plotW, botY0+botH-24); ctx.stroke(); // horizontal axis baseline
+    ctx.beginPath(); ctx.moveTo(padL, botY0); ctx.lineTo(padL, botY0+botH); ctx.stroke();
 
-          ctx.fillRect(px0, pyTop, Math.max(0.5, px1 - px0), Math.max(0.5, pyBot - pyTop));
-          ctx.strokeRect(px0, pyTop, Math.max(0.5, px1 - px0), Math.max(0.5, pyBot - pyTop));
+    ctx.fillStyle = "#111";
+    ctx.font = "14px system-ui, sans-serif";
+    ctx.fillText("Domaine fréquentiel (schéma) : spectre + copies à k·fs", padL, botY0 + 14);
+
+    // Nyquist band shading [-fs/2, fs/2]
+    const nyL = fx2px(-fs/2), nyR = fx2px(fs/2);
+    ctx.fillStyle = "rgba(0,0,0,0.04)";
+    ctx.fillRect(nyL, botY0+24, (nyR-nyL), botH-52);
+    ctx.strokeStyle = "rgba(0,0,0,0.20)";
+    ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(nyL, botY0+24); ctx.lineTo(nyL, botY0+botH-24); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(nyR, botY0+24); ctx.lineTo(nyR, botY0+botH-24); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // helper: draw spectral lines at ±f, and copies at ±f + k fs
+    function drawSpectrumLines(f, amp, color) {
+      if (!(f > 0) || amp <= 0) return;
+
+      const baseY = botY0 + botH - 24;
+      const height = (botH - 60) * Math.min(1, Math.max(0.2, amp)); // scaled
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+
+      const kMax = Math.ceil(fMaxPlot / fs) + 1;
+      for (let k=-kMax;k<=kMax;k++){
+        const fpos = f + k*fs;
+        const fneg = -f + k*fs;
+
+        // draw if in view
+        for (const ff of [fpos, fneg]) {
+          if (ff < -fMaxPlot || ff > fMaxPlot) continue;
+          const x = fx2px(ff);
+          ctx.beginPath();
+          ctx.moveTo(x, baseY);
+          ctx.lineTo(x, baseY - height);
+          ctx.stroke();
         }
       }
     }
 
-    // Function curve
-    ctx.strokeStyle = "#111";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    let started = false;
-    for (let i = 0; i < plotN; i++) {
-      const x = xs[i], y = ys[i];
-      if (!isFinite(y)) { started = false; continue; }
-      const px = x2px(x), py = y2py(y);
-      if (!started) { ctx.moveTo(px, py); started = true; }
-      else ctx.lineTo(px, py);
-    }
-    ctx.stroke();
+    // original components
+    drawSpectrumLines(f1, 1.0, "rgba(0,0,0,0.55)");         // continuous spectrum impulses (schematic)
+    if (f2 > 0 && a2 > 0) drawSpectrumLines(f2, a2, "rgba(0,0,0,0.55)");
 
-    // Title within plot
+    // highlight baseband alias positions (what the sampled signal "looks like" in baseband)
+    function drawAliasMarker(fa, color) {
+      const baseY = botY0 + botH - 24;
+      const x1 = fx2px(fa);
+      const x2 = fx2px(-fa);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(x1, baseY); ctx.lineTo(x1, baseY - 26); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x2, baseY); ctx.lineTo(x2, baseY - 26); ctx.stroke();
+    }
+    drawAliasMarker(fa1, "rgba(30,136,229,0.9)");
+    if (f2 > 0 && a2 > 0) drawAliasMarker(fa2, "rgba(30,136,229,0.9)");
+
+    // labels (freq)
     ctx.fillStyle = "#111";
-    ctx.font = "14px system-ui, sans-serif";
-    const modeName = (mode === 'riemann') ? `Riemann (${rule})` : `Lebesgue-style (squares, Δx=Δy=s)`;
-    ctx.fillText(`${modeName} — s=${s.toFixed(2)}`, padL, H - padB + 32);
+    ctx.font = "12px system-ui, sans-serif";
+    ctx.fillText(`Affiché: f ∈ [−${fMaxPlot.toFixed(0)}, +${fMaxPlot.toFixed(0)}] Hz`, padL, botY0 + botH - 8);
+    ctx.fillText(`Bande de Nyquist: [−fs/2, +fs/2] = [${(-fs/2).toFixed(1)}, ${(fs/2).toFixed(1)}] Hz`, padL + 260, botY0 + botH - 8);
+
+    // small legend
+    const lx = padL + plotW - 290;
+    const ly = botY0 + 26;
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.strokeStyle = "#ddd";
+    ctx.lineWidth = 1;
+    ctx.fillRect(lx, ly, 270, 52);
+    ctx.strokeRect(lx, ly, 270, 52);
+    ctx.fillStyle = "#111";
+    ctx.fillText("Lignes grises: copies du spectre à k·fs", lx+10, ly+18);
+    ctx.fillStyle = "rgba(30,136,229,0.95)";
+    ctx.fillText("Bleu: fréquence(s) observée(s) en baseband (alias)", lx+10, ly+36);
   }
 
-  presetEl.addEventListener('change', () => { exprEl.value = presetEl.value; draw(); });
-  [exprEl, modeEl, ruleEl, aEl, bEl, stepEl, samplesEl].forEach(node => {
-    node.addEventListener('input', draw);
-    node.addEventListener('change', draw);
+  function tick(ts){
+    if (running) t0 = ts * 0.001;
+    draw();
+    requestAnimationFrame(tick);
+  }
+
+  // events
+  [f1El,f2El,a2El,fsEl,tviewEl,reconEl].forEach(n => n.addEventListener('input', draw));
+  toggleAnimBtn.addEventListener('click', () => {
+    running = !running;
+    toggleAnimBtn.textContent = running ? "Pause" : "Reprendre";
   });
 
-  draw();
+  requestAnimationFrame(tick);
 })();
 </script>
 </body>

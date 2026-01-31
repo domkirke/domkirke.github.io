@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=960,height=700,initial-scale=1" />
+  <title>Non-uniform Quantization: Linear vs μ-law vs A-law</title>
+  <style>
+    :root { color-scheme: light; }
+    html, body{
+      width:960px; height:700px; margin:0; overflow:hidden;
+      background:#fff; color:#111;
+      font-size: 13px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    .app{
+      box-sizing:border-box;
+      width:960px; height:700px;
+      padding:12px;
+      display:grid;
+      grid-template-rows:auto 1fr;
+      gap:10px;
+    }
+    .panel{
+      border:1px solid #d9d9d9; border-radius:10px;
+      background:#fff;
+      padding:10px 12px;
+    }
+    .row{ display:flex; flex-wrap:wrap; gap:10px 14px; align-items:center; }
+    label{ display:inline-flex; gap:8px; align-items:center; white-space:nowrap; }
+    select, button{ font:inherit; }
+    input[type="range"]{ width:220px; }
+    input[type="number"]{ width:90px; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .small{ font-size:13px; color:#333; line-height:1.35; }
+    .pill{
+      border:1px solid #e1e1e1; background:#fafafa;
+      border-radius:999px; padding:6px 10px;
+      display:inline-flex; gap:10px; align-items:center;
+    }
+    canvas{
+      width:936px; height:560px;
+      border:1px solid #d9d9d9; border-radius:10px;
+      background:#fff;
+      display:block;
+    }
+    .btn{
+      border:1px solid #d9d9d9; background:#fff;
+      border-radius:8px; padding:6px 10px; cursor:pointer;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .hidden{ display:none !important; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="panel">
+    <div class="row">
+      <label>
+        Companding
+        <select id="mode">
+          <option value="linear">Linear (uniform)</option>
+          <option value="mulaw">μ-law</option>
+          <option value="alaw">A-law</option>
+        </select>
+      </label>
+
+      <label>
+        Bits (N)
+        <input id="bits" type="range" min="2" max="12" step="1" value="8">
+        <span class="mono" id="bitsv"></span>
+      </label>
+
+      <label>
+        Input amplitude
+        <input id="amp" type="range" min="0.05" max="1.0" step="0.01" value="0.9">
+        <span class="mono" id="ampv"></span>
+      </label>
+
+      <label>
+        Test signal
+        <select id="sig">
+          <option value="sine" selected>Sine</option>
+          <option value="twoTone">Two-tone</option>
+          <option value="chirp">Chirp</option>
+          <option value="noise">Uniform noise</option>
+        </select>
+      </label>
+
+      <button class="btn" id="regen">Regenerate</button>
+
+      <span class="pill">
+        <span class="mono" id="levelsTxt"></span>
+        <span class="mono" id="snrTxt"></span>
+      </span>
+    </div>
+
+    <div class="row" style="margin-top:8px;">
+      <label id="muWrap">
+        μ
+        <input id="mu" type="range" min="1" max="255" step="1" value="255">
+        <span class="mono" id="muv"></span>
+      </label>
+
+      <label id="aWrap">
+        A
+        <input id="A" type="range" min="2" max="200" step="1" value="87">
+        <span class="mono" id="Av"></span>
+      </label>
+
+      <span class="small">
+        Non-uniform quantization = <b>compress</b> (μ/A-law) → <b>uniform quantize</b> → <b>expand</b>.
+        It allocates <b>finer steps near 0</b> and <b>coarser steps at large amplitudes</b>.
+      </span>
+    </div>
+  </div>
+
+  <canvas id="cv" width="936" height="560"></canvas>
+</div>
+
+<script>
+(() => {
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+
+  const el = (id) => document.getElementById(id);
+  const modeEl = el('mode');
+  const bitsEl = el('bits');
+  const ampEl  = el('amp');
+  const sigEl  = el('sig');
+  const muEl   = el('mu');
+  const AEl    = el('A');
+  const regenBtn = el('regen');
+
+  const bitsv = el('bitsv'), ampv = el('ampv'), muv = el('muv'), Av = el('Av');
+  const muWrap = el('muWrap'), aWrap = el('aWrap');
+  const levelsTxt = el('levelsTxt'), snrTxt = el('snrTxt');
+
+  function clamp(x,a,b){ return Math.min(b, Math.max(a,x)); }
+  function sgn(x){ return x < 0 ? -1 : 1; }
+
+  // --- Companding (normalized domain [-1,1]) ---
+  function compand(x, mode, mu, A){
+    x = clamp(x, -1, 1);
+    const ax = Math.abs(x);
+    const sx = (x === 0) ? 0 : Math.sign(x);
+    if (mode === 'linear') return x;
+
+    if (mode === 'mulaw') {
+      // y = sign(x) * ln(1+μ|x|)/ln(1+μ)
+      return sx * Math.log1p(mu * ax) / Math.log1p(mu);
+    }
+
+    // A-law
+    // y = sign(x) * (A|x|)/(1+ln A) for |x|<1/A
+    // y = sign(x) * (1+ln(A|x|))/(1+ln A) otherwise
+    const lnA = Math.log(A);
+    const denom = 1 + lnA;
+    if (ax < 1/A) return sx * (A * ax) / denom;
+    return sx * (1 + Math.log(A * ax)) / denom;
+  }
+
+  function expand(y, mode, mu, A){
+    y = clamp(y, -1, 1);
+    const ay = Math.abs(y);
+    const sy = (y === 0) ? 0 : Math.sign(y);
+    if (mode === 'linear') return y;
+
+    if (mode === 'mulaw') {
+      // x = sign(y) * ( (1+μ)^{|y|} - 1 ) / μ
+      return sy * (Math.pow(1 + mu, ay) - 1) / mu;
+    }
+
+    // A-law inverse
+    const lnA = Math.log(A);
+    const denom = 1 + lnA;
+    const thresh = 1 / denom; // corresponds to |x| = 1/A boundary
+    if (ay < thresh) {
+      // |y| = (A|x|)/denom  => |x| = |y|*denom/A
+      return sy * (ay * denom) / A;
+    }
+    // |y| = (1+ln(A|x|))/denom => ln(A|x|) = |y|*denom - 1
+    return sy * Math.exp(ay * denom - 1) / A;
+  }
+
+  // Uniform quantizer in companded domain y in [-1,1], mid-tread with L levels including 0.
+  function quantizeUniformMidtread(y, L){
+    const dy = 2 / (L - 1);
+    const k = Math.round((y + 1) / dy);
+    const yq = -1 + k * dy;
+    return clamp(yq, -1, 1);
+  }
+
+  // Generate a test signal x(t) in [-amp, amp]
+  function makeSignal(kind, amp, N, seed=1){
+    // simple deterministic RNG for reproducibility
+    let s = seed >>> 0;
+    function rand(){
+      s = (1664525 * s + 1013904223) >>> 0;
+      return s / 4294967296;
+    }
+
+    const x = new Float64Array(N);
+    for (let i=0;i<N;i++){
+      const t = i / (N-1);
+      let v = 0;
+      if (kind === 'sine') {
+        v = Math.sin(2*Math.PI * 3 * t);
+      } else if (kind === 'twoTone') {
+        v = 0.65*Math.sin(2*Math.PI*2*t) + 0.35*Math.sin(2*Math.PI*11*t);
+      } else if (kind === 'chirp') {
+        const f0 = 1, f1 = 14;
+        const phase = 2*Math.PI*(f0*t + 0.5*(f1-f0)*t*t);
+        v = Math.sin(phase);
+      } else { // noise
+        v = 2*rand() - 1;
+      }
+      x[i] = amp * v;
+    }
+    return x;
+  }
+
+  function mse(a,b){
+    let s=0;
+    for (let i=0;i<a.length;i++){
+      const e = a[i]-b[i];
+      s += e*e;
+    }
+    return s / a.length;
+  }
+
+  function power(a){
+    let s=0;
+    for (let i=0;i<a.length;i++) s += a[i]*a[i];
+    return s / a.length;
+  }
+
+  function db(x){ return 10*Math.log10(x); }
+
+  function drawAxesBox(x,y,w,h,title){
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(x,y,w,h);
+    ctx.strokeStyle = "#d9d9d9";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x,y,w,h);
+
+    ctx.fillStyle = "#111";
+    ctx.font = "13px system-ui, sans-serif";
+    ctx.fillText(title, x+10, y+18);
+  }
+
+  function plotLine(x0,y0,w,h, xs, ys, xMin,xMax,yMin,yMax, strokeStyle, lineWidth=2){
+    const X = (v) => x0 + (v-xMin)/(xMax-xMin) * w;
+    const Y = (v) => y0 + (yMax-v)/(yMax-yMin) * h;
+    ctx.strokeStyle = strokeStyle;
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath();
+    let started=false;
+    for (let i=0;i<xs.length;i++){
+      const x=xs[i], y=ys[i];
+      if (!isFinite(y)) { started=false; continue; }
+      const px=X(x), py=Y(y);
+      if (!started){ ctx.moveTo(px,py); started=true; }
+      else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+  }
+
+  function plotPoints(x0,y0,w,h, xs, ys, xMin,xMax,yMin,yMax, fillStyle, r=2.5){
+    const X = (v) => x0 + (v-xMin)/(xMax-xMin) * w;
+    const Y = (v) => y0 + (yMax-v)/(yMax-yMin) * h;
+    ctx.fillStyle = fillStyle;
+    for (let i=0;i<xs.length;i++){
+      const px=X(xs[i]), py=Y(ys[i]);
+      ctx.beginPath(); ctx.arc(px,py,r,0,2*Math.PI); ctx.fill();
+    }
+  }
+
+  function grid(x,y,w,h, nx=8, ny=6){
+    ctx.strokeStyle = "#eeeeee";
+    ctx.lineWidth = 1;
+    for (let i=1;i<nx;i++){
+      const gx = x + w*i/nx;
+      ctx.beginPath(); ctx.moveTo(gx,y); ctx.lineTo(gx,y+h); ctx.stroke();
+    }
+    for (let j=1;j<ny;j++){
+      const gy = y + h*j/ny;
+      ctx.beginPath(); ctx.moveTo(x,gy); ctx.lineTo(x+w,gy); ctx.stroke();
+    }
+  }
+
+  function draw() {
+    const mode = modeEl.value;
+    const Nbits = Number(bitsEl.value);
+    const amp = Number(ampEl.value);
+    const sig = sigEl.value;
+    const mu = Number(muEl.value);
+    const A = Number(AEl.value);
+
+    bitsv.textContent = String(Nbits);
+    ampv.textContent = amp.toFixed(2);
+    muv.textContent = String(mu);
+    Av.textContent = String(A);
+
+    muWrap.classList.toggle('hidden', mode !== 'mulaw');
+    aWrap.classList.toggle('hidden', mode !== 'alaw');
+
+    const L = 2 ** Nbits;
+    const dy = 2 / (L - 1);
+
+    levelsTxt.textContent = `L=${L} levels, Δy=${dy.toFixed(6)}`;
+
+    // --- Build signal & quantize ---
+    const N = 1400; // for smooth plot
+    const x = makeSignal(sig, amp, N, 12345);
+
+    const xhat = new Float64Array(N);
+    const y = new Float64Array(N);
+    const yq = new Float64Array(N);
+
+    for (let i=0;i<N;i++){
+      const xn = clamp(x[i], -1, 1);
+      const yc = compand(xn, mode, mu, A);
+      const yquant = quantizeUniformMidtread(yc, L);
+      const xr = expand(yquant, mode, mu, A);
+      xhat[i] = xr;
+      y[i] = yc;
+      yq[i] = yquant;
+    }
+
+    const sigPow = power(x);
+    const errPow = mse(x, xhat);
+    const SNR = errPow > 0 ? db(sigPow/errPow) : Infinity;
+    snrTxt.textContent = `SNR≈${isFinite(SNR) ? SNR.toFixed(2)+' dB' : '∞'}`;
+
+    // --- Precompute transfer curves ---
+    const M = 1200;
+    const xs = new Float64Array(M);
+    const ycArr = new Float64Array(M);
+    const yqArr = new Float64Array(M);
+    const xrArr = new Float64Array(M);
+
+    for (let i=0;i<M;i++){
+      const xv = -1 + 2*i/(M-1);
+      xs[i] = xv;
+      const yc = compand(xv, mode, mu, A);
+      const yqq = quantizeUniformMidtread(yc, L);
+      ycArr[i] = yc;
+      yqArr[i] = yqq;
+      xrArr[i] = expand(yqq, mode, mu, A);
+    }
+
+    // --- Effective step sizes in x-domain ---
+    // For each quantization code k -> yk, map to xk = expand(yk).
+    // Step size approx Δx_k = x_{k+1} - x_k at that code.
+    const codeN = L;
+    const yLevels = new Float64Array(codeN);
+    const xLevels = new Float64Array(codeN);
+    for (let k=0;k<codeN;k++){
+      const yk = -1 + k * dy;
+      yLevels[k] = yk;
+      xLevels[k] = expand(yk, mode, mu, A);
+    }
+    const stepX = new Float64Array(codeN-1);
+    const stepXat = new Float64Array(codeN-1); // midpoints in x
+    for (let k=0;k<codeN-1;k++){
+      stepX[k] = xLevels[k+1] - xLevels[k];
+      stepXat[k] = 0.5*(xLevels[k+1] + xLevels[k]);
+    }
+
+    // --- Draw layout ---
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0,0,W,H);
+
+    // 2 columns top, 1 wide bottom
+    const pad = 12;
+    const gap = 12;
+
+    const topH = 250;
+    const bottomH = H - pad*2 - topH - gap;
+
+    const colW = Math.floor((W - pad*2 - gap) / 2);
+
+    const box1 = { x: pad, y: pad, w: colW, h: topH };
+    const box2 = { x: pad + colW + gap, y: pad, w: colW, h: topH };
+    const box3 = { x: pad, y: pad + topH + gap, w: W - pad*2, h: bottomH };
+
+    // Box 1: compressor + quantized transfer
+    drawAxesBox(box1.x, box1.y, box1.w, box1.h, "Transfer curve (compress & quantize): y = C(x), yq");
+    grid(box1.x+8, box1.y+26, box1.w-16, box1.h-38, 8, 6);
+
+    // axes labels
+    ctx.fillStyle = "#333";
+    ctx.font = "12px system-ui, sans-serif";
+    ctx.fillText("x", box1.x + box1.w - 16, box1.y + box1.h - 10);
+    ctx.fillText("y", box1.x + 12, box1.y + 38);
+
+    // plot y=C(x)
+    plotLine(box1.x+8, box1.y+26, box1.w-16, box1.h-38,
+             xs, ycArr, -1,1,-1,1, "rgba(0,0,0,0.55)", 2);
+
+    // plot yq staircase as points/line
+    plotLine(box1.x+8, box1.y+26, box1.w-16, box1.h-38,
+             xs, yqArr, -1,1,-1,1, "rgba(30,136,229,0.95)", 2);
+
+    // diagonal reference y=x
+    const diagX = new Float64Array(2); diagX[0]=-1; diagX[1]=1;
+    const diagY = new Float64Array(2); diagY[0]=-1; diagY[1]=1;
+    plotLine(box1.x+8, box1.y+26, box1.w-16, box1.h-38,
+             diagX, diagY, -1,1,-1,1, "rgba(0,0,0,0.15)", 1);
+
+    // Box 2: effective step sizes Δx
+    drawAxesBox(box2.x, box2.y, box2.w, box2.h, "Effective step size in x-domain (after expansion)");
+    grid(box2.x+8, box2.y+26, box2.w-16, box2.h-38, 8, 6);
+
+    // y-range for step sizes
+    let sMin = +Infinity, sMax = -Infinity;
+    for (let i=0;i<stepX.length;i++){
+      sMin = Math.min(sMin, stepX[i]);
+      sMax = Math.max(sMax, stepX[i]);
+    }
+    // Pad and clamp for view
+    sMin = Math.min(0, sMin);
+    const span = Math.max(1e-6, sMax - sMin);
+    sMax += 0.10*span;
+
+    plotLine(box2.x+8, box2.y+26, box2.w-16, box2.h-38,
+             stepXat, stepX, -1,1, sMin, sMax, "rgba(67,160,71,0.95)", 2);
+
+    // annotate: linear -> constant steps
+    ctx.fillStyle = "#333";
+    ctx.font = "12px system-ui, sans-serif";
+    ctx.fillText("x", box2.x + box2.w - 16, box2.y + box2.h - 10);
+    ctx.fillText("Δx", box2.x + 12, box2.y + 38);
+
+    // Box 3: time domain comparison
+    drawAxesBox(box3.x, box3.y, box3.w, box3.h, "Time domain: original x(t), reconstructed x̂(t), error e(t)=x̂−x");
+    grid(box3.x+8, box3.y+26, box3.w-16, box3.h-38, 10, 6);
+
+    const t = new Float64Array(N);
+    const err = new Float64Array(N);
+    for (let i=0;i<N;i++){
+      t[i] = i/(N-1);
+      err[i] = xhat[i] - x[i];
+    }
+
+    // y-range for time plot
+    let ymin = -1, ymax = 1;
+    // plot x and xhat
+    plotLine(box3.x+8, box3.y+26, box3.w-16, box3.h-38,
+             t, x, 0,1, ymin,ymax, "rgba(0,0,0,0.55)", 2);
+    plotLine(box3.x+8, box3.y+26, box3.w-16, box3.h-38,
+             t, xhat, 0,1, ymin,ymax, "rgba(30,136,229,0.95)", 2);
+
+    // plot error scaled (so it’s visible): e * gain
+    // choose a gain so typical error occupies ~20% of height
+    const eRms = Math.sqrt(errPow);
+    const gain = (eRms > 1e-12) ? (0.20 / eRms) : 1;
+    const errScaled = new Float64Array(N);
+    for (let i=0;i<N;i++) errScaled[i] = err[i] * gain;
+
+    plotLine(box3.x+8, box3.y+26, box3.w-16, box3.h-38,
+             t, errScaled, 0,1, ymin,ymax, "rgba(220,0,0,0.65)", 1.5);
+
+    // legend
+    const lx = box3.x + 16, ly = box3.y + 34;
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.strokeStyle = "#ddd"; ctx.lineWidth = 1;
+    ctx.fillRect(lx, ly, 330, 58);
+    ctx.strokeRect(lx, ly, 330, 58);
+
+    ctx.font = "12px system-ui, sans-serif";
+    ctx.fillStyle = "rgba(0,0,0,0.75)";
+    ctx.fillText("x(t) original", lx+42, ly+18);
+    ctx.fillStyle = "rgba(30,136,229,0.95)";
+    ctx.fillText("x̂(t) reconstructed", lx+42, ly+34);
+    ctx.fillStyle = "rgba(220,0,0,0.75)";
+    ctx.fillText(`e(t)·${gain.toFixed(1)} (scaled error)`, lx+42, ly+50);
+
+    // legend swatches
+    function swatch(x,y,color,w=28){
+      ctx.strokeStyle = color; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+w,y); ctx.stroke();
+    }
+    swatch(lx+10, ly+14, "rgba(0,0,0,0.55)");
+    swatch(lx+10, ly+30, "rgba(30,136,229,0.95)");
+    swatch(lx+10, ly+46, "rgba(220,0,0,0.65)");
+
+    // footer text
+    ctx.fillStyle = "#333";
+    ctx.font = "12px system-ui, sans-serif";
+    const modeName = mode === 'linear' ? "Linear" : (mode === 'mulaw' ? `μ-law (μ=${mu})` : `A-law (A=${A})`);
+    ctx.fillText(`${modeName} | N=${Nbits} bits (L=${L}), uniform quantization in companded domain y∈[-1,1]`, 14, H-10);
+  }
+
+  function regenerateIfNoise(){
+    // for noise, refresh seed effect by changing a hidden "seed" approach:
+    // simplest: re-run draw() since generator uses fixed seed; we can randomize by toggling a global seed.
+  }
+
+  // Minor improvement: randomize noise when clicking regenerate
+  let noiseSeed = 12345;
+  const _makeSignal = makeSignal;
+  makeSignal = function(kind, amp, N){
+    if (kind === 'noise') {
+      noiseSeed = (noiseSeed * 1103515245 + 12345) >>> 0;
+      return _makeSignal(kind, amp, N, noiseSeed);
+    }
+    return _makeSignal(kind, amp, N, 12345);
+  }
+
+  function updateAndDraw(){ draw(); }
+
+  [modeEl,bitsEl,ampEl,sigEl,muEl,AEl].forEach(n => n.addEventListener('input', updateAndDraw));
+  [modeEl,sigEl].forEach(n => n.addEventListener('change', updateAndDraw));
+  regenBtn.addEventListener('click', () => updateAndDraw());
+
+  updateAndDraw();
+})();
+</script>
+</body>
+</html>
