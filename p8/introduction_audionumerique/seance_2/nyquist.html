@@ -1,0 +1,391 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=960,height=700,initial-scale=1" />
+  <title>Riemann / Lebesgue Integration Visualizer</title>
+  <style>
+    /* Force light mode */
+    :root { color-scheme: light; }
+    html, body {
+      margin: 0;
+      width: 960px;
+      height: 700px;
+      overflow: hidden;
+      background: #ffffff;
+      color: #111;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    .app {
+      box-sizing: border-box;
+      width: 960px;
+      height: 700px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+    }
+
+    .panel {
+      border: 1px solid #d9d9d9;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #fff;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    label { display: inline-block; margin: 4px 10px 4px 0; }
+    input[type="number"] { width: 92px; }
+    input[type="text"] { width: 420px; max-width: 100%; }
+    select { max-width: 100%; }
+
+    canvas {
+      width: 960px;      /* CSS size */
+      height: 700px;     /* CSS size */
+      border: 1px solid #d9d9d9;
+      border-radius: 10px;
+      background: #fff;
+      display: block;
+    }
+
+    .small { color: #333; font-size: 13px; line-height: 1.35; }
+    .warn { color: #8a4b00; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div class="panel controls">
+    <div>
+      <label>
+        f(x) =
+        <input id="expr" type="text" value="sin(x)+1.5" />
+      </label>
+      <label>
+        Presets:
+        <select id="preset">
+          <option value="sin(x)+1.5">sin(x)+1.5</option>
+          <option value="x*x">x^2</option>
+          <option value="exp(-x*x)">exp(-x^2)</option>
+          <option value="abs(x)">abs(x)</option>
+          <option value="1/(1+x*x)">1/(1+x^2)</option>
+          <option value="cos(3*x)+1.2">cos(3x)+1.2</option>
+        </select>
+      </label>
+    </div>
+
+    <div>
+      <label>a <input id="a" type="number" step="0.1" value="0"></label>
+      <label>b <input id="b" type="number" step="0.1" value="6.283185307"></label>
+      <label>
+        Mode
+        <select id="mode">
+          <option value="riemann">Riemann</option>
+          <option value="lebesgue">Lebesgue (squares)</option>
+        </select>
+      </label>
+      <label id="riemannRuleLabel">
+        Rule
+        <select id="rule">
+          <option value="left">Left</option>
+          <option value="mid" selected>Midpoint</option>
+          <option value="right">Right</option>
+        </select>
+      </label>
+    </div>
+
+    <div>
+      <label>
+        Step / square size (s)
+        <input id="step" type="range" min="0.01" max="1.0" step="0.01" value="0.15">
+        <span class="mono" id="stepVal"></span>
+      </label>
+      <label>
+        Plot samples
+        <input id="samples" type="range" min="200" max="5000" step="100" value="1200">
+        <span class="mono" id="samplesVal"></span>
+      </label>
+    </div>
+
+    <div class="small">
+      <div>Approx area: <span class="mono" id="approxArea"></span></div>
+      <div>Reference (fine trapezoid): <span class="mono" id="refArea"></span></div>
+      <div class="warn" id="warn"></div>
+      <div class="small">
+        Lebesgue mode draws <span class="mono">s × s</span> squares (Δx = Δy = s) stacked under the curve (negative values are clamped to 0 for this visualization).
+      </div>
+    </div>
+  </div>
+
+  <!-- Fixed 960x700 drawing buffer to match the requested viewport -->
+  <canvas id="cv" width="960" height="700"></canvas>
+</div>
+
+<script>
+(() => {
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+
+  const el = (id) => document.getElementById(id);
+  const exprEl = el('expr');
+  const presetEl = el('preset');
+  const modeEl = el('mode');
+  const ruleEl = el('rule');
+  const aEl = el('a');
+  const bEl = el('b');
+  const stepEl = el('step');
+  const samplesEl = el('samples');
+
+  const stepValEl = el('stepVal');
+  const samplesValEl = el('samplesVal');
+  const approxAreaEl = el('approxArea');
+  const refAreaEl = el('refArea');
+  const warnEl = el('warn');
+  const riemannRuleLabel = el('riemannRuleLabel');
+
+  function parseFunc(expr) {
+    const body = `
+      "use strict";
+      const {sin,cos,tan,asin,acos,atan,atan2,exp,log,sqrt,pow,abs,min,max,floor,ceil,round,PI,E} = Math;
+      return (${expr});
+    `;
+    return new Function("x", body);
+  }
+
+  function nicePad(min, max, padFrac=0.08) {
+    if (!isFinite(min) || !isFinite(max)) return [0, 1];
+    if (min === max) {
+      const d = (min === 0 ? 1 : Math.abs(min) * 0.2);
+      return [min - d, max + d];
+    }
+    const span = max - min;
+    return [min - span * padFrac, max + span * padFrac];
+  }
+
+  function trapzRef(f, a, b, n=20000) {
+    if (!(b > a)) return 0;
+    const h = (b - a) / n;
+    let s = 0;
+    let prev = f(a);
+    for (let i = 1; i <= n; i++) {
+      const x = a + i*h;
+      const y = f(x);
+      s += (prev + y) * 0.5;
+      prev = y;
+    }
+    return s * h;
+  }
+
+  function draw() {
+    const expr = exprEl.value.trim();
+    let a = Number(aEl.value), b = Number(bEl.value);
+    const mode = modeEl.value;
+    const rule = ruleEl.value;
+    const s = Number(stepEl.value);
+    const plotN = Number(samplesEl.value);
+
+    stepValEl.textContent = s.toFixed(2);
+    samplesValEl.textContent = String(plotN);
+
+    riemannRuleLabel.style.display = (mode === 'riemann') ? '' : 'none';
+    warnEl.textContent = "";
+
+    if (!(b > a)) [a, b] = [b, a];
+    if (b === a) b = a + 1;
+
+    let f;
+    try {
+      f = parseFunc(expr);
+      const t = f((a+b)/2);
+      if (!isFinite(t)) throw new Error("f(x) is not finite");
+    } catch (e) {
+      ctx.clearRect(0,0,cv.width,cv.height);
+      ctx.fillStyle = "#b00020";
+      ctx.font = "16px system-ui, sans-serif";
+      ctx.fillText("Error parsing f(x): " + e.message, 20, 30);
+      approxAreaEl.textContent = "—";
+      refAreaEl.textContent = "—";
+      return;
+    }
+
+    const xs = new Float64Array(plotN);
+    const ys = new Float64Array(plotN);
+    let yMin = +Infinity, yMax = -Infinity;
+    for (let i = 0; i < plotN; i++) {
+      const x = a + (b - a) * (i / (plotN - 1));
+      let y = f(x);
+      if (!isFinite(y)) y = NaN;
+      xs[i] = x;
+      ys[i] = y;
+      if (isFinite(y)) { yMin = Math.min(yMin, y); yMax = Math.max(yMax, y); }
+    }
+    if (!isFinite(yMin) || !isFinite(yMax)) { yMin = -1; yMax = 1; }
+    yMin = Math.min(yMin, 0);
+    yMax = Math.max(yMax, 0);
+    [yMin, yMax] = nicePad(yMin, yMax);
+
+    const W = cv.width, H = cv.height;
+
+    // Layout inside the canvas (leave room for axes labels)
+    const padL = 70, padR = 20, padT = 22, padB = 55;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    const x2px = (x) => padL + (x - a) / (b - a) * plotW;
+    const y2py = (y) => padT + (yMax - y) / (yMax - yMin) * plotH;
+    const y0 = y2py(0);
+
+    // Approximation
+    let approx = 0;
+
+    if (mode === 'riemann') {
+      const dx = s;
+      const n = Math.max(1, Math.floor((b - a) / dx));
+      for (let i = 0; i < n; i++) {
+        const x0 = a + i*dx;
+        const x1 = Math.min(b, x0 + dx);
+        let xSample = (rule === 'left') ? x0 : (rule === 'right') ? x1 : 0.5*(x0 + x1);
+        const y = f(xSample);
+        if (isFinite(y)) approx += y * (x1 - x0);
+      }
+    } else {
+      const dx = s, dy = s;
+      const n = Math.max(1, Math.floor((b - a) / dx));
+      let hadNegative = false;
+      for (let i = 0; i < n; i++) {
+        const x0 = a + i*dx;
+        const x1 = Math.min(b, x0 + dx);
+        const xm = 0.5*(x0 + x1);
+        let y = f(xm);
+        if (!isFinite(y)) continue;
+        if (y < 0) { hadNegative = true; y = 0; }
+        const k = Math.floor(y / dy);
+        approx += k * dy * (x1 - x0);
+      }
+      if (hadNegative) warnEl.textContent = "Lebesgue (squares) mode clamps negative f(x) to 0 for the visualization.";
+    }
+
+    const ref = trapzRef(f, a, b, 40000);
+    approxAreaEl.textContent = approx.toFixed(8);
+    refAreaEl.textContent = ref.toFixed(8);
+
+    // ---- Draw ----
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = "#eeeeee";
+    ctx.lineWidth = 1;
+    const gridLines = 10;
+    for (let i = 1; i < gridLines; i++) {
+      const gx = padL + (plotW * i / gridLines);
+      const gy = padT + (plotH * i / gridLines);
+      ctx.beginPath(); ctx.moveTo(gx, padT); ctx.lineTo(gx, H - padB); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(W - padR, gy); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = "#333";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, y0); ctx.lineTo(W - padR, y0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.stroke();
+
+    // Labels
+    ctx.fillStyle = "#111";
+    ctx.font = "13px system-ui, sans-serif";
+    ctx.fillText(`x ∈ [${a.toFixed(3)}, ${b.toFixed(3)}]`, padL, H - 18);
+    ctx.fillText(`y ∈ [${yMin.toFixed(3)}, ${yMax.toFixed(3)}]`, padL, 18);
+
+    // Shapes
+    if (mode === 'riemann') {
+      const dx = s;
+      const n = Math.max(1, Math.floor((b - a) / dx));
+      ctx.fillStyle = "rgba(30, 136, 229, 0.22)";
+      ctx.strokeStyle = "rgba(30, 136, 229, 0.65)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < n; i++) {
+        const x0 = a + i*dx;
+        const x1 = Math.min(b, x0 + dx);
+        const xSample = (rule === 'left') ? x0 : (rule === 'right') ? x1 : 0.5*(x0 + x1);
+        const y = f(xSample);
+        if (!isFinite(y)) continue;
+
+        const px0 = x2px(x0), px1 = x2px(x1);
+        const py = y2py(y);
+
+        const top = Math.min(py, y0);
+        const bot = Math.max(py, y0);
+        ctx.fillRect(px0, top, Math.max(0.5, px1 - px0), Math.max(0.5, bot - top));
+        ctx.strokeRect(px0, top, Math.max(0.5, px1 - px0), Math.max(0.5, bot - top));
+      }
+    } else {
+      const dx = s, dy = s;
+      const n = Math.max(1, Math.floor((b - a) / dx));
+      ctx.fillStyle = "rgba(67, 160, 71, 0.20)";
+      ctx.strokeStyle = "rgba(67, 160, 71, 0.55)";
+      ctx.lineWidth = 1;
+
+      for (let i = 0; i < n; i++) {
+        const x0 = a + i*dx;
+        const x1 = Math.min(b, x0 + dx);
+        const xm = 0.5*(x0 + x1);
+        let y = f(xm);
+        if (!isFinite(y)) continue;
+        y = Math.max(0, y);
+
+        const k = Math.floor(y / dy);
+        for (let j = 0; j < k; j++) {
+          const yLo = j * dy;
+          const yHi = (j + 1) * dy;
+
+          const px0 = x2px(x0), px1 = x2px(x1);
+          const pyTop = y2py(yHi);
+          const pyBot = y2py(yLo);
+
+          ctx.fillRect(px0, pyTop, Math.max(0.5, px1 - px0), Math.max(0.5, pyBot - pyTop));
+          ctx.strokeRect(px0, pyTop, Math.max(0.5, px1 - px0), Math.max(0.5, pyBot - pyTop));
+        }
+      }
+    }
+
+    // Function curve
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i < plotN; i++) {
+      const x = xs[i], y = ys[i];
+      if (!isFinite(y)) { started = false; continue; }
+      const px = x2px(x), py = y2py(y);
+      if (!started) { ctx.moveTo(px, py); started = true; }
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Title within plot
+    ctx.fillStyle = "#111";
+    ctx.font = "14px system-ui, sans-serif";
+    const modeName = (mode === 'riemann') ? `Riemann (${rule})` : `Lebesgue-style (squares, Δx=Δy=s)`;
+    ctx.fillText(`${modeName} — s=${s.toFixed(2)}`, padL, H - padB + 32);
+  }
+
+  presetEl.addEventListener('change', () => { exprEl.value = presetEl.value; draw(); });
+  [exprEl, modeEl, ruleEl, aEl, bEl, stepEl, samplesEl].forEach(node => {
+    node.addEventListener('input', draw);
+    node.addEventListener('change', draw);
+  });
+
+  draw();
+})();
+</script>
+</body>
+</html>
