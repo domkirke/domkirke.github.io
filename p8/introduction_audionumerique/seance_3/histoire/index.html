@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Frise — Histoire de l’audionumérique</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #1f1f1f;
+      --muted: #666;
+      --axis: #333;
+      --grid: #e6e6e6;
+      --panel: #f7f7f7;
+      --border: #ddd;
+      --shadow: rgba(0,0,0,.08);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+    body { margin: 0; background: var(--bg); color: var(--fg); }
+    header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--bg); z-index: 5;
+    }
+    header h1 { margin: 0 0 10px 0; font-size: 18px; }
+    .toolbar {
+      display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+      color: var(--muted); font-size: 14px;
+    }
+    .toolbar label { display: inline-flex; gap: 8px; align-items: center; }
+    .toolbar input[type="range"] { width: 220px; }
+    .toolbar input[type="search"] { padding: 6px 8px; min-width: 240px; }
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; }
+    .chip {
+      background: var(--panel); border: 1px solid var(--border);
+      padding: 4px 8px; border-radius: 999px;
+      display: inline-flex; gap: 8px; align-items: center;
+      user-select: none;
+    }
+    .chip input { transform: translateY(1px); }
+
+    main {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 0;
+      height: calc(100vh - 86px);
+    }
+    #timelineWrap {
+      overflow: auto;
+      border-right: 1px solid var(--border);
+    }
+    #side {
+      background: var(--panel);
+      padding: 14px;
+      overflow: auto;
+    }
+    #side h2 { margin: 0 0 8px 0; font-size: 16px; }
+    #side .hint { color: var(--muted); font-size: 13px; line-height: 1.35; }
+    #details {
+      margin-top: 12px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 10px;
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+    #details .year { color: var(--muted); font-size: 12px; }
+    #details .title { font-weight: 700; margin: 2px 0 6px 0; }
+    #details .meta { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+    #details .text { font-size: 13px; line-height: 1.35; white-space: pre-wrap; }
+    #details .empty { color: var(--muted); font-size: 13px; }
+
+    /* Tooltip */
+    .tooltip {
+      position: fixed;
+      pointer-events: none;
+      background: rgba(20,20,20,0.92);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      max-width: 360px;
+      line-height: 1.35;
+      transform: translate(12px, 12px);
+      display: none;
+      z-index: 20;
+    }
+
+    /* SVG text */
+    .svg-label { font-size: 12px; fill: #1f1f1f; }
+    .svg-year { font-size: 11px; fill: #333; }
+    .svg-cat { font-size: 12px; fill: #333; font-weight: 700; }
+    .svg-muted { fill: #777; font-size: 11px; }
+
+    #modalOverlay{
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 50;
+    }
+
+    #modal{
+    position: fixed;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(980px, calc(100vw - 24px));
+    height: min(78vh, 860px);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 10px 50px rgba(0,0,0,.25);
+    z-index: 60;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    }
+    #modalHeader{
+    display:flex; align-items:flex-start; justify-content: space-between;
+    gap: 14px;
+    padding: 12px 12px;
+    background: #fafafa;
+    border-bottom: 1px solid var(--border);
+    }
+    #modalMeta{ color: var(--muted); font-size: 12px; margin-bottom: 2px; }
+    #modalTitle{ font-weight: 800; font-size: 16px; }
+    #modalClose{
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #fff;
+    cursor: pointer;
+    }
+    #modalBody{
+    padding: 12px;
+    overflow: auto;
+    font-size: 13px;
+    line-height: 1.45;
+    }
+    #modalBody iframe{
+    width: 100%;
+    aspect-ratio: 16/9;
+    border: 0;
+    border-radius: 10px;
+    }
+    #modalBody img{ max-width: 100%; border-radius: 10px; }
+    #modalBody iframe{
+      width: 100%;
+      aspect-ratio: 16/9;
+      border: 0;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Frise chronologique — histoire de l’audionumérique (années 1960 → 2020+)</h1>
+    <div class="toolbar">
+      <label>Zoom (px/an)
+        <input id="zoom" type="range" min="8" max="40" value="18" />
+        <span id="zoomVal"></span>
+      </label>
+
+      <label>Recherche
+        <input id="q" type="search" placeholder="ex : MIDI, CD, IRCAM, MP3…" />
+      </label>
+
+      <div class="filters" id="filters"></div>
+    </div>
+  </header>
+
+  <main>
+    <div id="timelineWrap">
+      <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <aside id="side">
+      <h2>Édition</h2>
+      <div class="hint">
+        Modifie <code>timeline-data.js</code> (liste <code>TIMELINE_EVENTS</code>), recharge la page.<br><br>
+        Interaction : survol = tooltip, clic = détails.
+      </div>
+
+      <div id="details">
+        <div class="empty">Clique un événement pour afficher les détails.</div>
+      </div>
+    </aside>
+  </main>
+
+  <div class="tooltip" id="tooltip"></div>
+  <div id="modalOverlay" style="display:none;" aria-hidden="true"></div>
+  <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" style="display:none;">
+    <div id="modalHeader">
+      <div>
+        <div id="modalMeta"></div>
+        <div id="modalTitle"></div>
+      </div>
+      <button id="modalClose" type="button">Fermer</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+
+  <script src="./timeline-data.js"></script>
+  <script>
+    // --- Config & helpers ---
+    const COLORS = {
+      "Technologie": "#1565C0",
+      "Standard": "#2E7D32",
+      "Œuvre": "#6A1B9A",
+      "Compositeur / chercheur": "#EF6C00",
+      "Institution / industrie": "#37474F",
+      "Écosystème / diffusion": "#455A64"
+    };
+    function inferCategoryColor(cat) {
+      const s = String(cat || "").toLowerCase();
+
+      // Groupes principaux
+      if (s.startsWith("additive")) return "#6A1B9A";
+      if (s.startsWith("fm") || s.includes("phase distortion") || s.includes("pm")) return "#1565C0";
+      if (s.startsWith("am") || s.includes("ring")) return "#2E7D32";
+
+      // Optionnel : autres familles si tu veux des couleurs dédiées
+      if (s.includes("instrument") || s.includes("produit") || s.includes("outil")) return "#37474F";
+      if (s.includes("œuvre") || s.includes("work")) return "#EF6C00";
+      if (s.includes("recherche") || s.includes("théorie") || s.includes("ressource")) return "#455A64";
+
+      return null;
+    }
+
+    const svg = document.getElementById("svg");
+    const wrap = document.getElementById("timelineWrap");
+    const tooltip = document.getElementById("tooltip");
+    const details = document.getElementById("details");
+    const zoom = document.getElementById("zoom");
+    const zoomVal = document.getElementById("zoomVal");
+    const q = document.getElementById("q");
+    const filtersEl = document.getElementById("filters");
+
+    // Mesure réaliste de la largeur d'un label (doit matcher .svg-label)
+    const measureCtx = document.createElement("canvas").getContext("2d");
+    function measureLabelWidth(labelStr){
+      measureCtx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif";
+      return measureCtx.measureText(labelStr).width;
+    }
+
+    function el(name, attrs = {}, children = []) {
+      const n = document.createElementNS("http://www.w3.org/2000/svg", name);
+      for (const [k,v] of Object.entries(attrs)) n.setAttribute(k, v);
+      for (const c of children) n.appendChild(c);
+      return n;
+    }
+    function txt(s) { return document.createTextNode(s); }
+    function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+
+    // --- State ---
+    let pxPerYear = +zoom.value;
+    let query = "";
+    let enabledCats = new Set(); // set after we build filters
+
+    // --- Data normalization ---
+    function normalizeEvents(raw) {
+      return raw
+        .map(e => ({
+          id: e.id ?? `${e.year}-${e.category}-${e.title}`.replace(/\s+/g, "_"),
+          year: +e.year,
+          category: e.category,
+          title: e.title,
+          details: e.details ?? "",
+          who: e.who ?? "",
+          color: e.color ?? inferCategoryColor(e.category) ?? (COLORS[e.category] || "#455A64"),
+          links: e.links ?? [],
+          modalHtml: e.modalHtml ?? ""
+        }))
+        .sort((a,b) => (a.year - b.year) || a.title.localeCompare(b.title));
+    }
+
+    const ALL = normalizeEvents(window.TIMELINE_EVENTS || []);
+    // Build a category -> color map from event colors (first event wins)
+    const CATEGORY_COLORS = new Map();
+    for (const e of ALL) {
+      if (!CATEGORY_COLORS.has(e.category)) CATEGORY_COLORS.set(e.category, e.color);
+    }
+
+    function colorForCategory(cat) {
+      return inferCategoryColor(cat) || CATEGORY_COLORS.get(cat) || COLORS[cat] || "#455A64";
+    }
+
+    function computeYearRange(events) {
+      const years = events.map(e => e.year);
+      let min = Math.min(...years), max = Math.max(...years);
+      min = Math.floor(min / 5) * 5;
+      max = Math.ceil(max / 5) * 5;
+      return {min, max};
+    }
+
+    // Categories (lanes)
+    function getCategories(events) {
+      const cats = Array.from(new Set(events.map(e => e.category)));
+      // stable-ish ordering: known first
+      const order = Object.keys(COLORS);
+      cats.sort((a,b) => (order.indexOf(a) - order.indexOf(b)) || a.localeCompare(b));
+      return cats;
+    }
+
+    function buildFilters(categories) {
+      filtersEl.innerHTML = "";
+      enabledCats = new Set(categories); // default: all checked
+
+      for (const cat of categories) {
+        const color = colorForCategory(cat);
+        const chip = document.createElement("label");
+        chip.className = "chip";
+        chip.style.borderColor = color + "55";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = true;
+        cb.addEventListener("change", () => {
+          if (cb.checked) enabledCats.add(cat);
+          else enabledCats.delete(cat);
+          render();
+        });
+
+        const swatch = document.createElement("span");
+        swatch.style.width = "10px";
+        swatch.style.height = "10px";
+        swatch.style.borderRadius = "2px";
+        swatch.style.background = color;
+        swatch.style.display = "inline-block";
+
+        const label = document.createElement("span");
+        label.textContent = cat;
+
+        chip.appendChild(cb);
+        chip.appendChild(swatch);
+        chip.appendChild(label);
+        filtersEl.appendChild(chip);
+      }
+    }
+
+    function matchesQuery(e, query) {
+      if (!query) return true;
+      const s = (e.title + " " + e.details + " " + e.category + " " + (e.who || "")).toLowerCase();
+      return s.includes(query.toLowerCase());
+    }
+
+    // --- Layout ---
+    function render() {
+      pxPerYear = +zoom.value;
+      zoomVal.textContent = pxPerYear;
+
+      const categories = getCategories(ALL);
+      buildFilters(categories);
+
+      const filtered = ALL.filter(e => enabledCats.has(e.category) && matchesQuery(e, query));
+      const {min, max} = computeYearRange(filtered.length ? filtered : ALL);
+
+      // SVG dimensions
+      const leftPad = 140;
+      const rightPad = 1000;
+      const topPad = 30;
+      const lanesTopPad = 100; // extra room for stacked labels above the first baseline
+      const axisY = 70;
+      const catGap = 150;
+      const dotR = 5;
+
+      const width = leftPad + rightPad + (max - min) * pxPerYear;
+      const height = topPad + axisY + lanesTopPad + 20 + categories.length * catGap;
+
+
+      svg.setAttribute("width", width);
+      svg.setAttribute("height", height);
+      svg.innerHTML = "";
+
+      // Background grid (every 5 years)
+      for (let y = min; y <= max; y += 5) {
+        const x = leftPad + (y - min) * pxPerYear;
+        const isDecade = (y % 10 === 0);
+
+        svg.appendChild(el("line", {
+          x1: x, y1: topPad,
+          x2: x, y2: height - 20,
+          stroke: isDecade ? "#d7d7d7" : "#eeeeee",
+          "stroke-width": isDecade ? 1.4 : 1
+        }));
+
+        if (isDecade) {
+          const t = el("text", { x: x - 14, y: topPad + 14, class: "svg-year" }, [txt(String(y))]);
+          svg.appendChild(t);
+        }
+      }
+
+      // Axis title
+      svg.appendChild(el("text", { x: 16, y: 22, class: "svg-muted" }, [
+        txt("Survol = tooltip • clic = détails • zoom + filtre par catégorie")
+      ]));
+
+      // Category lanes labels + baseline
+      const catY = new Map();
+      categories.forEach((cat, i) => {
+        const y = topPad + axisY + lanesTopPad + i * catGap;
+        catY.set(cat, y);
+
+        const color = colorForCategory(cat);
+
+        // label
+        svg.appendChild(el("text", { x: 16, y: y + 4, class: "svg-cat" }, [txt(cat)]));
+        // baseline
+        svg.appendChild(el("line", {
+          x1: leftPad, y1: y,
+          x2: width - rightPad, y2: y,
+          stroke: "#333", "stroke-width": 1
+        }));
+        // left color bar
+        svg.appendChild(el("rect", {
+          x: 120, y: y - 9, width: 8, height: 18, fill: color, rx: 2
+        }));
+      });
+
+      // Collision avoidance within each category: assign "rows" (sub-lanes)
+      // so labels don't overlap too much.
+      const perCat = new Map(categories.map(c => [c, []]));
+for (const e of filtered) perCat.get(e.category).push(e);
+
+const placed = [];
+const rowHeight = 18; // distance verticale entre rangées
+const firstRowOffset = rowHeight; // same as one row step
+const gap = 12;       // espace horizontal minimal entre 2 labels
+
+for (const cat of categories) {
+  const list = perCat.get(cat) || [];
+
+  // rows[row] = xRight (fin) du dernier label placé sur cette rangée
+  const rows = [];
+
+  for (const e of list) {
+    const x = leftPad + (e.year - min) * pxPerYear;
+
+    const labelStr = `${e.year} — ${e.title}`;
+    const w = measureLabelWidth(labelStr) + 24; // marge (dot->texte + confort)
+
+    let row = 0;
+    while (row < rows.length && x < (rows[row] + gap)) row++;
+    if (row === rows.length) rows.push(-Infinity);
+
+    rows[row] = x + w;
+    console.log('element : ', e)
+
+    placed.push({
+      ...e,
+      x,
+      y: catY.get(cat) - (row + 1) * firstRowOffset,
+      row,
+      _label: labelStr, 
+    });
+  }
+}
+ 
+
+      // Draw events
+      for (const e of placed) {
+        // connector
+        svg.appendChild(el("line", {
+          x1: e.x, y1: catY.get(e.category),
+          x2: e.x, y2: e.y,
+          stroke: "#b9c6d0", "stroke-width": 1
+        }));
+
+        // dot
+        const dot = el("circle", {
+          cx: e.x, cy: e.y, r: dotR,
+          fill: e.color, stroke: "#fff", "stroke-width": 1.2,
+          "data-id": e.id,
+          style: "cursor:pointer"
+        });
+
+        // label text
+        const label = el("text", {
+            x: e.x + 10, y: e.y + 4,
+          class: "svg-label",
+          "data-id": e.id,
+          style: "cursor:pointer"
+        }, [txt(e._label || `${e.year} — ${e.title}`)]);
+
+        // hover & click handling
+        const onMove = (evt) => {
+          tooltip.style.display = "block";
+          tooltip.style.left = evt.clientX + "px";
+          tooltip.style.top = evt.clientY + "px";
+          const who = e.who ? `\n${e.who}` : "";
+          const det = e.details ? `\n${e.details}` : "";
+          tooltip.textContent = `${e.year} • ${e.category}\n${e.title}${who}${det}`;
+        };
+        const onOut = () => { tooltip.style.display = "none"; };
+
+        const onClick = () => openModal(e);
+
+        dot.addEventListener("mousemove", onMove);
+        dot.addEventListener("mouseleave", onOut);
+        dot.addEventListener("click", onClick);
+
+        label.addEventListener("mousemove", onMove);
+        label.addEventListener("mouseleave", onOut);
+        label.addEventListener("click", onClick);
+
+        svg.appendChild(dot);
+        svg.appendChild(label);
+      }
+
+      // If nothing matches, show message
+      if (!placed.length) {
+        svg.appendChild(el("text", { x: 16, y: height - 30, class: "svg-muted" }, [
+          txt("Aucun événement ne correspond aux filtres/recherche.")
+        ]));
+      }
+    }
+
+    const modalOverlay = document.getElementById("modalOverlay");
+    const modal = document.getElementById("modal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalMeta = document.getElementById("modalMeta");
+    const modalBody = document.getElementById("modalBody");
+    const modalClose = document.getElementById("modalClose");
+
+    function openModal(e){
+      console.log('open modal!!', e)
+      modalTitle.textContent = e.title;
+      modalMeta.textContent = `${e.year} • ${e.category}${e.who ? " • " + e.who : ""}`;
+
+      const safeText = e.details
+        ? `<p>${escapeHtml(e.details).replace(/\n/g,"<br>")}</p>`
+        : "";
+
+      // IMPORTANT: property name is modalHtml
+      const rich = (typeof e.modalHtml === "string") ? e.modalHtml : "";
+      console.log("modal : ", e.modalHtml)
+
+      modalBody.innerHTML = `
+        ${safeText}
+        ${rich}
+        ${
+          e.links && e.links.length ? `
+            <hr>
+            <ul>
+              ${e.links.map(l => `<li><a href="${escapeAttr(l.href)}" target="_blank" rel="noopener">${escapeHtml(l.label || l.href)}</a></li>`).join("")}
+            </ul>
+          ` : ""
+        }
+      `;
+
+      modalOverlay.style.display = "block";
+      modal.style.display = "grid";
+      modalOverlay.setAttribute("aria-hidden","false");
+      modalClose.focus();
+    }
+
+    function closeModal(){
+        modalOverlay.style.display = "none";
+        modal.style.display = "none";
+        modalOverlay.setAttribute("aria-hidden","true");
+        modalBody.innerHTML = "";
+    }
+
+    // overlay click + button + ESC
+    modalOverlay.addEventListener("click", closeModal);
+    modalClose.addEventListener("click", closeModal);
+    document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape" && modal.style.display !== "none") closeModal();
+    });
+
+    function escapeAttr(s){
+    return String(s).replace(/"/g, "&quot;");
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[c]));
+    }
+
+    // --- UI bindings ---
+    zoom.addEventListener("input", () => render());
+    q.addEventListener("input", () => { query = q.value.trim(); render(); });
+
+    // Initial
+    render();
+  </script>
+</body>
+
+</html>
