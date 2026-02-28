@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Aliasing & Nyquist (compact 960x700, Light)</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --fg:#0b1220;
+      --muted:#4b5b73;
+      --panel:#f5f7fb;
+      --line:#d6deea;
+      --canvas:#ffffff;
+      --blue:#2a6df4;
+      --green:#1a9a5a;
+      --red:#d63b3b;
+    }
+    html, body { height:100%; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* Fixed for iframe */
+    .app{
+      width:960px;
+      height:700px;
+      box-sizing:border-box;
+      padding:10px;          /* reduced */
+      overflow:hidden;
+    }
+
+    .titlebar{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:6px;     /* reduced */
+    }
+    h1{ font-size:15px; margin:0; font-weight:700; }
+    .subtitle{ font-size:11px; color:var(--muted); margin:0; white-space:nowrap; }
+
+    .layout{
+      display:grid;
+      grid-template-columns: 620px 1fr;
+      gap:10px;              /* reduced */
+      height: calc(700px - 10px - 10px - 22px - 6px); /* app paddings + title approx */
+      align-items:start;
+    }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:8px;           /* reduced */
+      box-sizing:border-box;
+      height:100%;
+    }
+
+    .controls{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px 10px;          /* reduced */
+      align-items:end;
+      margin-bottom:6px;     /* reduced */
+    }
+    label{
+      font-size:11px;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    input, select, button{
+      font: inherit;
+      font-size:12px;
+      color:var(--fg);
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:5px 8px;       /* slightly reduced */
+      outline:none;
+    }
+    input[type="range"]{ width: 340px; padding:0; }
+    button{ cursor:pointer; background:#fff; }
+    button:hover{ background:#f0f4ff; }
+
+    .info{
+      font-size:11px;        /* reduced */
+      color:var(--muted);
+      margin:4px 0 6px;      /* reduced */
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      line-height:1.2;
+    }
+
+    .cap{ font-size:11px; color:var(--muted); margin:0 0 5px; }
+
+    canvas{
+      display:block;
+      background:var(--canvas);
+      border:1px solid var(--line);
+      border-radius:10px;
+    }
+
+    /* More compact fixed sizes */
+    #timeCanvas { width: 598px; height: 250px; }
+    #discCanvas { width: 598px; height: 130px; }
+    #freqCanvas { width: 296px; height: 490px; }
+
+    .footnote{ font-size:11px; color:var(--muted); margin-top:6px; line-height:1.2; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="titlebar">
+      <h1>Aliasing & the Nyquist theorem (interactive)</h1>
+      <p class="subtitle">960×700 iframe (compact)</p>
+    </div>
+
+    <div class="layout">
+      <!-- LEFT -->
+      <div class="card">
+        <div class="controls">
+          <label>Fs (Hz)
+            <input id="fs" type="number" min="8" max="256" step="1" value="32">
+          </label>
+
+          <label>f (Hz)
+            <input id="f" type="number" min="0" step="0.1" value="10">
+          </label>
+
+          <label>f slider (0..3·Fs)
+            <input id="fRange" type="range" min="0" max="96" step="0.1" value="10">
+          </label>
+
+          <label>Phase (deg)
+            <input id="phi" type="number" min="0" max="360" step="5" value="0">
+          </label>
+
+          <label>Duration (s)
+            <input id="dur" type="number" min="0.5" max="6" step="0.5" value="2">
+          </label>
+
+          <label>Show
+            <select id="view">
+              <option value="both" selected>continuous + samples</option>
+              <option value="samples">samples only</option>
+              <option value="continuous">continuous only</option>
+            </select>
+          </label>
+
+          <button id="regen">Redraw</button>
+        </div>
+
+        <div class="info" id="info"></div>
+
+        <p class="cap">Time: dense “continuous” sine + sampled points at Fs</p>
+        <canvas id="timeCanvas" width="598" height="250"></canvas>
+
+        <div style="height:8px"></div>
+
+        <p class="cap">Discrete samples x[n] (stems)</p>
+        <canvas id="discCanvas" width="598" height="130"></canvas>
+
+        <div class="footnote">
+          Nyquist: if the signal has no content above <b>Fs/2</b>, it can be reconstructed. If <b>f &gt; Fs/2</b>, it aliases (folds) into a lower frequency.
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="card">
+        <p class="cap">True f, Nyquist Fs/2, and alias frequency</p>
+        <canvas id="freqCanvas" width="296" height="490"></canvas>
+
+        <div class="footnote">
+          Different analog frequencies separated by multiples of <b>Fs</b> can produce identical samples.
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+// Fold f into [0, Fs/2]
+function aliasFreq(f, Fs){
+  const folded = ((f + Fs/2) % Fs) - Fs/2; // (-Fs/2, Fs/2]
+  return Math.abs(folded);
+}
+
+function clear(ctx, w, h){
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0,0,w,h);
+}
+
+function drawAxesMid(ctx, w, h){
+  ctx.strokeStyle = "#d6deea";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, h/2);
+  ctx.lineTo(w, h/2);
+  ctx.stroke();
+}
+
+function drawTimeCanvas(ctx, w, h, Fs, f, phiRad, dur, viewMode){
+  clear(ctx, w, h);
+  const pad = 16;
+  const plotW = w - 2*pad;
+  const plotH = h - 2*pad;
+  const tMax = dur;
+  const yScale = 0.42 * plotH;
+  const yMid = pad + 0.5 * plotH;
+
+  drawAxesMid(ctx, w, h);
+
+  // dense curve
+  const denseRate = Math.max(600, Math.floor(30 * Fs));
+  const M = Math.max(2, Math.floor(denseRate * dur));
+
+  if (viewMode !== "samples") {
+    ctx.strokeStyle = "rgba(42,109,244,0.85)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < M; i++){
+      const t = (i/(M-1)) * tMax;
+      const x = Math.sin(2*Math.PI*f*t + phiRad);
+      const px = pad + (t/tMax) * plotW;
+      const py = yMid - x * yScale;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.lineWidth = 1;
+  }
+
+  // sample points
+  if (viewMode !== "continuous") {
+    const N = Math.max(1, Math.floor(Fs * dur) + 1);
+    for (let n = 0; n < N; n++){
+      const t = n / Fs;
+      if (t > tMax + 1e-12) break;
+      const x = Math.sin(2*Math.PI*f*t + phiRad);
+      const px = pad + (t/tMax) * plotW;
+      const py = yMid - x * yScale;
+
+      ctx.strokeStyle = "rgba(214,222,234,0.8)";
+      ctx.beginPath();
+      ctx.moveTo(px, pad);
+      ctx.lineTo(px, pad + plotH);
+      ctx.stroke();
+
+      ctx.fillStyle = "#0b1220";
+      ctx.beginPath();
+      ctx.arc(px, py, 2.8, 0, 2*Math.PI);
+      ctx.fill();
+    }
+  }
+
+  ctx.strokeStyle = "#d6deea";
+  ctx.strokeRect(0.5, 0.5, w-1, h-1);
+}
+
+function drawDiscreteCanvas(ctx, w, h, Fs, f, phiRad, dur){
+  clear(ctx, w, h);
+
+  const pad = 16;
+  const plotW = w - 2*pad;
+  const plotH = h - 2*pad;
+  const yScale = 0.42 * plotH;
+  const yMid = pad + 0.5 * plotH;
+
+  drawAxesMid(ctx, w, h);
+
+  const N = Math.max(2, Math.floor(Fs * dur) + 1);
+  ctx.strokeStyle = "#9bb0cc";
+  ctx.fillStyle = "#0b1220";
+
+  for (let n = 0; n < N; n++){
+    const x = Math.sin(2*Math.PI*f*(n/Fs) + phiRad);
+    const px = pad + (n/(N-1)) * plotW;
+    const py = yMid - x * yScale;
+
+    ctx.beginPath();
+    ctx.moveTo(px, yMid);
+    ctx.lineTo(px, py);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(px, py, 2.2, 0, 2*Math.PI);
+    ctx.fill();
+  }
+
+  ctx.strokeStyle = "#d6deea";
+  ctx.strokeRect(0.5, 0.5, w-1, h-1);
+}
+
+function drawFreqCanvas(ctx, w, h, Fs, f){
+  clear(ctx, w, h);
+
+  const padL = 40, padR = 10, padT = 16, padB = 22;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+
+  const fMax = 3 * Fs;
+  const nyq = Fs / 2;
+  const fAlias = aliasFreq(f, Fs);
+  const fy = (ff) => padT + (1 - clamp(ff / fMax, 0, 1)) * plotH;
+
+  // alternating Nyquist bands (each is Fs/2)
+  const bandH = nyq;
+  for (let band = 0; band < 6; band++){
+    const f0 = band * bandH;
+    const f1 = (band+1) * bandH;
+    const y0 = fy(f0), y1 = fy(f1);
+    ctx.fillStyle = (band % 2 === 0) ? "rgba(42,109,244,0.06)" : "rgba(229,138,47,0.06)";
+    ctx.fillRect(padL, y1, plotW, (y0 - y1));
+  }
+
+  // axes
+  ctx.strokeStyle = "#d6deea";
+  ctx.beginPath();
+  ctx.moveTo(padL, padT);
+  ctx.lineTo(padL, padT + plotH);
+  ctx.lineTo(padL + plotW, padT + plotH);
+  ctx.stroke();
+
+  // Nyquist line
+  ctx.strokeStyle = "rgba(214,59,59,0.9)";
+  ctx.setLineDash([6,4]);
+  ctx.beginPath();
+  ctx.moveTo(padL, fy(nyq));
+  ctx.lineTo(padL + plotW, fy(nyq));
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // true f marker
+  ctx.strokeStyle = "rgba(42,109,244,0.95)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(padL, fy(f));
+  ctx.lineTo(padL + plotW, fy(f));
+  ctx.stroke();
+
+  // alias marker (within 0..Nyquist)
+  ctx.strokeStyle = "rgba(26,154,90,0.95)";
+  ctx.beginPath();
+  ctx.moveTo(padL, fy(fAlias));
+  ctx.lineTo(padL + plotW, fy(fAlias));
+  ctx.stroke();
+  ctx.lineWidth = 1;
+
+  // labels
+  ctx.fillStyle = "#4b5b73";
+  ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+  ctx.fillText(`0`, 8, padT + plotH + 14);
+  ctx.fillText(`${fMax.toFixed(0)} Hz`, 8, padT + 10);
+
+  ctx.fillStyle = "#d63b3b";
+  ctx.fillText(`Fs/2 = ${nyq.toFixed(2)} Hz`, padL + 6, fy(nyq) - 6);
+
+  ctx.fillStyle = "#2a6df4";
+  ctx.fillText(`f = ${f.toFixed(2)} Hz`, padL + 6, clamp(fy(f) - 6, 12, h-6));
+
+  ctx.fillStyle = "#1a9a5a";
+  ctx.fillText(`alias = ${fAlias.toFixed(2)} Hz`, padL + 6, clamp(fy(fAlias) + 14, 12, h-6));
+
+  ctx.strokeStyle = "#d6deea";
+  ctx.strokeRect(0.5, 0.5, w-1, h-1);
+}
+
+const els = {
+  fs: document.getElementById("fs"),
+  f: document.getElementById("f"),
+  fRange: document.getElementById("fRange"),
+  phi: document.getElementById("phi"),
+  dur: document.getElementById("dur"),
+  view: document.getElementById("view"),
+  regen: document.getElementById("regen"),
+  info: document.getElementById("info"),
+  timeCanvas: document.getElementById("timeCanvas"),
+  discCanvas: document.getElementById("discCanvas"),
+  freqCanvas: document.getElementById("freqCanvas"),
+};
+
+const ctxTime = els.timeCanvas.getContext("2d");
+const ctxDisc = els.discCanvas.getContext("2d");
+const ctxFreq = els.freqCanvas.getContext("2d");
+
+function syncRangeMax(){
+  const Fs = clamp(parseFloat(els.fs.value), 8, 256);
+  const max = 3 * Fs;
+  els.fRange.max = String(max);
+  const f = clamp(parseFloat(els.f.value), 0, max);
+  els.f.value = String(f);
+  els.fRange.value = String(f);
+}
+
+function render(){
+  const Fs = clamp(parseFloat(els.fs.value), 8, 256);
+  const fMax = 3 * Fs;
+
+  const f = clamp(parseFloat(els.f.value), 0, fMax);
+  const phiDeg = clamp(parseFloat(els.phi.value), 0, 360);
+  const dur = clamp(parseFloat(els.dur.value), 0.5, 6);
+  const viewMode = els.view.value;
+
+  els.f.value = String(f);
+  els.fRange.value = String(f);
+
+  const nyq = Fs/2;
+  const fa = aliasFreq(f, Fs);
+  const isAliasing = f > nyq + 1e-12;
+
+  const omega = 2*Math.PI*(f/Fs);
+  const omegaWrapped = ((omega + Math.PI) % (2*Math.PI)) - Math.PI;
+
+  els.info.innerHTML =
+    `Fs=${Fs.toFixed(2)} Hz, Nyquist=${nyq.toFixed(2)} Hz<br>` +
+    `f=${f.toFixed(2)} Hz → alias=${fa.toFixed(2)} Hz ` +
+    (isAliasing
+      ? `<span style="color:var(--red);font-weight:700;">(aliasing)</span>`
+      : `<span style="color:var(--green);font-weight:700;">(no aliasing)</span>`) +
+    `<br>ω=2π(f/Fs)=${omega.toFixed(3)} rad (wrapped ${omegaWrapped.toFixed(3)})`;
+
+  const phiRad = (phiDeg * Math.PI) / 180;
+
+  drawTimeCanvas(ctxTime, els.timeCanvas.width, els.timeCanvas.height, Fs, f, phiRad, dur, viewMode);
+  drawDiscreteCanvas(ctxDisc, els.discCanvas.width, els.discCanvas.height, Fs, f, phiRad, dur);
+  drawFreqCanvas(ctxFreq, els.freqCanvas.width, els.freqCanvas.height, Fs, f);
+}
+
+els.regen.addEventListener("click", () => { syncRangeMax(); render(); });
+els.fs.addEventListener("change", () => { syncRangeMax(); render(); });
+els.f.addEventListener("change", () => { syncRangeMax(); render(); });
+els.fRange.addEventListener("input", () => { els.f.value = els.fRange.value; render(); });
+["phi","dur","view"].forEach(id => els[id].addEventListener("change", render));
+
+syncRangeMax();
+render();
+</script>
+</body>
+</html>
