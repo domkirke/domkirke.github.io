@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>STFT Demo (Iframe 960x700, Light)</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --fg:#0b1220;
+      --muted:#4b5b73;
+      --panel:#f5f7fb;
+      --line:#d6deea;
+      --canvas:#ffffff;
+    }
+
+    html, body { height:100%; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* Fixed layout for a 960x700 iframe */
+    .app{
+      width:960px;
+      height:700px;
+      box-sizing:border-box;
+      padding:12px;
+      overflow:hidden;
+    }
+
+    .titlebar{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    h1{
+      font-size:16px;
+      margin:0;
+      font-weight:700;
+    }
+    .subtitle{
+      font-size:12px;
+      color:var(--muted);
+      margin:0;
+      white-space:nowrap;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns: 620px 1fr; /* left + right (spectrogram) */
+      gap:12px;
+      height: calc(700px - 12px - 28px); /* app padding + titlebar approx */
+      align-items:start;
+    }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:10px;
+      box-sizing:border-box;
+    }
+
+    .controls{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px 10px;
+      align-items:end;
+      margin-bottom:8px;
+    }
+
+    label{
+      font-size:11px;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    input, select, button{
+      font: inherit;
+      font-size:12px;
+      color:var(--fg);
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:6px 8px;
+      outline:none;
+    }
+    input[type="range"]{ width: 360px; padding:0; }
+
+    button{
+      cursor:pointer;
+      background:#ffffff;
+    }
+    button:hover{ background:#f0f4ff; }
+
+    .info{
+      font-size:12px;
+      color:var(--muted);
+      margin:6px 0 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .stack{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .row2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+
+    .cap{
+      font-size:11px;
+      color:var(--muted);
+      margin:0 0 6px;
+    }
+
+    canvas{
+      display:block;
+      background:var(--canvas);
+      border:1px solid var(--line);
+      border-radius:10px;
+    }
+
+    /* Fixed canvas sizes for a stable iframe layout */
+    #waveCanvas { width: 598px; height: 160px; }
+    #frameCanvas{ width: 289px; height: 160px; }
+    #specCanvas { width: 289px; height: 160px; }
+    #gramCanvas { width: 296px; height: 552px; }
+
+    /* Ensure the card contents don't overflow the iframe height */
+    .leftCard{ height: 100%; }
+    .rightCard{ height: 100%; }
+
+    .footnote{
+      font-size:11px;
+      color:var(--muted);
+      margin-top:8px;
+      line-height:1.25;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="titlebar">
+      <h1>STFT demo (low sample rate, naive DFT)</h1>
+      <p class="subtitle">Designed for a 960×700 iframe</p>
+    </div>
+
+    <div class="layout">
+      <!-- LEFT: controls + waveform + frame + spectrum -->
+      <div class="card leftCard">
+        <div class="controls">
+          <label>Signal
+            <select id="signalType">
+              <option value="twotone" selected>two-tone (changes halfway)</option>
+              <option value="sine">single sine</option>
+              <option value="chirp">chirp (rises)</option>
+            </select>
+          </label>
+
+          <label>Sample rate (Hz)
+            <input id="fs" type="number" min="16" max="512" step="1" value="64">
+          </label>
+
+          <label>Duration (s)
+            <input id="dur" type="number" min="0.5" max="8" step="0.5" value="2">
+          </label>
+
+          <label>Window N (samples)
+            <input id="winSize" type="number" min="4" max="128" step="1" value="16">
+          </label>
+
+          <label>Hop H (samples)
+            <input id="hop" type="number" min="1" max="128" step="1" value="8">
+          </label>
+
+          <label>Window
+            <select id="windowType">
+              <option value="hann" selected>Hann</option>
+              <option value="rect">Rectangular</option>
+            </select>
+          </label>
+
+          <button id="regen">Regenerate</button>
+        </div>
+
+        <label style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:6px;margin-bottom:6px;">
+          Frame index (moves analysis frame)
+          <input id="frameIdx" type="range" min="0" max="0" step="1" value="0">
+        </label>
+
+        <div class="info" id="info"></div>
+
+        <div class="stack">
+          <div>
+            <p class="cap">Signal samples (highlighted region = current frame)</p>
+            <!-- IMPORTANT: set actual bitmap size for crisp drawing -->
+            <canvas id="waveCanvas" width="598" height="160"></canvas>
+          </div>
+
+          <div class="row2">
+            <div>
+              <p class="cap">Windowed frame (samples) + window curve</p>
+              <canvas id="frameCanvas" width="289" height="160"></canvas>
+            </div>
+            <div>
+              <p class="cap">Magnitude spectrum (DFT bins of selected frame)</p>
+              <canvas id="specCanvas" width="289" height="160"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: spectrogram -->
+      <div class="card rightCard">
+        <p class="cap">Spectrogram (magnitude, dB-ish; time=frames, freq=bins)</p>
+        <canvas id="gramCanvas" width="296" height="552"></canvas>
+        <div class="footnote">
+          Δf = Fs/N (bin spacing). Hann reduces leakage vs rectangular.
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------- Math helpers ---------- */
+function hannWindow(N) {
+  const w = new Array(N);
+  if (N === 1) { w[0] = 1; return w; }
+  for (let n = 0; n < N; n++) w[n] = 0.5 - 0.5 * Math.cos((2*Math.PI*n)/(N-1));
+  return w;
+}
+function rectWindow(N) { return Array.from({length:N}, () => 1); }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+// Naive DFT magnitude (O(N^2), fine for small N)
+function dftMag(x) {
+  const N = x.length;
+  const mags = new Array(Math.floor(N/2) + 1).fill(0);
+  for (let k = 0; k <= Math.floor(N/2); k++) {
+    let re = 0, im = 0;
+    for (let n = 0; n < N; n++) {
+      const ang = -2*Math.PI*k*n/N;
+      re += x[n] * Math.cos(ang);
+      im += x[n] * Math.sin(ang);
+    }
+    mags[k] = Math.hypot(re, im);
+  }
+  return mags;
+}
+
+/* ---------- Signal generation ---------- */
+function genSignal(type, fs, durSec) {
+  const L = Math.max(1, Math.floor(fs * durSec));
+  const x = new Array(L).fill(0);
+
+  if (type === "sine") {
+    const f = fs / 8;
+    for (let n = 0; n < L; n++) x[n] = Math.sin(2*Math.PI*f*(n/fs));
+  } else if (type === "twotone") {
+    const f1 = fs / 8;
+    const f2 = fs / 4;
+    const mid = Math.floor(L/2);
+    for (let n = 0; n < L; n++) {
+      const f = (n < mid) ? f1 : f2;
+      x[n] = Math.sin(2*Math.PI*f*(n/fs));
+    }
+  } else if (type === "chirp") {
+    const f0 = fs / 16;
+    const f1 = fs / 3.2; // < fs/2
+    for (let n = 0; n < L; n++) {
+      const t = n / fs;
+      const T = durSec;
+      const f = f0 + (f1 - f0) * (t / T);
+      x[n] = Math.sin(2*Math.PI*f*t);
+    }
+  }
+  return x;
+}
+
+/* ---------- STFT ---------- */
+function stft(x, winSize, hop, window) {
+  const L = x.length;
+  const frames = Math.max(0, Math.floor((L - winSize) / hop) + 1);
+  const mags = [];
+  for (let i = 0; i < frames; i++) {
+    const start = i * hop;
+    const frame = new Array(winSize);
+    for (let n = 0; n < winSize; n++) frame[n] = x[start + n] * window[n];
+    mags.push(dftMag(frame));
+  }
+  return mags;
+}
+
+/* ---------- Drawing ---------- */
+function clear(ctx, w, h) {
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0,0,w,h);
+}
+
+function drawMidline(ctx, w, h) {
+  ctx.strokeStyle = "#d6deea";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, h/2);
+  ctx.lineTo(w, h/2);
+  ctx.stroke();
+}
+
+function drawDiscreteSignal(ctx, w, h, x, highlightStart, highlightN) {
+  clear(ctx, w, h);
+  drawMidline(ctx, w, h);
+
+  const L = x.length;
+  const pad = 14;
+  const plotW = w - 2*pad;
+  const plotH = h - 2*pad;
+
+  // highlight window region
+  if (highlightStart != null && highlightN != null && L > 1) {
+    const a = highlightStart;
+    const b = highlightStart + highlightN - 1;
+    const x0 = pad + (a/(L-1)) * plotW;
+    const x1 = pad + (b/(L-1)) * plotW;
+    ctx.fillStyle = "rgba(40, 120, 255, 0.10)";
+    ctx.fillRect(x0, pad, (x1-x0), plotH);
+    ctx.strokeStyle = "rgba(40, 120, 255, 0.35)";
+    ctx.strokeRect(x0, pad, (x1-x0), plotH);
+  }
+
+  // stems + points
+  ctx.strokeStyle = "#9bb0cc";
+  ctx.fillStyle = "#0b1220";
+
+  for (let n = 0; n < L; n++) {
+    const px = pad + (L === 1 ? 0 : (n/(L-1)) * plotW);
+    const py = pad + (0.5 - 0.45 * x[n]) * plotH;
+    const mid = pad + 0.5 * plotH;
+
+    ctx.beginPath();
+    ctx.moveTo(px, mid);
+    ctx.lineTo(px, py);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(px, py, 2.2, 0, 2*Math.PI);
+    ctx.fill();
+  }
+
+  // light connecting line
+  ctx.strokeStyle = "rgba(11,18,32,0.25)";
+  ctx.beginPath();
+  for (let n = 0; n < L; n++) {
+    const px = pad + (L === 1 ? 0 : (n/(L-1)) * plotW);
+    const py = pad + (0.5 - 0.45 * x[n]) * plotH;
+    if (n === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+}
+
+function drawFrameAndWindow(ctx, w, h, rawFrame, window) {
+  clear(ctx, w, h);
+  drawMidline(ctx, w, h);
+
+  const N = rawFrame.length;
+  const pad = 14;
+  const plotW = w - 2*pad;
+  const plotH = h - 2*pad;
+
+  // window curve (scaled to [-1,1] around midline)
+  ctx.strokeStyle = "rgba(230, 150, 60, 0.95)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let n = 0; n < N; n++) {
+    const px = pad + (N === 1 ? 0 : (n/(N-1)) * plotW);
+    const wy = window[n];          // 0..1
+    const yScaled = 2*wy - 1;      // -1..1
+    const py = pad + (0.5 - 0.45 * yScaled) * plotH;
+    if (n === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+  ctx.lineWidth = 1;
+
+  // windowed frame stems
+  ctx.strokeStyle = "#9bb0cc";
+  ctx.fillStyle = "#0b1220";
+  for (let n = 0; n < N; n++) {
+    const px = pad + (N === 1 ? 0 : (n/(N-1)) * plotW);
+    const y = rawFrame[n] * window[n];
+    const py = pad + (0.5 - 0.45 * y) * plotH;
+    const mid = pad + 0.5 * plotH;
+
+    ctx.beginPath();
+    ctx.moveTo(px, mid);
+    ctx.lineTo(px, py);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(px, py, 2.2, 0, 2*Math.PI);
+    ctx.fill();
+  }
+}
+
+function drawSpectrum(ctx, w, h, mags, fs, N) {
+  clear(ctx, w, h);
+
+  const padL = 26, padR = 10, padT = 12, padB = 18;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+
+  const eps = 1e-9;
+  const db = mags.map(m => 20*Math.log10(m + eps));
+  const maxDb = Math.max(...db);
+  const minDb = maxDb - 50;
+
+  // axes
+  const axX0 = padL, axY0 = padT + plotH;
+  const axX1 = padL + plotW, axY1 = padT;
+
+  ctx.strokeStyle = "#d6deea";
+  ctx.beginPath();
+  ctx.moveTo(axX0, axY1);
+  ctx.lineTo(axX0, axY0);
+  ctx.lineTo(axX1, axY0);
+  ctx.stroke();
+
+  // line plot
+  const K = mags.length;
+  ctx.strokeStyle = "#1a9a5a";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let k = 0; k < K; k++) {
+    const px = padL + (K === 1 ? 0 : (k/(K-1)) * plotW);
+    const y01 = (db[k] - minDb) / (maxDb - minDb);
+    const py = padT + (1 - clamp(y01, 0, 1)) * plotH;
+    if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+  ctx.lineWidth = 1;
+
+  // points
+  ctx.fillStyle = "#0b1220";
+  for (let k = 0; k < K; k++) {
+    const px = padL + (K === 1 ? 0 : (k/(K-1)) * plotW);
+    const y01 = (db[k] - minDb) / (maxDb - minDb);
+    const py = padT + (1 - clamp(y01, 0, 1)) * plotH;
+    ctx.beginPath();
+    ctx.arc(px, py, 2.0, 0, 2*Math.PI);
+    ctx.fill();
+  }
+
+  // labels
+  ctx.fillStyle = "#4b5b73";
+  ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+  const df = fs / N;
+  ctx.fillText(`Δf=Fs/N=${df.toFixed(2)} Hz`, 6, 12);
+  ctx.fillText(`0`, padL, h - 5);
+  ctx.fillText(`${(fs/2).toFixed(1)} Hz`, w - 60, h - 5);
+}
+
+function drawSpectrogram(ctx, w, h, stftMags, selectedFrame) {
+  clear(ctx, w, h);
+  const frames = stftMags.length;
+  if (frames === 0) return;
+  const bins = stftMags[0].length;
+
+  const eps = 1e-9;
+  let maxDb = -Infinity;
+  for (let t = 0; t < frames; t++) {
+    for (let k = 0; k < bins; k++) {
+      const db = 20*Math.log10(stftMags[t][k] + eps);
+      if (db > maxDb) maxDb = db;
+    }
+  }
+  const minDb = maxDb - 50;
+
+  const img = ctx.createImageData(w, h);
+  const data = img.data;
+
+  // Light-mode colormap: white -> blue -> purple -> red (simple)
+  for (let y = 0; y < h; y++) {
+    const k = Math.floor((1 - y/(h-1)) * (bins-1)); // top=high freq
+    for (let x = 0; x < w; x++) {
+      const t = Math.floor((x/(w-1)) * (frames-1));
+      const db = 20*Math.log10(stftMags[t][k] + eps);
+      const v = clamp((db - minDb) / (maxDb - minDb), 0, 1);
+
+      // v=0 => white background; v=1 => strong color
+      const r = Math.floor(255 * (1 - 0.10*v) - 20*v + 0);   // keep fairly bright
+      const g = Math.floor(255 * (1 - 0.55*v));
+      const b = Math.floor(255 * (1 - 0.15*v) + 40*v);
+
+      // Add some hue shift with v (blue-ish at mid)
+      const rr = clamp(Math.floor(r + 110*Math.max(0, v-0.65)), 0, 255);
+      const gg = clamp(Math.floor(g - 30*Math.max(0, v-0.55)), 0, 255);
+      const bb = clamp(Math.floor(b + 160*Math.max(0, 0.55-v)), 0, 255);
+
+      const i = (y*w + x) * 4;
+      data[i+0] = rr;
+      data[i+1] = gg;
+      data[i+2] = bb;
+      data[i+3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+
+  // selected frame line
+  if (selectedFrame != null && frames > 1) {
+    const xSel = (selectedFrame / (frames-1)) * (w-1);
+    ctx.strokeStyle = "rgba(0,0,0,0.75)";
+    ctx.beginPath();
+    ctx.moveTo(xSel, 0);
+    ctx.lineTo(xSel, h);
+    ctx.stroke();
+  }
+
+  // border
+  ctx.strokeStyle = "#d6deea";
+  ctx.strokeRect(0.5, 0.5, w-1, h-1);
+}
+
+/* ---------- UI wiring ---------- */
+const els = {
+  signalType: document.getElementById("signalType"),
+  fs: document.getElementById("fs"),
+  dur: document.getElementById("dur"),
+  winSize: document.getElementById("winSize"),
+  hop: document.getElementById("hop"),
+  windowType: document.getElementById("windowType"),
+  regen: document.getElementById("regen"),
+  frameIdx: document.getElementById("frameIdx"),
+  info: document.getElementById("info"),
+  waveCanvas: document.getElementById("waveCanvas"),
+  frameCanvas: document.getElementById("frameCanvas"),
+  specCanvas: document.getElementById("specCanvas"),
+  gramCanvas: document.getElementById("gramCanvas"),
+};
+
+const ctxWave = els.waveCanvas.getContext("2d");
+const ctxFrame = els.frameCanvas.getContext("2d");
+const ctxSpec  = els.specCanvas.getContext("2d");
+const ctxGram  = els.gramCanvas.getContext("2d");
+
+let state = { x: [], fs: 64, dur: 2, winSize: 16, hop: 8, window: [], stftMags: [] };
+
+function rebuild() {
+  const fs = clamp(parseInt(els.fs.value, 10), 16, 512);
+  const dur = Math.max(0.5, parseFloat(els.dur.value));
+  let winSize = clamp(parseInt(els.winSize.value, 10), 4, 128);
+  let hop = clamp(parseInt(els.hop.value, 10), 1, 128);
+
+  const x = genSignal(els.signalType.value, fs, dur);
+
+  // keep sizes sensible
+  winSize = Math.min(winSize, x.length);
+  hop = Math.min(hop, winSize);
+
+  const window = (els.windowType.value === "hann") ? hannWindow(winSize) : rectWindow(winSize);
+  const stftMags = stft(x, winSize, hop, window);
+
+  state = { x, fs, dur, winSize, hop, window, stftMags };
+
+  const frames = stftMags.length;
+  els.frameIdx.min = 0;
+  els.frameIdx.max = Math.max(0, frames - 1);
+  els.frameIdx.value = 0;
+
+  render();
+}
+
+function render() {
+  const { x, fs, winSize, hop, window, stftMags } = state;
+  const frames = stftMags.length;
+  const i = clamp(parseInt(els.frameIdx.value, 10) || 0, 0, Math.max(0, frames-1));
+  const start = i * hop;
+
+  const df = fs / winSize;
+  const t0 = start / fs;
+
+  els.info.textContent =
+    `Fs=${fs}Hz  L=${x.length}  N=${winSize}  H=${hop}  frames=${frames}  ` +
+    `| frame=${i} startSample=${start} startTime=${t0.toFixed(3)}s  Δf=${df.toFixed(2)}Hz`;
+
+  drawDiscreteSignal(ctxWave, els.waveCanvas.width, els.waveCanvas.height, x, start, winSize);
+
+  const rawFrame = x.slice(start, start + winSize);
+  drawFrameAndWindow(ctxFrame, els.frameCanvas.width, els.frameCanvas.height, rawFrame, window);
+
+  const mags = stftMags[i] || new Array(Math.floor(winSize/2)+1).fill(0);
+  drawSpectrum(ctxSpec, els.specCanvas.width, els.specCanvas.height, mags, fs, winSize);
+
+  drawSpectrogram(ctxGram, els.gramCanvas.width, els.gramCanvas.height, stftMags, i);
+}
+
+els.regen.addEventListener("click", rebuild);
+["signalType","fs","dur","winSize","hop","windowType"].forEach(id => els[id].addEventListener("change", rebuild));
+els.frameIdx.addEventListener("input", render);
+
+rebuild();
+</script>
+</body>
+</html>
