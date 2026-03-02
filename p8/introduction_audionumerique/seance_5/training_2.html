@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Choisir le bon spectre — harmoniques, f0 variable</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 16px; }
+    #wrap { max-width: 1120px; }
+    #timeCanvas { border: 1px solid #ccc; background: #fff; }
+    .small { color:#444; font-size:13px; }
+    #msg { margin-top: 10px; padding: 10px; border-radius: 6px; background: #f6f7f9; }
+
+    .specGrid { display:grid; grid-template-columns: repeat(2, minmax(260px, 1fr)); gap:14px; margin-top:14px; }
+    .specCard { border:1px solid #cfd4da; border-radius:8px; background:#fff; padding:10px; cursor:pointer; user-select:none; }
+    .specCard:hover { box-shadow: 0 2px 10px rgba(0,0,0,.08); transform: translateY(-1px); }
+    .specCard.selected { border-color:#0b5ed7; box-shadow: 0 0 0 3px rgba(11,94,215,.18); }
+    .specHeader { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; gap:10px; }
+    .specHeader b { font-size:14px; }
+    .specHeader .meta { font-size:12px; color:#555; white-space:nowrap; }
+
+    button { padding: 10px 14px; cursor:pointer; }
+    .controls { margin-top:12px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  </style>
+</head>
+<body>
+<div id="wrap">
+  <h2>Signal temporel → choisir le bon spectre</h2>
+  <div class="small">
+    Consigne : clique sur le spectre correspondant au signal. Tous les spectres sont <b>harmoniques</b> (raies à n·f0),
+    mais <b>chaque proposition a son propre f0</b> (affiché).
+  </div>
+
+  <canvas id="timeCanvas" width="1080" height="380" style="margin-top:10px;"></canvas>
+
+  <div class="specGrid" id="specGrid"></div>
+
+  <div class="controls">
+    <button id="btnNew">Nouveau tirage</button>
+    <button id="btnCheck">Vérifier</button>
+    <button id="btnSol">Solution</button>
+    <span class="small">Astuce : l’espacement des raies = f0.</span>
+  </div>
+
+  <div id="msg"><div id="feedback"></div></div>
+</div>
+
+<script>
+(() => {
+  const timeCanvas = document.getElementById("timeCanvas");
+  const tctx = timeCanvas.getContext("2d");
+  const specGrid = document.getElementById("specGrid");
+
+  const feedback = document.getElementById("feedback");
+  const btnNew = document.getElementById("btnNew");
+  const btnCheck = document.getElementById("btnCheck");
+  const btnSol = document.getElementById("btnSol");
+
+  const TWO_PI = 2 * Math.PI;
+  const NMAX = 10;
+  const N_OPTIONS = 4;
+
+  const AMPLITUDES = [1, 1.5, 2, 3, 4, 5];
+  const PERIODES   = [2, 2.5, 3, 4, 5, 6, 8, 10];
+  const F0_MULTS   = [0.5, 2/3, 1, 1.5, 2, 3];
+
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function format(x) { return (Math.round(x * 1000) / 1000).toString(); }
+  function clamp(x,a,b){ return Math.max(a, Math.min(b,x)); }
+
+  function mkProfile(name, coeffFn) {
+    return {
+      name,
+      coeffs: () => {
+        const a = new Array(NMAX + 1).fill(0);
+        for (let n=1;n<=NMAX;n++) a[n] = coeffFn(n);
+        if (Math.abs(a[1]) < 1e-12) a[1] = 1;
+        return a;
+      }
+    };
+  }
+
+  const PROFILES = [
+    mkProfile("Sinus", (n) => n===1 ? 1 : 0),
+    mkProfile("Carré ~ impaires 1/n", (n) => (n%2===1 ? 1/n : 0)),
+    mkProfile("Triangle ~ impaires 1/n²", (n) => (n%2===1 ? 1/(n*n) : 0)),
+    mkProfile("Dent de scie ~ 1/n", (n) => 1/n),
+    mkProfile("Somme 1f+2f+3f", (n) => (n===1?1 : n===2?0.45 : n===3?0.25 : 0)),
+    mkProfile("Somme 1f+5f", (n) => (n===1?1 : n===5?0.35 : 0)),
+  ];
+
+  function magsFromCoeffs(coeffs) {
+    const mags = new Array(NMAX + 1).fill(0);
+    for (let n=1;n<=NMAX;n++) mags[n] = Math.abs(coeffs[n]);
+    return mags;
+  }
+  function normalizeToMax(arr) {
+    let mx = 0;
+    for (let i=1;i<arr.length;i++) mx = Math.max(mx, arr[i]);
+    if (mx < 1e-12) mx = 1;
+    const out = arr.slice();
+    for (let i=1;i<out.length;i++) out[i] = out[i]/mx;
+    return out;
+  }
+  function keySpectrum(f0, magsNorm) {
+    const kf = Math.round(f0*100000);
+    const km = magsNorm.slice(1).map(v => Math.round(v*1000)).join(",");
+    return `${kf}|${km}`;
+  }
+
+  // Etat
+  let A = 2;
+  let T = 4;
+  let f0True = 1/4;
+
+  let trueProfile = PROFILES[0];
+  let trueCoeffs = null;
+
+  let options = [];
+  let selectedIndex = -1;
+  let correctIndex = -1;
+  let fMaxGlobal = 1;
+
+  function synthRawY(t, f0, coeffs) {
+    let s = 0;
+    for (let n=1;n<=NMAX;n++) {
+      const an = coeffs[n];
+      if (an !== 0) s += an * Math.sin(TWO_PI * (n * f0) * t);
+    }
+    return s;
+  }
+
+  function computeScaleToPeakA(f0, coeffs) {
+    const period = 1 / f0;
+    const N = 8000;
+    let maxAbs = 0;
+    for (let i=0;i<=N;i++) {
+      const t = (i/N) * period;
+      const v = Math.abs(synthRawY(t, f0, coeffs));
+      if (v > maxAbs) maxAbs = v;
+    }
+    if (maxAbs < 1e-12) maxAbs = 1;
+    return A / maxAbs;
+  }
+
+  function drawTime() {
+    tctx.clearRect(0,0,timeCanvas.width,timeCanvas.height);
+
+    const W = timeCanvas.width, H = timeCanvas.height;
+    const padL = 70, padR = 18, padT = 18, padB = 60;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    const tMin = 0;
+    const tMax = 3*T;
+    const yMax = Math.max(1, A)*1.25;
+    const yMin = -yMax;
+
+    const xOfT = (t) => padL + (t - tMin)/(tMax-tMin)*plotW;
+    const yOfY = (y) => padT + (yMax - y)/(yMax-yMin)*plotH;
+
+    // grille
+    tctx.strokeStyle = "#e9ecef"; tctx.lineWidth = 1;
+    for (let i=0;i<=12;i++){
+      const x = padL + (i/12)*plotW;
+      tctx.beginPath(); tctx.moveTo(x,padT); tctx.lineTo(x,padT+plotH); tctx.stroke();
+    }
+    for (let j=0;j<=8;j++){
+      const y = padT + (j/8)*plotH;
+      tctx.beginPath(); tctx.moveTo(padL,y); tctx.lineTo(padL+plotW,y); tctx.stroke();
+    }
+
+    // axes
+    tctx.strokeStyle="#333"; tctx.lineWidth=1.5;
+    tctx.beginPath(); tctx.moveTo(padL,padT); tctx.lineTo(padL,padT+plotH); tctx.stroke();
+    const y0 = yOfY(0);
+    tctx.beginPath(); tctx.moveTo(padL,y0); tctx.lineTo(padL+plotW,y0); tctx.stroke();
+
+    // labels
+    tctx.fillStyle="#111"; tctx.font="14px system-ui, Arial";
+    tctx.fillText("y (u.a.)", 12, padT+14);
+    tctx.fillText("t (s)", padL+plotW-36, padT+plotH+42);
+
+    // ticks temps 0,T,2T,3T
+    tctx.font="13px system-ui, Arial";
+    tctx.strokeStyle="#111"; tctx.lineWidth=1;
+    for (let k=0;k<=3;k++){
+      const t = k*T;
+      const x = xOfT(t);
+      tctx.beginPath(); tctx.moveTo(x,y0-6); tctx.lineTo(x,y0+6); tctx.stroke();
+      tctx.fillText(format(t), x-6, padT+plotH+30);
+    }
+
+    // ticks y -A,0,+A
+    [[A,yOfY(A)],[0,y0],[-A,yOfY(-A)]].forEach(([val,yy])=>{
+      tctx.beginPath(); tctx.moveTo(padL-6,yy); tctx.lineTo(padL+6,yy); tctx.stroke();
+      tctx.fillText(format(val), padL-56, yy+5);
+    });
+
+    // signal
+    const scale = computeScaleToPeakA(f0True, trueCoeffs);
+    tctx.strokeStyle="#0b5ed7"; tctx.lineWidth=2.5;
+    tctx.beginPath();
+    const N = 2400;
+    for (let i=0;i<=N;i++){
+      const t = tMin + (i/N)*(tMax-tMin);
+      const y = scale * synthRawY(t, f0True, trueCoeffs);
+      const x = xOfT(t);
+      const yy = yOfY(y);
+      if (i===0) tctx.moveTo(x,yy); else tctx.lineTo(x,yy);
+    }
+    tctx.stroke();
+
+    // titre
+    tctx.fillStyle="#222"; tctx.font="15px system-ui, Arial";
+    tctx.fillText("Signal périodique = somme d’harmoniques (choisir le spectre)", padL+10, padT+20);
+  }
+
+  function drawSpectrum(canvas, opt) {
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    const padL=48, padR=10, padT=12, padB=30;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+
+    // axes
+    ctx.strokeStyle="#333"; ctx.lineWidth=1.2;
+    ctx.beginPath();
+    ctx.moveTo(padL,padT);
+    ctx.lineTo(padL,padT+plotH);
+    ctx.lineTo(padL+plotW,padT+plotH);
+    ctx.stroke();
+
+    // y grid
+    ctx.strokeStyle="#eef1f4"; ctx.lineWidth=1;
+    for (let j=1;j<=3;j++){
+      const y = padT + (j/4)*plotH;
+      ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(padL+plotW,y); ctx.stroke();
+    }
+
+    const xOfF = (ff) => padL + (ff / fMaxGlobal) * plotW;
+    const yOfM = (m) => padT + (1 - clamp(m,0,1)) * plotH;
+
+    ctx.strokeStyle="#0b5ed7"; ctx.fillStyle="#0b5ed7"; ctx.lineWidth=2;
+    for (let n=1;n<=NMAX;n++){
+      const m = opt.magsNorm[n];
+      if (m <= 1e-6) continue;
+      const ff = n * opt.f0;
+      const x = xOfF(ff);
+      const y = yOfM(m);
+      const y0 = padT+plotH;
+
+      ctx.beginPath(); ctx.moveTo(x,y0); ctx.lineTo(x,y); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x,y,3.2,0,TWO_PI); ctx.fill();
+    }
+
+    ctx.fillStyle="#111"; ctx.font="12px system-ui, Arial";
+    ctx.fillText("A(f) (rel.)", 6, padT+12);
+    ctx.fillText("f (Hz)", padL+plotW-32, padT+plotH+22);
+
+    const ticks = [0, fMaxGlobal/2, fMaxGlobal];
+    ticks.forEach(ff=>{
+      const x = xOfF(ff);
+      ctx.fillText(format(ff), x-10, padT+plotH+22);
+    });
+  }
+
+  function renderSpectra() {
+    specGrid.innerHTML = "";
+    options.forEach((opt, idx) => {
+      const card = document.createElement("div");
+      card.className = "specCard";
+      card.tabIndex = 0;
+
+      const header = document.createElement("div");
+      header.className = "specHeader";
+
+      // >>> CHANGEMENT: on affiche f0 de la proposition <<<
+      header.innerHTML =
+        `<b>Proposition ${String.fromCharCode(65+idx)}</b>
+         <span class="meta">f0 = ${format(opt.f0)} Hz</span>
+         <span class="meta">0 → ${format(fMaxGlobal)} Hz</span>`;
+
+      const c = document.createElement("canvas");
+      c.width = 500;
+      c.height = 170;
+
+      drawSpectrum(c, opt);
+
+      const select = () => {
+        selectedIndex = idx;
+        [...specGrid.querySelectorAll(".specCard")].forEach(el => el.classList.remove("selected"));
+        card.classList.add("selected");
+      };
+
+      card.appendChild(header);
+      card.appendChild(c);
+      card.addEventListener("click", select);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(); }
+      });
+
+      specGrid.appendChild(card);
+    });
+  }
+
+  function buildOptions() {
+    const keys = new Set();
+    const opts = [];
+
+    const trueMagsNorm = normalizeToMax(magsFromCoeffs(trueCoeffs));
+    opts.push({ f0: f0True, profile: trueProfile, magsNorm: trueMagsNorm, isCorrect: true });
+    keys.add(keySpectrum(f0True, trueMagsNorm));
+
+    while (opts.length < N_OPTIONS) {
+      let prof = pick(PROFILES);
+      let mult = pick(F0_MULTS);
+      let f0cand = clamp(f0True * mult, 0.05, 5);
+
+      // éviter doublon exact (même prof + même f0) et éviter que "même prof + même f0" repasse
+      if (prof === trueProfile && Math.abs(f0cand - f0True) < 1e-12) {
+        mult = pick(F0_MULTS.filter(m => Math.abs(m-1) > 1e-12));
+        f0cand = clamp(f0True * mult, 0.05, 5);
+      }
+
+      const coeffs = prof.coeffs();
+      const magsNorm = normalizeToMax(magsFromCoeffs(coeffs));
+      const k = keySpectrum(f0cand, magsNorm);
+      if (keys.has(k)) continue;
+
+      keys.add(k);
+      opts.push({ f0: f0cand, profile: prof, magsNorm, isCorrect: false });
+    }
+
+    // shuffle
+    for (let i=opts.length-1;i>0;i--) {
+      const j = Math.floor(Math.random()*(i+1));
+      [opts[i], opts[j]] = [opts[j], opts[i]];
+    }
+
+    options = opts;
+    correctIndex = options.findIndex(o => o.isCorrect);
+    selectedIndex = -1;
+
+    const maxF0 = Math.max(...options.map(o => o.f0));
+    fMaxGlobal = NMAX * maxF0;
+  }
+
+  function newDraw() {
+    A = pick(AMPLITUDES);
+    T = pick(PERIODES);
+    f0True = 1 / T;
+
+    trueProfile = pick(PROFILES);
+    trueCoeffs = trueProfile.coeffs();
+
+    buildOptions();
+
+    feedback.textContent = "Choisis une proposition, puis clique “Vérifier”.";
+    drawTime();
+    renderSpectra();
+  }
+
+  function check() {
+    if (selectedIndex < 0) {
+      feedback.innerHTML = "<b>Choisis une proposition</b> (A, B, C ou D).";
+      return;
+    }
+    if (selectedIndex === correctIndex) {
+      feedback.innerHTML = "<b>Correct.</b> Bon f0 et bon profil d’harmoniques.";
+    } else {
+      const good = String.fromCharCode(65 + correctIndex);
+      const bad  = String.fromCharCode(65 + selectedIndex);
+      feedback.innerHTML = `<b>Incorrect.</b> Tu as choisi ${bad}. Réessaie (ou clique “Solution”).`;
+    }
+  }
+
+  function solution() {
+    const good = String.fromCharCode(65 + correctIndex);
+    feedback.innerHTML = `Solution : la bonne réponse est <b>${good}</b>.`;
+    const cards = [...specGrid.querySelectorAll(".specCard")];
+    cards.forEach((el, i) => el.classList.toggle("selected", i === correctIndex));
+    selectedIndex = correctIndex;
+  }
+
+  btnNew.addEventListener("click", newDraw);
+  btnCheck.addEventListener("click", check);
+  btnSol.addEventListener("click", solution);
+
+  newDraw();
+})();
+</script>
+</body>
+</html>
