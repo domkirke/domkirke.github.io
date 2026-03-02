@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Entraîneur ondes — A / T / f (formes + harmoniques)</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 16px; }
+    #wrap { max-width: 1040px; }
+    #canvas { border: 1px solid #ccc; background: #fff; }
+    .row { display: flex; gap: 16px; flex-wrap: wrap; align-items: end; margin-top: 14px; }
+    label { display: grid; gap: 6px; font-size: 14px; }
+    input { padding: 8px; width: 180px; }
+    button { padding: 10px 14px; cursor: pointer; }
+    #msg { margin-top: 10px; padding: 10px; border-radius: 6px; background: #f6f7f9; }
+    .small { color: #444; font-size: 13px; }
+    .inline { display:flex; gap:12px; align-items:center; flex-wrap: wrap; }
+    .pill { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius:999px; background:#fff; font-size:12px; color:#333;}
+  </style>
+</head>
+<body>
+<div id="wrap">
+  <h2>Onde périodique — déterminer A, T et f</h2>
+
+  <div class="inline" style="margin-bottom:10px;visibility:hidden;">
+    <span class="pill" id="waveInfo">Forme: —</span>
+    <label class="inline" style="gap:8px;">
+      <input type="checkbox" id="chkHideWave" />
+      Masquer le nom de la forme (pour les élèves)
+    </label>
+  </div>
+
+  <canvas id="canvas" width="1000" height="440"></canvas>
+
+  <div class="row">
+    <label>Amplitude A (u.a.)
+      <input id="inA" placeholder="ex: 2" />
+    </label>
+    <label>Période T (s)
+      <input id="inT" placeholder="ex: 4" />
+    </label>
+    <label>Fréquence f (Hz)
+      <input id="inF" placeholder="ex: 0.25" />
+    </label>
+
+    <button id="btnCheck">Vérifier</button>
+    <button id="btnNew">Nouveau tirage</button>
+    <button id="btnSol">Afficher solution</button>
+  </div>
+
+  <div id="msg">
+    <div class="small">Tolérance : ±5% (modifiable dans le code). Rappel : <b>f = 1 / T</b>.</div>
+    <div class="small">Pour les formes “à harmoniques”, l’amplitude demandée est l’<b>amplitude crête</b> (max |y|), normalisée à A.</div>
+    <div id="feedback" style="margin-top: 6px;"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  const inA = document.getElementById("inA");
+  const inT = document.getElementById("inT");
+  const inF = document.getElementById("inF");
+
+  const chkHideWave = document.getElementById("chkHideWave");
+  const waveInfo = document.getElementById("waveInfo");
+  const feedback = document.getElementById("feedback");
+
+  const btnCheck = document.getElementById("btnCheck");
+  const btnNew = document.getElementById("btnNew");
+  const btnSol = document.getElementById("btnSol");
+
+  const TWO_PI = 2 * Math.PI;
+
+  // Valeurs "propres" (lisibles)
+  const AMPLITUDES = [0.5, 1, 1.5, 2, 3, 4, 5];
+  const PERIODES   = [2, 2.5, 3, 4, 5, 6, 8, 10];
+
+  const TOL = 0.05; // 5%
+
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function format(x) { return (Math.round(x * 1000) / 1000).toString(); }
+  function parseFR(x) {
+    if (!x) return NaN;
+    return Number(String(x).trim().replace(",", "."));
+  }
+
+  // ---- Définition des formes ----
+  // On définit une fonction brute raw(theta) puis on la NORMALISE pour qu'elle soit dans [-1,1]
+  // => l'amplitude crête finale sera exactement A.
+  function makeNormalizedShape(name, rawFn) {
+    // calcule max|raw| sur [0, 2π] pour normaliser
+    const N = 4096;
+    let maxAbs = 0;
+    for (let i = 0; i <= N; i++) {
+      const th = (i / N) * TWO_PI;
+      const v = rawFn(th);
+      const a = Math.abs(v);
+      if (a > maxAbs) maxAbs = a;
+    }
+    if (maxAbs < 1e-12) maxAbs = 1;
+
+    return {
+      name,
+      fn: (theta) => rawFn(theta) / maxAbs
+    };
+  }
+
+  // Formes de base
+  const sine = makeNormalizedShape("Sinus", (th) => Math.sin(th));
+  const square = makeNormalizedShape("Carré (idéal)", (th) => (Math.sin(th) >= 0 ? 1 : -1));
+  const triangle = makeNormalizedShape("Triangle (idéal)", (th) => (2/Math.PI) * Math.asin(Math.sin(th)));
+  const saw = makeNormalizedShape("Dent de scie (idéale)", (th) => {
+    let x = th / TWO_PI; x = x - Math.floor(x); // frac
+    return 2 * x - 1;
+  });
+
+  // Formes avec harmoniques (série de Fourier tronquée)
+  // Carré approx: sum_{k=1..K} (1/(2k-1)) sin((2k-1)th)
+  function squareFourier(K) {
+    return makeNormalizedShape(`Carré ~ ${K} harmoniques impaires`, (th) => {
+      let s = 0;
+      for (let k = 1; k <= K; k++) {
+        const n = 2*k - 1;
+        s += (1/n) * Math.sin(n * th);
+      }
+      return s;
+    });
+  }
+
+  // Triangle approx: sum_{k=1..K} ((-1)^{k-1}/(2k-1)^2) sin((2k-1)th)
+  function triangleFourier(K) {
+    return makeNormalizedShape(`Triangle ~ ${K} harmoniques impaires`, (th) => {
+      let s = 0;
+      for (let k = 1; k <= K; k++) {
+        const n = 2*k - 1;
+        const sign = (k % 2 === 1) ? 1 : -1;
+        s += sign * (1/(n*n)) * Math.sin(n * th);
+      }
+      return s;
+    });
+  }
+
+  // “Son riche” simple: fondamentale + 2e + 3e (coeffs fixes, normalisé)
+  const rich123 = makeNormalizedShape("Somme (1f + 2f + 3f)", (th) =>
+    1.0*Math.sin(th) + 0.45*Math.sin(2*th) + 0.25*Math.sin(3*th)
+  );
+
+  // “Basse + pointe”: fondamentale + 5e harmonique
+  const rich15 = makeNormalizedShape("Somme (1f + 5f)", (th) =>
+    1.0*Math.sin(th) + 0.35*Math.sin(5*th)
+  );
+
+  const WAVES = [
+    sine,
+    square,
+    triangle,
+    saw,
+    squareFourier(3),
+    squareFourier(5),
+    triangleFourier(3),
+    triangleFourier(5),
+    rich123,
+    rich15
+  ];
+
+  // ---- Paramètres tirés ----
+  let A = 2, T = 4, f = 1/4;
+  let wave = sine;
+
+  function updateWaveInfo() {
+    waveInfo.textContent = chkHideWave.checked ? "Forme: (masquée)" : `Forme: ${wave.name}`;
+  }
+
+  function yOf(t) {
+    // y(t) = A * wave(2π t / T)
+    const theta = TWO_PI * t / T;
+    return A * wave.fn(theta);
+  }
+
+  function newDraw() {
+    A = pick(AMPLITUDES);
+    T = pick(PERIODES);
+    f = 1 / T;
+    wave = pick(WAVES);
+
+    inA.value = ""; inT.value = ""; inF.value = "";
+    feedback.textContent = "Nouvelle onde : mesure A, T, f.";
+
+    updateWaveInfo();
+    drawSignal();
+  }
+
+  function drawSignal() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const W = canvas.width, H = canvas.height;
+    const padL = 70, padR = 20, padT = 20, padB = 60;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    // 3 périodes affichées
+    const tMin = 0;
+    const tMax = 3 * T;
+
+    // Fenêtre verticale autour de ±A
+    const yMax = Math.max(1, A) * 1.25;
+    const yMin = -yMax;
+
+    const xOfT = (t) => padL + (t - tMin) / (tMax - tMin) * plotW;
+    const yOfY = (y) => padT + (yMax - y) / (yMax - yMin) * plotH;
+
+    // Grille
+    ctx.strokeStyle = "#e9ecef";
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 12; i++) {
+      const x = padL + (i / 12) * plotW;
+      ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + plotH); ctx.stroke();
+    }
+    for (let j = 0; j <= 8; j++) {
+      const y = padT + (j / 8) * plotH;
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + plotW, y); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = "#333";
+    ctx.lineWidth = 1.5;
+
+    // Axe y (à gauche)
+    ctx.beginPath();
+    ctx.moveTo(padL, padT);
+    ctx.lineTo(padL, padT + plotH);
+    ctx.stroke();
+
+    // Axe x (y=0)
+    const y0 = yOfY(0);
+    ctx.beginPath();
+    ctx.moveTo(padL, y0);
+    ctx.lineTo(padL + plotW, y0);
+    ctx.stroke();
+
+    // Labels
+    ctx.fillStyle = "#111";
+    ctx.font = "14px system-ui, Arial";
+    ctx.fillText("y (u.a.)", 12, padT + 14);
+    ctx.fillText("t (s)", padL + plotW - 36, padT + plotH + 42);
+
+    // Ticks temps : 0, T, 2T, 3T
+    ctx.font = "13px system-ui, Arial";
+    ctx.fillStyle = "#111";
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 1;
+    for (let k = 0; k <= 3; k++) {
+      const t = k * T;
+      const x = xOfT(t);
+      ctx.beginPath();
+      ctx.moveTo(x, y0 - 6);
+      ctx.lineTo(x, y0 + 6);
+      ctx.stroke();
+      ctx.fillText(format(t), x - 6, padT + plotH + 30);
+    }
+
+    // Ticks y : -A, 0, +A
+    [[A, yOfY(A)], [0, y0], [-A, yOfY(-A)]].forEach(([val, yy]) => {
+      ctx.beginPath();
+      ctx.moveTo(padL - 6, yy);
+      ctx.lineTo(padL + 6, yy);
+      ctx.stroke();
+      ctx.fillText(format(val), padL - 56, yy + 5);
+    });
+
+    // Courbe
+    ctx.strokeStyle = "#0b5ed7";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    const N = 1600;
+    for (let i = 0; i <= N; i++) {
+      const t = tMin + (i / N) * (tMax - tMin);
+      const y = yOf(t);
+      const x = xOfT(t);
+      const yy = yOfY(y);
+      if (i === 0) ctx.moveTo(x, yy);
+      else ctx.lineTo(x, yy);
+    }
+    ctx.stroke();
+
+    // Titre dans le graphe (ne donne pas A/T)
+    ctx.fillStyle = "#222";
+    ctx.font = "15px system-ui, Arial";
+    const title = chkHideWave.checked ? "Onde périodique (déterminer A, T, f)" : `Onde périodique (${wave.name})`;
+    ctx.fillText(title, padL + 10, padT + 20);
+  }
+
+  function withinTol(user, trueVal) {
+    if (!isFinite(user)) return false;
+    const denom = Math.max(1e-12, Math.abs(trueVal));
+    return Math.abs(user - trueVal) / denom <= TOL;
+  }
+
+  function check() {
+    const uA = parseFR(inA.value);
+    const uT = parseFR(inT.value);
+    const uF = parseFR(inF.value);
+
+    const okA = withinTol(uA, A);
+    const okT = withinTol(uT, T);
+    const okF = withinTol(uF, f);
+
+    const parts = [
+      `A: ${okA ? "OK" : "faux"} (attendu ≈ ${format(A)})`,
+      `T: ${okT ? "OK" : "faux"} (attendu ≈ ${format(T)})`,
+      `f: ${okF ? "OK" : "faux"} (attendu ≈ ${format(f)})`,
+    ];
+
+    const all = okA && okT && okF;
+    feedback.innerHTML = all
+      ? `<b>Tout est correct.</b> ${parts.join(" — ")}`
+      : `<b>À corriger.</b> ${parts.join(" — ")}`;
+  }
+
+  function solution() {
+    feedback.innerHTML =
+      `Solution : A = <b>${format(A)}</b>, T = <b>${format(T)} s</b>, f = <b>${format(f)} Hz</b>`;
+  }
+
+  chkHideWave.addEventListener("change", () => { updateWaveInfo(); drawSignal(); });
+  btnNew.addEventListener("click", newDraw);
+  btnCheck.addEventListener("click", check);
+  btnSol.addEventListener("click", solution);
+
+  // Init
+  newDraw();
+})();
+</script>
+</body>
+</html>
