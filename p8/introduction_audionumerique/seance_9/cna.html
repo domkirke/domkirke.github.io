@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Conversion numérique → analogique</title>
+<style>
+  :root{
+    --bg:#eef3f8;
+    --panel:#ffffff;
+    --line:#d7dee8;
+    --text:#1f2937;
+    --muted:#6b7280;
+    --blue:#2563eb;
+    --red:#dc2626;
+    --orange:#f59e0b;
+    --green:#16a34a;
+    --gray:#94a3b8;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--bg);
+    font-family:Inter,Segoe UI,Arial,sans-serif;
+    color:var(--text);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+  }
+  .app{
+    width:960px;
+    height:700px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 10px 28px rgba(0,0,0,.08);
+    display:grid;
+    grid-template-rows:76px auto 1fr 48px;
+  }
+  .header{
+    padding:14px 18px;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#fff,#f8fbff);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .title h1{
+    margin:0;
+    font-size:22px;
+  }
+  .title div{
+    margin-top:4px;
+    color:var(--muted);
+    font-size:12px;
+  }
+  .badge{
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:8px 12px;
+    font-size:12px;
+    color:var(--muted);
+    background:#fff;
+  }
+  .controls{
+    display:grid;
+    grid-template-columns:repeat(5,1fr) auto auto;
+    gap:12px;
+    padding:12px 16px;
+    border-bottom:1px solid var(--line);
+    background:#fbfdff;
+    align-items:end;
+  }
+  .control label{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  .control span{
+    color:var(--muted);
+    font-weight:600;
+  }
+  input[type="range"]{
+    width:100%;
+    accent-color:var(--blue);
+  }
+  button{
+    height:40px;
+    border:none;
+    border-radius:10px;
+    padding:0 14px;
+    font-weight:700;
+    cursor:pointer;
+    background:var(--blue);
+    color:#fff;
+  }
+  button.secondary{
+    background:#fff;
+    color:var(--text);
+    border:1px solid var(--line);
+  }
+  .canvasWrap{
+    padding:14px;
+  }
+  canvas{
+    width:100%;
+    height:100%;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    display:block;
+  }
+  .footer{
+    border-top:1px solid var(--line);
+    padding:10px 16px;
+    font-size:12px;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#fcfdff;
+  }
+  .legend{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .legend span{white-space:nowrap}
+  .dot{
+    display:inline-block;
+    width:11px;
+    height:11px;
+    border-radius:3px;
+    margin-right:6px;
+    vertical-align:-1px;
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <!-- <div class="header">
+      <div class="title">
+        <h1>Animation : conversion numérique → analogique</h1>
+        <div>Signal sinus · échantillonnage · maintien en escaliers · reconstruction filtrée</div>
+      </div>
+      <div class="badge">Mode blanc · 960 × 700</div>
+    </div> -->
+
+    <div class="controls">
+      <div class="control">
+        <label>Fréquence du sinus <span id="freqVal">2.0 Hz</span></label>
+        <input id="freq" type="range" min="0.5" max="8" step="0.1" value="2">
+      </div>
+      <div class="control">
+        <label>Fréquence d’échantillonnage <span id="fsVal">16 Hz</span></label>
+        <input id="fs" type="range" min="6" max="48" step="1" value="16">
+      </div>
+      <div class="control">
+        <label>Fréquence de coupure du filtre <span id="fcVal">6.0 Hz</span></label>
+        <input id="fc" type="range" min="0.5" max="20" step="0.1" value="6">
+      </div>
+      <div class="control">
+        <label>Vitesse animation <span id="speedVal">0.0×</span></label>
+        <input id="speed" type="range" min="0" max="3" step="0.1" value="0">
+      </div>
+      <div class="control" style="display: none;">
+        <label>Curseur temporel <span id="cursorVal">activé</span></label>
+        <input id="cursor" type="range" min="0" max="1" step="1" value="1">
+      </div>
+
+      <button id="toggleBtn">Pause</button>
+      <button id="exportBtn" class="secondary">Exporter PNG</button>
+    </div>
+
+    <div class="canvasWrap">
+      <canvas id="canvas" width="930" height="540"></canvas>
+    </div>
+
+    <div class="footer">
+      <div class="legend">
+        <span><i class="dot" style="background:#2563eb"></i>signal analogique</span>
+        <span><i class="dot" style="background:#dc2626"></i>échantillons</span>
+        <span><i class="dot" style="background:#f59e0b"></i>sortie DAC en escaliers</span>
+        <span><i class="dot" style="background:#16a34a"></i>signal filtré / reconstruit</span>
+        <span><i class="dot" style="background:#94a3b8"></i>référence</span>
+      </div>
+      <!-- <div>Filtre analogique simulé ici par un passe-bas 1er ordre pédagogique</div> -->
+    </div>
+  </div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const freqEl = document.getElementById('freq');
+const fsEl = document.getElementById('fs');
+const fcEl = document.getElementById('fc');
+const speedEl = document.getElementById('speed');
+const cursorEl = document.getElementById('cursor');
+const toggleBtn = document.getElementById('toggleBtn');
+const exportBtn = document.getElementById('exportBtn');
+
+const freqVal = document.getElementById('freqVal');
+const fsVal = document.getElementById('fsVal');
+const fcVal = document.getElementById('fcVal');
+const speedVal = document.getElementById('speedVal');
+const cursorVal = document.getElementById('cursorVal');
+
+let running = true;
+let phase = 0;
+let lastTime = performance.now();
+
+const state = {
+  duration: 1.0,
+  freq: parseFloat(freqEl.value),
+  fs: parseFloat(fsEl.value),
+  fc: parseFloat(fcEl.value),
+  amp: 1.0,
+  speed: parseFloat(speedEl.value),
+  showCursor: !!parseInt(cursorEl.value, 10)
+};
+
+function updateLabels(){
+  freqVal.textContent = `${state.freq.toFixed(1)} Hz`;
+  fsVal.textContent = `${state.fs.toFixed(0)} Hz`;
+  fcVal.textContent = `${state.fc.toFixed(1)} Hz`;
+  speedVal.textContent = `${state.speed.toFixed(1)}×`;
+  cursorVal.textContent = state.showCursor ? 'activé' : 'désactivé';
+}
+
+[freqEl, fsEl, fcEl, speedEl, cursorEl].forEach(el => {
+  el.addEventListener('input', () => {
+    state.freq = parseFloat(freqEl.value);
+    state.fs = parseFloat(fsEl.value);
+    state.fc = parseFloat(fcEl.value);
+    state.speed = parseFloat(speedEl.value);
+    state.showCursor = !!parseInt(cursorEl.value, 10);
+    updateLabels();
+  });
+});
+
+toggleBtn.addEventListener('click', () => {
+  running = !running;
+  toggleBtn.textContent = running ? 'Pause' : 'Lecture';
+});
+
+exportBtn.addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'animation_conversion_dac_filtre.png';
+  a.click();
+});
+
+function analogSignal(t){
+  return state.amp * Math.sin(2 * Math.PI * state.freq * t + phase);
+}
+
+function makeSamples(){
+  const dt = 1 / state.fs;
+  const ts = [];
+  const ys = [];
+  for(let t = 0; t <= state.duration + 1e-9; t += dt){
+    ts.push(t);
+    ys.push(analogSignal(t));
+  }
+  return { ts, ys };
+}
+
+function staircaseValueAt(t, samples){
+  if (t <= samples.ts[0]) return samples.ys[0];
+  for(let i = 0; i < samples.ts.length - 1; i++){
+    if(t >= samples.ts[i] && t < samples.ts[i+1]){
+      return samples.ys[i];
+    }
+  }
+  return samples.ys[samples.ys.length - 1];
+}
+
+// Simulation simple d'un filtre passe-bas analogique 1er ordre
+function makeFilteredCurve(samples, steps){
+  const out = [];
+  const dt = state.duration / steps;
+  const RC = 1 / (2 * Math.PI * Math.max(state.fc, 0.001));
+  const alpha = dt / (RC + dt);
+
+  let y = staircaseValueAt(0, samples);
+
+  for(let i = 0; i <= steps; i++){
+    const t = i * dt;
+    const x = staircaseValueAt(t, samples);
+    y = y + alpha * (x - y);
+    out.push({ t, y });
+  }
+  return out;
+}
+
+function drawRoundedRect(x, y, w, h, r, fill, stroke){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+  if(fill){
+    ctx.fillStyle = fill;
+    ctx.fill();
+  }
+  if(stroke){
+    ctx.strokeStyle = stroke;
+    ctx.stroke();
+  }
+}
+
+function drawPanel(panel, title, subtitle){
+  drawRoundedRect(panel.x, panel.y, panel.w, panel.h, 12, '#ffffff', '#d7dee8');
+
+  ctx.fillStyle = '#1f2937';
+  ctx.font = 'bold 15px Inter, Arial';
+  ctx.fillText(title, panel.x + 14, panel.y + 22);
+
+  ctx.fillStyle = '#6b7280';
+  ctx.font = '12px Inter, Arial';
+  ctx.fillText(subtitle, panel.x + 14, panel.y + 40);
+
+  const gx = panel.x + 58;
+  const gy = panel.y + 16;
+  const gw = panel.w - 76;
+  const gh = panel.h - 34;
+
+  ctx.strokeStyle = '#edf2f7';
+  ctx.lineWidth = 1;
+  for(let i = 0; i <= 8; i++){
+    const x = gx + (gw * i / 8);
+    ctx.beginPath();
+    ctx.moveTo(x, gy);
+    ctx.lineTo(x, gy + gh);
+    ctx.stroke();
+  }
+  for(let i = 0; i <= 4; i++){
+    const y = gy + (gh * i / 4);
+    ctx.beginPath();
+    ctx.moveTo(gx, y);
+    ctx.lineTo(gx + gw, y);
+    ctx.stroke();
+  }
+
+  const y0 = gy + gh / 2;
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.beginPath();
+  ctx.moveTo(gx, y0);
+  ctx.lineTo(gx + gw, y0);
+  ctx.stroke();
+
+  ctx.fillStyle = '#64748b';
+  ctx.font = '11px Inter, Arial';
+  ctx.fillText('+A', panel.x + 22, gy + 10);
+  ctx.fillText('0', panel.x + 28, y0 + 4);
+  ctx.fillText('-A', panel.x + 22, gy + gh - 4);
+
+  return { gx, gy, gw, gh, y0 };
+}
+
+function toCanvasPoint(t, y, area){
+  const x = area.gx + (t / state.duration) * area.gw;
+  const yy = area.y0 - y * (area.gh * 0.38);
+  return { x, y: yy };
+}
+
+function drawAnalog(area, color='#2563eb', alpha=1, dashed=false){
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = alpha;
+  ctx.lineWidth = 2.2;
+  if(dashed) ctx.setLineDash([7,5]);
+  ctx.beginPath();
+  const steps = Math.floor(area.gw);
+  for(let i=0; i<=steps; i++){
+    const t = state.duration * i / steps;
+    const y = analogSignal(t);
+    const p = toCanvasPoint(t, y, area);
+    if(i===0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawSamples(area, samples){
+  ctx.save();
+  ctx.strokeStyle = '#dc2626';
+  ctx.fillStyle = '#dc2626';
+  ctx.lineWidth = 1.2;
+
+  for(let i=0; i<samples.ts.length; i++){
+    const p = toCanvasPoint(samples.ts[i], samples.ys[i], area);
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    ctx.moveTo(p.x, area.y0);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3.2, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawStaircase(area, samples, color='#f59e0b', alpha=1){
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = alpha;
+  ctx.lineWidth = 2.3;
+  ctx.beginPath();
+
+  for(let i=0; i<samples.ts.length-1; i++){
+    const t0 = samples.ts[i];
+    const t1 = samples.ts[i+1];
+    const y = samples.ys[i];
+
+    const p0 = toCanvasPoint(t0, y, area);
+    const p1 = toCanvasPoint(t1, y, area);
+    const p2 = toCanvasPoint(t1, samples.ys[i+1], area);
+
+    if(i===0) ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawFiltered(area, samples){
+  ctx.save();
+  ctx.strokeStyle = '#16a34a';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+
+  const steps = Math.floor(area.gw);
+  const filtered = makeFilteredCurve(samples, steps);
+
+  for(let i=0; i<filtered.length; i++){
+    const p = toCanvasPoint(filtered[i].t, filtered[i].y, area);
+    if(i===0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCursor(area){
+  if(!state.showCursor) return;
+  const scanT = ((phase / (2 * Math.PI * Math.max(state.freq, 0.001))) % state.duration + state.duration) % state.duration;
+  const x = area.gx + (scanT / state.duration) * area.gw;
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(37,99,235,.25)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4,4]);
+  ctx.beginPath();
+  ctx.moveTo(x, area.gy);
+  ctx.lineTo(x, area.gy + area.gh);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawAnnotations(panel, lines){
+  const x = panel.x + panel.w - 270;
+  const y = panel.y + 12;
+  drawRoundedRect(x, y, 250, 54, 10, '#f8fbff', '#e4eaf2');
+  ctx.fillStyle = '#475569';
+  ctx.font = '12px Inter, Arial';
+  ctx.fillText(lines[0], x + 10, y + 20);
+  ctx.fillText(lines[1], x + 10, y + 39);
+}
+
+function render(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  const margin = 18;
+  const gap = 12;
+  const panelW = canvas.width - margin*2;
+  const panelH = (canvas.height - margin*2 - gap*2) / 3;
+
+  const p1 = { x: margin, y: margin, w: panelW, h: panelH };
+  const p2 = { x: margin, y: margin + panelH + gap, w: panelW, h: panelH };
+  const p3 = { x: margin, y: margin + 2*(panelH + gap), w: panelW, h: panelH };
+
+  const area1 = drawPanel(
+    p1,
+    '1. Signal analogique et échantillonnage',
+    ''
+    // 'Le sinus continu est observé à intervalles réguliers : ce sont les échantillons numériques.'
+  );
+  const area2 = drawPanel(
+    p2,
+    '2. Sortie brute du DAC : maintien entre les échantillons',
+    ''
+    // 'Chaque valeur est convertie en tension puis maintenue jusqu’au point suivant : signal en escaliers.'
+  );
+  const area3 = drawPanel(
+    p3,
+    '3. Reconstruction par filtrage analogique',
+    ''
+    // 'Un filtre passe-bas lisse les marches et atténue les composantes hautes fréquences.'
+  );
+
+  const samples = makeSamples();
+
+  drawAnalog(area1, '#2563eb', 1, false);
+  drawSamples(area1, samples);
+  drawCursor(area1);
+  // drawAnnotations(p1, [
+  //   `f signal = ${state.freq.toFixed(1)} Hz · f échant. = ${state.fs.toFixed(0)} Hz`,
+  //   'Bleu = analogique continu, rouge = valeurs échantillonnées'
+  // ]);
+
+  drawAnalog(area2, '#94a3b8', 0.7, true);
+  drawStaircase(area2, samples, '#f59e0b', 1);
+  drawSamples(area2, samples);
+  drawCursor(area2);
+  // drawAnnotations(p2, [
+  //   'Le DAC crée des tensions correspondant aux valeurs numériques',
+  //   'Le maintien entre deux instants produit les “escaliers”'
+  // ]);
+
+  drawAnalog(area3, '#94a3b8', 0.7, true);
+  drawStaircase(area3, samples, '#f59e0b', 0.35);
+  drawFiltered(area3, samples);
+  drawCursor(area3);
+  // drawAnnotations(p3, [
+  //   `Filtre passe-bas 1er ordre simulé : fc = ${state.fc.toFixed(1)} Hz`,
+  //   'Si fc est trop basse, le signal est mieux lissé mais plus atténué'
+  // ]);
+}
+
+function animate(now){
+  const dt = (now - lastTime) / 1000;
+  lastTime = now;
+
+  if(running){
+    phase += dt * state.speed * 2 * Math.PI * 0.8;
+  }
+
+  render();
+  requestAnimationFrame(animate);
+}
+
+updateLabels();
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
