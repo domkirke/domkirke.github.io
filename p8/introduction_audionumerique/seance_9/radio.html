@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Comparaison bruit : normal / AM / FM</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --panel:#f7f7f9;
+    --border:#d8d8de;
+    --text:#1c1f24;
+    --muted:#5c6470;
+    --accent:#1368ce;
+    --green:#0f9d58;
+    --orange:#d97706;
+    --magenta:#c026d3;
+    --red:#d93025;
+    --gray:#94a3b8;
+    --grid:#e7e9ee;
+  }
+  body{
+    margin:0;
+    background:#efefef;
+    font-family:Arial, Helvetica, sans-serif;
+    color:var(--text);
+  }
+  #app{
+    width:960px;
+    height:700px;
+    margin:18px auto;
+    background:var(--bg);
+    border:1px solid var(--border);
+    box-shadow:0 4px 18px rgba(0,0,0,.08);
+    box-sizing:border-box;
+    padding:10px;
+    overflow:hidden;
+  }
+  .titlebar{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:8px;
+  }
+  .titlebar h1{
+    font-size:20px;
+    margin:0;
+  }
+  .subtitle{
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  .controls{
+    display:grid;
+    grid-template-columns:1.15fr 1.15fr 0.95fr;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:9px;
+    box-sizing:border-box;
+  }
+  .panel h2{
+    font-size:14px;
+    margin:0 0 7px 0;
+  }
+  .row{
+    display:grid;
+    grid-template-columns:120px 1fr 58px;
+    gap:8px;
+    align-items:center;
+    margin:4px 0;
+    font-size:12px;
+  }
+  .row input[type="range"], .row select{ width:100%; }
+  .val{
+    text-align:right;
+    color:var(--accent);
+    font-weight:bold;
+    font-variant-numeric:tabular-nums;
+  }
+  .small{
+    font-size:11px;
+    color:var(--muted);
+    line-height:1.3;
+  }
+  .checkrow{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:6px;
+    font-size:12px;
+  }
+  .actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-top:6px;
+  }
+  button{
+    border:1px solid #b9c4d4;
+    background:#fff;
+    color:#123;
+    padding:8px 8px;
+    border-radius:7px;
+    cursor:pointer;
+    font-weight:600;
+    font-size:12px;
+  }
+  button:hover{ background:#f2f7ff; }
+  button.primary{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent);
+  }
+  button.smallbtn{
+    padding:6px 4px;
+    font-size:11px;
+  }
+
+  .schemes{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .scheme{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px;
+    box-sizing:border-box;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .scheme:hover{
+    background:#fcfdff;
+  }
+  .scheme.best{
+    box-shadow:0 0 0 2px rgba(15,157,88,.10) inset;
+  }
+  .scheme.active{
+    border-color:var(--accent);
+    box-shadow:0 0 0 2px rgba(19,104,206,.10) inset;
+  }
+  .scheme.best.active{
+    box-shadow:
+      0 0 0 2px rgba(19,104,206,.10) inset,
+      0 0 0 4px rgba(15,157,88,.05) inset;
+  }
+  .scheme h3{
+    margin:0 0 5px 0;
+    font-size:13px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .badge{
+    font-size:10px;
+    border-radius:999px;
+    padding:2px 6px;
+    border:1px solid #dbe5f3;
+    color:#355;
+    background:#f8fbff;
+  }
+  .scheme.active .badge{
+    border-color:#bcd4f6;
+    color:#0d4f9f;
+  }
+  .formula{
+    font-family:"Courier New", monospace;
+    font-size:11px;
+    background:#fafafa;
+    border:1px solid #ececf2;
+    border-radius:6px;
+    padding:5px 6px;
+    line-height:1.25;
+    min-height:46px;
+    box-sizing:border-box;
+  }
+  .metric{
+    margin-top:5px;
+    font-size:12px;
+  }
+  .metric b{ color:#173f77; }
+  .bar{
+    height:7px;
+    background:#edf0f4;
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:4px;
+  }
+  .fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, #d93025, #d97706, #0f9d58);
+  }
+  .schemeButtons{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:6px;
+    margin-top:7px;
+  }
+
+  .plots{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .plotBox{
+    border:1px solid var(--border);
+    border-radius:8px;
+    overflow:hidden;
+    background:#fff;
+  }
+  .plotTitle{
+    font-size:12px;
+    padding:6px 8px;
+    background:#fafafa;
+    border-bottom:1px solid var(--border);
+    color:#223;
+    font-weight:700;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:200px;
+    background:#fff;
+  }
+
+  #summary{
+    margin-top:7px;
+    font-size:12px;
+    line-height:1.35;
+    color:var(--muted);
+  }
+  .good{ color:var(--green); font-weight:bold; }
+  .warn{ color:var(--red); font-weight:bold; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- <div class="titlebar">
+    <div>
+      <h1>Comparaison du bruit : Normal/direct, AM, FM</h1>
+      <div class="subtitle">Cliquer sur un bloc central pour afficher la reconstruction correspondante et son signal émis / modulé</div>
+    </div>
+    <div class="subtitle">960 × 700</div>
+  </div> -->
+
+  <div class="controls">
+    <div class="panel">
+      <h2>1) Source vocale simple</h2>
+
+      <div class="row">
+        <label for="vowel">Voyelle</label>
+        <select id="vowel">
+          <option value="a">/a/</option>
+          <option value="e">/e/</option>
+          <option value="i">/i/</option>
+          <option value="o" selected>/o/</option>
+          <option value="u">/u/</option>
+        </select>
+        <div class="val">-</div>
+      </div>
+
+      <div class="row">
+        <label for="f0">Hauteur F0</label>
+        <input id="f0" type="range" min="90" max="220" step="1" value="130">
+        <div class="val" id="f0v">130</div>
+      </div>
+
+      <div class="row">
+        <label for="duration">Durée</label>
+        <input id="duration" type="range" min="0.7" max="2.5" step="0.1" value="1.6">
+        <div class="val" id="durationv">1.6 s</div>
+      </div>
+
+      <div class="row">
+        <label for="vibrato">Vibrato</label>
+        <input id="vibrato" type="range" min="0" max="4" step="0.1" value="0.7">
+        <div class="val" id="vibratov">0.7 %</div>
+      </div>
+
+      <div class="row">
+        <label for="breath">Souffle</label>
+        <input id="breath" type="range" min="0" max="0.08" step="0.005" value="0.02">
+        <div class="val" id="breathv">0.020</div>
+      </div>
+
+      <div class="small">
+        Cette source représente le message <b>m(t)</b>.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>2) Canal / modulations / affichage</h2>
+
+      <div class="row">
+        <label for="carrier">Porteuse f<sub>c</sub></label>
+        <input id="carrier" type="range" min="3500" max="10000" step="100" value="6000">
+        <div class="val" id="carrierv">6000 Hz</div>
+      </div>
+
+      <div class="row">
+        <label for="amDepth">AM : μ</label>
+        <input id="amDepth" type="range" min="0" max="1.10" step="0.01" value="0.70">
+        <div class="val" id="amDepthv">0.70</div>
+      </div>
+
+      <div class="row">
+        <label for="fmDev">FM : Δf</label>
+        <input id="fmDev" type="range" min="80" max="1600" step="10" value="500">
+        <div class="val" id="fmDevv">500 Hz</div>
+      </div>
+
+      <div class="row">
+        <label for="chanNoise">Bruit canal σ</label>
+        <input id="chanNoise" type="range" min="0" max="0.16" step="0.002" value="0.040">
+        <div class="val" id="chanNoisev">0.040</div>
+      </div>
+
+      <div class="row">
+        <label for="cmpWindow">Zoom gauche</label>
+        <input id="cmpWindow" type="range" min="20" max="80" step="1" value="38">
+        <div class="val" id="cmpWindowv">38 ms</div>
+      </div>
+
+      <div class="row">
+        <label for="txWindow">Zoom droite</label>
+        <input id="txWindow" type="range" min="1.0" max="8.0" step="0.1" value="3.0">
+        <div class="val" id="txWindowv">3.0 ms</div>
+      </div>
+
+      <div class="checkrow">
+        <input type="checkbox" id="fmLimiter" checked>
+        <label for="fmLimiter">Activer le limiteur FM</label>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>3) Actions</h2>
+
+      <div class="actions">
+        <button id="regen" class="primary">Recalculer</button>
+        <button id="playSource">Écouter source</button>
+        <button id="randomize">Exemple aléatoire</button>
+        <button id="stopAudio">Stop audio</button>
+      </div>
+
+      <div id="summary">
+        Prêt.
+      </div>
+    </div>
+  </div>
+
+  <div class="schemes">
+    <div class="scheme active" id="cardDirect" data-scheme="Direct">
+      <h3>Normal / direct <span class="badge">cliquer pour afficher</span></h3>
+      <div class="formula">
+        x_tx(t)=k·m(t)<br>
+        y(t)=x_tx(t)+n(t)<br>
+        m̂(t)=LPF(y(t))
+      </div>
+      <div class="metric">SNR sortie : <b id="snrDirect">--</b></div>
+      <div class="bar"><div class="fill" id="barDirect"></div></div>
+      <div class="metric">Erreur RMS : <b id="errDirect">--</b></div>
+      <div class="schemeButtons">
+        <button class="smallbtn" id="playDirectTx">Émis</button>
+        <button class="smallbtn" id="playDirectChannel">Canal</button>
+        <button class="smallbtn" id="playDirectOut">Sortie</button>
+        <button class="smallbtn" id="playDirectResid">Résidu</button>
+      </div>
+    </div>
+
+    <div class="scheme" id="cardAM" data-scheme="AM">
+      <h3>AM <span class="badge">cliquer pour afficher</span></h3>
+      <div class="formula">
+        s(t)=A_c(1+μm(t))cos(2πf_ct)<br>
+        y(t)=s(t)+n(t)<br>
+        m̂(t)≈LPF(|y(t)|)-DC
+      </div>
+      <div class="metric">SNR sortie : <b id="snrAM">--</b></div>
+      <div class="bar"><div class="fill" id="barAM"></div></div>
+      <div class="metric">Erreur RMS : <b id="errAM">--</b></div>
+      <div class="schemeButtons">
+        <button class="smallbtn" id="playAMTx">Émis</button>
+        <button class="smallbtn" id="playAMChannel">Canal</button>
+        <button class="smallbtn" id="playAMOut">Sortie</button>
+        <button class="smallbtn" id="playAMResid">Résidu</button>
+      </div>
+    </div>
+
+    <div class="scheme" id="cardFM" data-scheme="FM">
+      <h3>FM <span class="badge">cliquer pour afficher</span></h3>
+      <div class="formula" id="fmFormula">
+        s(t)=A_c cos(2πf_ct+2πΔf∫m)<br>
+        y(t)=s(t)+n(t)<br>
+        m̂(t)∝d/dt atan2(Q(t),I(t))
+      </div>
+      <div class="metric">SNR sortie : <b id="snrFM">--</b></div>
+      <div class="bar"><div class="fill" id="barFM"></div></div>
+      <div class="metric">Erreur RMS : <b id="errFM">--</b></div>
+      <div class="schemeButtons">
+        <button class="smallbtn" id="playFMTx">Émis</button>
+        <button class="smallbtn" id="playFMChannel">Canal</button>
+        <button class="smallbtn" id="playFMOut">Sortie</button>
+        <button class="smallbtn" id="playFMResid">Résidu</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="plots">
+    <div class="plotBox">
+      <div class="plotTitle" id="plotCompareTitle">Source originale et reconstruction — Normal / direct</div>
+      <canvas id="cvCompare" width="456" height="220"></canvas>
+    </div>
+    <div class="plotBox">
+      <div class="plotTitle" id="plotTxTitle">Signal émis — Normal / direct</div>
+      <canvas id="cvTx" width="456" height="220"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const SR = 44100;
+  const TX_RMS = 0.32;
+
+  let audioCtx = null;
+  let currentSource = null;
+
+  const vowels = {
+    a: {formants:[800,1150,2900], bw:[90,100,140]},
+    e: {formants:[500,1750,2450], bw:[80,100,120]},
+    i: {formants:[300,2200,3000], bw:[70,120,140]},
+    o: {formants:[450,800,2830],  bw:[80,90,130]},
+    u: {formants:[325,700,2530],  bw:[70,80,120]}
+  };
+
+  let state = {
+    selectedScheme: "Direct",
+    sourceRaw: null,
+    sourceListen: null,
+    direct: {},
+    am: {},
+    fm: {},
+    residualListenScale: 1,
+    params: {},
+    voiceBW: 3000
+  };
+
+  function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+
+  function mean(arr){
+    let s = 0;
+    for(let i=0;i<arr.length;i++) s += arr[i];
+    return s / arr.length;
+  }
+
+  function rms(arr){
+    let s = 0;
+    for(let i=0;i<arr.length;i++) s += arr[i] * arr[i];
+    return Math.sqrt(s / arr.length + 1e-20);
+  }
+
+  function maxAbs(arr){
+    let m = 1e-12;
+    for(let i=0;i<arr.length;i++){
+      const a = Math.abs(arr[i]);
+      if(a > m) m = a;
+    }
+    return m;
+  }
+
+  function subtractMean(arr){
+    const m = mean(arr);
+    const out = new Float32Array(arr.length);
+    for(let i=0;i<arr.length;i++) out[i] = arr[i] - m;
+    return out;
+  }
+
+  function scaleArray(arr, gain){
+    const out = new Float32Array(arr.length);
+    for(let i=0;i<arr.length;i++) out[i] = arr[i] * gain;
+    return out;
+  }
+
+  function normalizeCopy(arr, target=0.90){
+    const m = maxAbs(arr);
+    return scaleArray(arr, target / m);
+  }
+
+  function scaleToRMS(arr, target){
+    return scaleArray(arr, target / rms(arr));
+  }
+
+  function addArrays(a, b){
+    const N = Math.min(a.length, b.length);
+    const out = new Float32Array(N);
+    for(let i=0;i<N;i++) out[i] = a[i] + b[i];
+    return out;
+  }
+
+  function randn(){
+    let u = 0, v = 0;
+    while(u === 0) u = Math.random();
+    while(v === 0) v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  function gaussianNoiseArray(N, sigma){
+    const out = new Float32Array(N);
+    for(let i=0;i<N;i++) out[i] = sigma * randn();
+    return out;
+  }
+
+  function lowpassOnePole(arr, cutoff, sr){
+    const out = new Float32Array(arr.length);
+    const a = Math.exp(-2 * Math.PI * cutoff / sr);
+    const b = 1 - a;
+    out[0] = b * arr[0];
+    for(let i=1;i<arr.length;i++){
+      out[i] = b * arr[i] + a * out[i-1];
+    }
+    return out;
+  }
+
+  function lowpassCascade(arr, cutoff, sr, stages=4){
+    let out = arr;
+    for(let i=0;i<stages;i++) out = lowpassOnePole(out, cutoff, sr);
+    return out;
+  }
+
+  function envelopeADSR(t, dur){
+    const a = 0.03;
+    const r = 0.08;
+    if(t < a) return t / a;
+    if(t > dur - r) return Math.max(0, (dur - t) / r);
+    return 1;
+  }
+
+  function spectralWeight(freq, formants, bw){
+    const gains = [1.0, 0.8, 0.55];
+    let w = 0;
+    for(let i=0;i<3;i++){
+      const z = (freq - formants[i]) / bw[i];
+      w += gains[i] * Math.exp(-0.5 * z * z);
+    }
+    return w;
+  }
+
+  function generateVoice({vowel, f0, duration, vibrato, breath}){
+    const N = Math.floor(duration * SR);
+    const x = new Float32Array(N);
+    const {formants, bw} = vowels[vowel];
+    const maxH = Math.max(8, Math.min(32, Math.floor(3500 / f0)));
+    const vibratoRate = 5.0;
+    let phase = 0;
+
+    for(let n=0;n<N;n++){
+      const t = n / SR;
+      const env = envelopeADSR(t, duration);
+      const fInst = f0 * (1 + (vibrato/100) * Math.sin(2*Math.PI*vibratoRate*t));
+      phase += 2 * Math.PI * fInst / SR;
+
+      let s = 0;
+      for(let h=1; h<=maxH; h++){
+        const hf = h * f0;
+        const w = spectralWeight(hf, formants, bw) / Math.pow(h, 1.12);
+        s += w * Math.sin(h * phase);
+      }
+      x[n] = env * (s + breath * (Math.random()*2 - 1));
+    }
+
+    const y = normalizeCopy(x, 0.85);
+    return {
+      signal: subtractMean(y),
+      bw: Math.min(3500, maxH * f0)
+    };
+  }
+
+  function modulateAM(m, fc, mu){
+    const N = m.length;
+    const y = new Float32Array(N);
+    const up = new Float32Array(N);
+    const lo = new Float32Array(N);
+    for(let n=0;n<N;n++){
+      const env = (1 + mu * m[n]);
+      const c = Math.cos(2 * Math.PI * fc * n / SR);
+      y[n] = env * c;
+      up[n] = env;
+      lo[n] = -env;
+    }
+    return { signal:y, upper:up, lower:lo };
+  }
+
+  function modulateFM(m, fc, dev){
+    const N = m.length;
+    const y = new Float32Array(N);
+    let ph = 0;
+    for(let n=0;n<N;n++){
+      ph += 2 * Math.PI * (fc + dev * m[n]) / SR;
+      y[n] = Math.cos(ph);
+    }
+    return y;
+  }
+
+  function demodulateDirect(channel, voiceBW){
+    let out = lowpassCascade(channel, Math.min(voiceBW + 350, 4200), SR, 4);
+    out = subtractMean(out);
+    return out;
+  }
+
+  function demodulateAM(channel, voiceBW){
+    const env = new Float32Array(channel.length);
+    for(let i=0;i<channel.length;i++) env[i] = Math.abs(channel[i]);
+    let out = lowpassCascade(env, Math.min(voiceBW + 350, 4200), SR, 4);
+    out = subtractMean(out);
+    return out;
+  }
+
+  function softLimitArray(arr, drive=2.8){
+    const out = new Float32Array(arr.length);
+    const norm = Math.tanh(drive);
+    for(let i=0;i<arr.length;i++){
+      out[i] = Math.tanh(drive * arr[i]) / norm;
+    }
+    return out;
+  }
+
+  function demodulateFM(channel, fc, dev, voiceBW, useLimiter){
+    const y = useLimiter ? softLimitArray(channel, 2.8) : channel;
+    const N = y.length;
+    const Iraw = new Float32Array(N);
+    const Qraw = new Float32Array(N);
+
+    for(let n=0;n<N;n++){
+      const ang = 2 * Math.PI * fc * n / SR;
+      Iraw[n] = 2 * y[n] * Math.cos(ang);
+      Qraw[n] = 2 * y[n] * (-Math.sin(ang));
+    }
+
+    const cutoffIQ = Math.min(voiceBW + 600, 4500);
+    const I = lowpassCascade(Iraw, cutoffIQ, SR, 4);
+    const Q = lowpassCascade(Qraw, cutoffIQ, SR, 4);
+
+    const rec = new Float32Array(N);
+    let prev = Math.atan2(Q[0], I[0]);
+    const d = Math.max(dev, 1);
+
+    for(let n=1;n<N;n++){
+      const ph = Math.atan2(Q[n], I[n]);
+      let dp = ph - prev;
+      if(dp > Math.PI) dp -= 2*Math.PI;
+      if(dp < -Math.PI) dp += 2*Math.PI;
+      rec[n] = (dp * SR) / (2*Math.PI * d);
+      prev = ph;
+    }
+
+    let out = lowpassCascade(rec, Math.min(voiceBW + 350, 4200), SR, 3);
+    out = subtractMean(out);
+
+    for(let i=0;i<out.length;i++){
+      out[i] = clamp(out[i], -2.5, 2.5);
+    }
+    return out;
+  }
+
+  function analyzeAgainstSource(refIn, rxIn){
+    const ref = subtractMean(refIn);
+    const rx = subtractMean(rxIn);
+    const N = Math.min(ref.length, rx.length);
+    const maxLag = Math.min(450, Math.floor(0.012 * SR));
+    let bestLag = 0;
+    let bestCorr = -1e99;
+
+    for(let lag=-maxLag; lag<=maxLag; lag++){
+      let s = 0, sr = 0, sx = 0;
+      let count = 0;
+
+      for(let i=80;i<N-80;i++){
+        const j = i + lag;
+        if(j < 0 || j >= N) continue;
+        const a = ref[i];
+        const b = rx[j];
+        s += a * b;
+        sr += a * a;
+        sx += b * b;
+        count++;
+      }
+      if(count < 100) continue;
+      const c = s / Math.sqrt((sr + 1e-12) * (sx + 1e-12));
+      if(c > bestCorr){
+        bestCorr = c;
+        bestLag = lag;
+      }
+    }
+
+    const rxAligned = new Float32Array(N);
+    for(let i=0;i<N;i++){
+      const j = i + bestLag;
+      rxAligned[i] = (j >= 0 && j < N) ? rx[j] : 0;
+    }
+
+    let num = 0, den = 1e-12;
+    for(let i=80;i<N-80;i++){
+      num += rxAligned[i] * ref[i];
+      den += ref[i] * ref[i];
+    }
+    let gain = num / den;
+    if(Math.abs(gain) < 1e-8) gain = 1;
+
+    const rxMatched = new Float32Array(N);
+    const residual = new Float32Array(N);
+
+    let sigPow = 1e-12;
+    let errPow = 1e-12;
+    let count = 0;
+
+    for(let i=80;i<N-80;i++){
+      rxMatched[i] = rxAligned[i] / gain;
+      residual[i] = rxMatched[i] - ref[i];
+      sigPow += ref[i] * ref[i];
+      errPow += residual[i] * residual[i];
+      count++;
+    }
+
+    const snrDb = 10 * Math.log10(sigPow / errPow);
+    const errRms = Math.sqrt(errPow / Math.max(count, 1));
+
+    return {
+      lag: bestLag,
+      gain,
+      snrDb,
+      errRms,
+      rxMatched,
+      residual
+    };
+  }
+
+  function getParams(){
+    return {
+      vowel: $("vowel").value,
+      f0: parseFloat($("f0").value),
+      duration: parseFloat($("duration").value),
+      vibrato: parseFloat($("vibrato").value),
+      breath: parseFloat($("breath").value),
+      carrier: parseFloat($("carrier").value),
+      amDepth: parseFloat($("amDepth").value),
+      fmDev: parseFloat($("fmDev").value),
+      chanNoise: parseFloat($("chanNoise").value),
+      cmpWindow: parseFloat($("cmpWindow").value),
+      txWindow: parseFloat($("txWindow").value),
+      fmLimiter: $("fmLimiter").checked
+    };
+  }
+
+  function updateReadouts(){
+    $("f0v").textContent = $("f0").value;
+    $("durationv").textContent = `${parseFloat($("duration").value).toFixed(1)} s`;
+    $("vibratov").textContent = `${parseFloat($("vibrato").value).toFixed(1)} %`;
+    $("breathv").textContent = parseFloat($("breath").value).toFixed(3);
+    $("carrierv").textContent = `${$("carrier").value} Hz`;
+    $("amDepthv").textContent = parseFloat($("amDepth").value).toFixed(2);
+    $("fmDevv").textContent = `${$("fmDev").value} Hz`;
+    $("chanNoisev").textContent = parseFloat($("chanNoise").value).toFixed(3);
+    $("cmpWindowv").textContent = `${parseFloat($("cmpWindow").value).toFixed(0)} ms`;
+    $("txWindowv").textContent = `${parseFloat($("txWindow").value).toFixed(1)} ms`;
+
+    $("fmFormula").innerHTML =
+      `s(t)=A_c cos(2πf_ct+2πΔf∫m)<br>` +
+      `y(t)=s(t)+n(t)<br>` +
+      `m̂(t)∝d/dt atan2(Q(t),I(t))` +
+      ($("fmLimiter").checked
+        ? `<br><span style="color:#0f9d58">limiteur ON</span>`
+        : `<br><span style="color:#d93025">limiteur OFF</span>`);
+  }
+
+  function formatDb(x){
+    if(!isFinite(x) || x > 99) return "∞ dB";
+    return `${x.toFixed(1)} dB`;
+  }
+
+  function updateCard(prefix, result){
+    $(`snr${prefix}`).textContent = formatDb(result.snrDb);
+    $(`err${prefix}`).textContent = result.errRms.toFixed(4);
+    const w = clamp((result.snrDb + 5) / 30 * 100, 0, 100);
+    $(`bar${prefix}`).style.width = `${w}%`;
+  }
+
+  function removeBestMarks(){
+    $("cardDirect").classList.remove("best");
+    $("cardAM").classList.remove("best");
+    $("cardFM").classList.remove("best");
+  }
+
+  function stateKeyFromScheme(scheme){
+    if(scheme === "Direct") return "direct";
+    if(scheme === "AM") return "am";
+    return "fm";
+  }
+
+  function getSchemeData(scheme){
+    return state[stateKeyFromScheme(scheme)];
+  }
+
+  function selectScheme(scheme){
+    state.selectedScheme = scheme;
+    document.querySelectorAll(".scheme").forEach(el => {
+      el.classList.toggle("active", el.dataset.scheme === scheme);
+    });
+    updatePlotTitles();
+    drawAll();
+  }
+
+  function updatePlotTitles(){
+    const s = state.selectedScheme;
+    const nice = s === "Direct" ? "Normal / direct" : s;
+    $("plotCompareTitle").textContent = `Source originale et reconstruction — ${nice}`;
+    if(s === "Direct"){
+      $("plotTxTitle").textContent = "Signal émis — Normal / direct (pas de modulation RF)";
+    } else {
+      $("plotTxTitle").textContent = `Signal modulé émis — ${nice}`;
+    }
+  }
+
+  function recompute(){
+    updateReadouts();
+    const p = getParams();
+
+    const voice = generateVoice(p);
+    const src = voice.signal;
+    const N = src.length;
+
+    const txDirectRaw = scaleToRMS(src, TX_RMS);
+
+    const am0 = modulateAM(src, p.carrier, p.amDepth);
+    const amGain = TX_RMS / rms(am0.signal);
+    const txAMRaw = scaleArray(am0.signal, amGain);
+    const amUpperRaw = scaleArray(am0.upper, amGain);
+    const amLowerRaw = scaleArray(am0.lower, amGain);
+
+    const txFMRaw = scaleToRMS(modulateFM(src, p.carrier, p.fmDev), TX_RMS);
+
+    const noise = gaussianNoiseArray(N, p.chanNoise);
+
+    const chDirectRaw = addArrays(txDirectRaw, noise);
+    const chAMRaw = addArrays(txAMRaw, noise);
+    const chFMRaw = addArrays(txFMRaw, noise);
+
+    const rxDirectRaw = demodulateDirect(chDirectRaw, voice.bw);
+    const rxAMRaw = demodulateAM(chAMRaw, voice.bw);
+    const rxFMRaw = demodulateFM(chFMRaw, p.carrier, p.fmDev, voice.bw, p.fmLimiter);
+
+    const anaDirect = analyzeAgainstSource(src, rxDirectRaw);
+    const anaAM = analyzeAgainstSource(src, rxAMRaw);
+    const anaFM = analyzeAgainstSource(src, rxFMRaw);
+
+    const sourceListen = normalizeCopy(src, 0.90);
+
+    const chDirectListen = normalizeCopy(chDirectRaw, 0.90);
+    const chAMListen = normalizeCopy(chAMRaw, 0.90);
+    const chFMListen = normalizeCopy(chFMRaw, 0.90);
+
+    const txDirectListen = normalizeCopy(txDirectRaw, 0.90);
+    const txAMListen = normalizeCopy(txAMRaw, 0.90);
+    const txFMListen = normalizeCopy(txFMRaw, 0.90);
+
+    const outDirectListen = normalizeCopy(anaDirect.rxMatched, 0.90);
+    const outAMListen = normalizeCopy(anaAM.rxMatched, 0.90);
+    const outFMListen = normalizeCopy(anaFM.rxMatched, 0.90);
+
+    const residMax = Math.max(
+      maxAbs(anaDirect.residual),
+      maxAbs(anaAM.residual),
+      maxAbs(anaFM.residual),
+      1e-6
+    );
+    const residualListenScale = Math.min(15, 0.85 / residMax);
+
+    state = {
+      selectedScheme: state.selectedScheme || "Direct",
+      sourceRaw: src,
+      sourceListen,
+      direct:{
+        txRaw: txDirectRaw,
+        channelRaw: chDirectRaw,
+        outRaw: anaDirect.rxMatched,
+        residualRaw: anaDirect.residual,
+        txListen: txDirectListen,
+        channelListen: chDirectListen,
+        outListen: outDirectListen,
+        residualListen: scaleArray(anaDirect.residual, residualListenScale),
+        result: anaDirect
+      },
+      am:{
+        txRaw: txAMRaw,
+        channelRaw: chAMRaw,
+        outRaw: anaAM.rxMatched,
+        residualRaw: anaAM.residual,
+        upperRaw: amUpperRaw,
+        lowerRaw: amLowerRaw,
+        txListen: txAMListen,
+        channelListen: chAMListen,
+        outListen: outAMListen,
+        residualListen: scaleArray(anaAM.residual, residualListenScale),
+        result: anaAM
+      },
+      fm:{
+        txRaw: txFMRaw,
+        channelRaw: chFMRaw,
+        outRaw: anaFM.rxMatched,
+        residualRaw: anaFM.residual,
+        txListen: txFMListen,
+        channelListen: chFMListen,
+        outListen: outFMListen,
+        residualListen: scaleArray(anaFM.residual, residualListenScale),
+        result: anaFM
+      },
+      residualListenScale,
+      params: p,
+      voiceBW: voice.bw
+    };
+
+    updateCard("Direct", anaDirect);
+    updateCard("AM", anaAM);
+    updateCard("FM", anaFM);
+
+    removeBestMarks();
+    const arr = [
+      {name:"Normal / direct", snr:anaDirect.snrDb, card:"cardDirect"},
+      {name:"AM", snr:anaAM.snrDb, card:"cardAM"},
+      {name:"FM", snr:anaFM.snrDb, card:"cardFM"}
+    ].sort((a,b) => b.snr - a.snr);
+    $(arr[0].card).classList.add("best");
+
+    const chSNR = p.chanNoise > 0 ? 20*Math.log10(TX_RMS / p.chanNoise) : Infinity;
+    const muWarn = p.amDepth > 1 ? ` <span class="warn">μ > 1 : surmodulation possible.</span>` : "";
+    $("summary").innerHTML =
+      `Canal : σ = <b>${p.chanNoise.toFixed(3)}</b>, SNR canal approx. ≈ <b>${formatDb(chSNR)}</b>.<br>` +
+      `Meilleure sortie actuelle : <span class="good">${arr[0].name}</span> (${formatDb(arr[0].snr)}).` +
+      ` Cliquer sur un bloc central pour mettre à jour les <b>2 graphes</b>.` +
+      muWarn +
+      `<br><span class="small">Boutons : Émis = signal transmis, Canal = après bruit, Sortie = reconstruction, Résidu = bruit/distorsion restant.</span>`;
+
+    updatePlotTitles();
+    selectScheme(state.selectedScheme);
+  }
+
+  function drawGrid(ctx, w, h){
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0,0,w,h);
+
+    ctx.strokeStyle = "#e7e9ee";
+    ctx.lineWidth = 1;
+    for(let i=0;i<=10;i++){
+      const x = i * w / 10;
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+    }
+    for(let i=0;i<=4;i++){
+      const y = i * h / 4;
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+    }
+
+    ctx.strokeStyle = "#8a94a5";
+    ctx.beginPath();
+    ctx.moveTo(0, h/2);
+    ctx.lineTo(w, h/2);
+    ctx.stroke();
+  }
+
+  function drawLegend(ctx, items){
+    let x = 8;
+    const y = 14;
+    ctx.font = "11px Arial";
+    items.forEach(it => {
+      ctx.strokeStyle = it.color;
+      ctx.lineWidth = 2;
+      if(it.dashed) ctx.setLineDash([5,4]); else ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(x, y-4);
+      ctx.lineTo(x+16, y-4);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#445";
+      ctx.fillText(it.label, x + 20, y);
+      x += 22 + ctx.measureText(it.label).width + 12;
+    });
+  }
+
+  function getPlotStart(count){
+    return Math.min(Math.floor(0.15 * SR), Math.max(0, (state.sourceRaw?.length || count) - count - 1));
+  }
+
+  function visibleMax(arrays, start, count){
+    let m = 1e-6;
+    for(const arr of arrays){
+      if(!arr) continue;
+      const end = Math.min(arr.length, start + count);
+      for(let i=start;i<end;i++){
+        const a = Math.abs(arr[i]);
+        if(a > m) m = a;
+      }
+    }
+    return m;
+  }
+
+  function drawLine(ctx, arr, start, count, scale, color, h, w, dashed=false){
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.4;
+    if(dashed) ctx.setLineDash([5,4]);
+    ctx.beginPath();
+    for(let px=0; px<w; px++){
+      const idx = Math.min(arr.length - 1, start + Math.floor(px * count / w));
+      const y = h/2 - arr[idx] * scale;
+      if(px===0) ctx.moveTo(px, y); else ctx.lineTo(px, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawMinMax(ctx, arr, start, count, scale, color, h, w){
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    for(let px=0; px<w; px++){
+      const i0 = start + Math.floor(px * count / w);
+      const i1 = Math.max(i0 + 1, start + Math.floor((px + 1) * count / w));
+      let mn = 1e9, mx = -1e9;
+      for(let i=i0; i<i1 && i<arr.length; i++){
+        const v = arr[i];
+        if(v < mn) mn = v;
+        if(v > mx) mx = v;
+      }
+      const y1 = h/2 - mx * scale;
+      const y2 = h/2 - mn * scale;
+      ctx.beginPath();
+      ctx.moveTo(px, y1);
+      ctx.lineTo(px, y2);
+      ctx.stroke();
+    }
+  }
+
+  function drawComparePlot(){
+    const scheme = state.selectedScheme;
+    const data = getSchemeData(scheme);
+    const canvas = $("cvCompare");
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width, h = canvas.height;
+    drawGrid(ctx, w, h);
+
+    const count = Math.min(state.sourceRaw.length, Math.floor(state.params.cmpWindow * SR / 1000));
+    const start = getPlotStart(count);
+    const m = visibleMax([state.sourceRaw, data.outRaw], start, count);
+    const scale = (h * 0.42) / m;
+
+    drawLine(ctx, state.sourceRaw, start, count, scale, "#b9c1cd", h, w, false);
+    drawLine(ctx, data.outRaw, start, count, scale,
+      scheme === "Direct" ? "#0f9d58" : scheme === "AM" ? "#d97706" : "#c026d3",
+      h, w, false);
+
+    drawLegend(ctx, [
+      {label:"source originale", color:"#b9c1cd"},
+      {label:"reconstruction", color: scheme === "Direct" ? "#0f9d58" : scheme === "AM" ? "#d97706" : "#c026d3"}
+    ]);
+
+    ctx.fillStyle = "#445";
+    ctx.font = "11px Arial";
+    ctx.fillText(`${state.params.cmpWindow.toFixed(0)} ms`, w - 44, 14);
+    ctx.fillText(`SNR sortie : ${formatDb(data.result.snrDb)}`, 8, h - 8);
+  }
+
+  function drawTxPlot(){
+    const scheme = state.selectedScheme;
+    const data = getSchemeData(scheme);
+    const canvas = $("cvTx");
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width, h = canvas.height;
+    drawGrid(ctx, w, h);
+
+    const ms = scheme === "Direct" ? state.params.cmpWindow : state.params.txWindow;
+    const count = Math.min(data.txRaw.length, Math.floor(ms * SR / 1000));
+    const start = getPlotStart(count);
+    const arrays = [data.txRaw];
+    if(scheme === "AM"){
+      arrays.push(data.upperRaw, data.lowerRaw);
+    }
+    const m = visibleMax(arrays, start, count);
+    const scale = (h * 0.42) / m;
+
+    if(count <= w * 2.3){
+      drawLine(ctx, data.txRaw, start, count, scale,
+        scheme === "Direct" ? "#0f9d58" : scheme === "AM" ? "#d97706" : "#c026d3",
+        h, w, false);
+    } else {
+      drawMinMax(ctx, data.txRaw, start, count, scale,
+        scheme === "Direct" ? "#0f9d58" : scheme === "AM" ? "#d97706" : "#c026d3",
+        h, w);
+    }
+
+    if(scheme === "AM"){
+      drawLine(ctx, data.upperRaw, start, count, scale, "#d93025", h, w, false);
+      drawLine(ctx, data.lowerRaw, start, count, scale, "#d93025", h, w, true);
+      drawLegend(ctx, [
+        {label:"signal AM", color:"#d97706"},
+        {label:"+enveloppe", color:"#d93025"},
+        {label:"-enveloppe", color:"#d93025", dashed:true}
+      ]);
+    } else if(scheme === "FM"){
+      drawLegend(ctx, [
+        {label:"signal FM émis", color:"#c026d3"}
+      ]);
+    } else {
+      drawLegend(ctx, [
+        {label:"signal direct émis", color:"#0f9d58"}
+      ]);
+    }
+
+    ctx.fillStyle = "#445";
+    ctx.font = "11px Arial";
+    ctx.fillText(`${ms.toFixed(scheme === "Direct" ? 0 : 1)} ms`, w - 44, 14);
+    if(scheme === "Direct"){
+      ctx.fillText(`pas de modulation RF`, 8, h - 8);
+    } else if(scheme === "AM"){
+      ctx.fillText(`amplitude variable`, 8, h - 8);
+    } else {
+      ctx.fillText(`amplitude quasi constante`, 8, h - 8);
+    }
+  }
+
+  function drawAll(){
+    if(!state.sourceRaw) return;
+    drawComparePlot();
+    drawTxPlot();
+  }
+
+  async function ensureAudio(){
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if(audioCtx.state === "suspended") await audioCtx.resume();
+  }
+
+  function stopAudio(){
+    if(currentSource){
+      try{ currentSource.stop(); }catch(e){}
+      currentSource.disconnect();
+      currentSource = null;
+    }
+  }
+
+  async function playBuffer(arr){
+    await ensureAudio();
+    stopAudio();
+
+    const buffer = audioCtx.createBuffer(1, arr.length, SR);
+    buffer.copyToChannel(arr, 0, 0);
+
+    const src = audioCtx.createBufferSource();
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0.95;
+    src.buffer = buffer;
+    src.connect(gain).connect(audioCtx.destination);
+    src.start();
+    currentSource = src;
+    src.onended = () => {
+      if(currentSource === src) currentSource = null;
+    };
+  }
+
+  function randomize(){
+    const vowelsArr = ["a","e","i","o","u"];
+    $("vowel").value = vowelsArr[Math.floor(Math.random()*vowelsArr.length)];
+    $("f0").value = String(100 + Math.floor(Math.random()*80));
+    $("duration").value = (1.0 + Math.random()*1.2).toFixed(1);
+    $("vibrato").value = (Math.random()*2.5).toFixed(1);
+    $("breath").value = (Math.random()*0.05).toFixed(3);
+    $("carrier").value = String(4000 + 100*Math.floor(Math.random()*45));
+    $("amDepth").value = (0.35 + Math.random()*0.55).toFixed(2);
+    $("fmDev").value = String(200 + 10*Math.floor(Math.random()*90));
+    $("chanNoise").value = (0.015 + Math.random()*0.08).toFixed(3);
+    $("cmpWindow").value = String(28 + Math.floor(Math.random()*24));
+    $("txWindow").value = (1.5 + Math.random()*3.5).toFixed(1);
+    $("fmLimiter").checked = Math.random() > 0.2;
+    recompute();
+  }
+
+  function bindSchemeButton(id, scheme, getter){
+    $(id).addEventListener("click", (e) => {
+      e.stopPropagation();
+      selectScheme(scheme);
+      const data = getSchemeData(scheme);
+      playBuffer(getter(data));
+    });
+  }
+
+  [
+    "vowel","f0","duration","vibrato","breath",
+    "carrier","amDepth","fmDev","chanNoise","cmpWindow","txWindow","fmLimiter"
+  ].forEach(id => {
+    $(id).addEventListener("input", recompute);
+    $(id).addEventListener("change", recompute);
+  });
+
+  document.querySelectorAll(".scheme").forEach(el => {
+    el.addEventListener("click", () => selectScheme(el.dataset.scheme));
+  });
+
+  $("regen").addEventListener("click", recompute);
+  $("randomize").addEventListener("click", randomize);
+  $("stopAudio").addEventListener("click", stopAudio);
+  $("playSource").addEventListener("click", () => playBuffer(state.sourceListen));
+
+  bindSchemeButton("playDirectTx", "Direct", d => d.txListen);
+  bindSchemeButton("playDirectChannel", "Direct", d => d.channelListen);
+  bindSchemeButton("playDirectOut", "Direct", d => d.outListen);
+  bindSchemeButton("playDirectResid", "Direct", d => d.residualListen);
+
+  bindSchemeButton("playAMTx", "AM", d => d.txListen);
+  bindSchemeButton("playAMChannel", "AM", d => d.channelListen);
+  bindSchemeButton("playAMOut", "AM", d => d.outListen);
+  bindSchemeButton("playAMResid", "AM", d => d.residualListen);
+
+  bindSchemeButton("playFMTx", "FM", d => d.txListen);
+  bindSchemeButton("playFMChannel", "FM", d => d.channelListen);
+  bindSchemeButton("playFMOut", "FM", d => d.outListen);
+  bindSchemeButton("playFMResid", "FM", d => d.residualListen);
+
+  recompute();
+})();
+</script>
+</body>
+</html>
