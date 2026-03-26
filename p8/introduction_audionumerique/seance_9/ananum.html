@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Comment un signal numérique passe dans un câble analogique</title>
+<style>
+  :root{
+    --bg:#eef3f8;
+    --panel:#ffffff;
+    --line:#d7dee8;
+    --text:#1f2937;
+    --muted:#6b7280;
+    --blue:#2563eb;
+    --red:#dc2626;
+    --orange:#f59e0b;
+    --green:#16a34a;
+    --gray:#94a3b8;
+    --violet:#7c3aed;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--bg);
+    font-family:Inter,Segoe UI,Arial,sans-serif;
+    color:var(--text);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+  }
+  .app{
+    width:960px;
+    height:700px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 10px 28px rgba(0,0,0,.08);
+    display:grid;
+    grid-template-rows:76px auto 1fr 52px;
+  }
+  .header{
+    padding:14px 18px;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#fff,#f8fbff);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .title h1{
+    margin:0;
+    font-size:22px;
+  }
+  .title div{
+    margin-top:4px;
+    color:var(--muted);
+    font-size:12px;
+  }
+  .badge{
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:8px 12px;
+    font-size:12px;
+    color:var(--muted);
+    background:#fff;
+  }
+  .controls{
+    display:grid;
+    grid-template-columns:repeat(6,1fr) auto auto;
+    gap:10px;
+    padding:12px 16px;
+    border-bottom:1px solid var(--line);
+    background:#fbfdff;
+    align-items:end;
+  }
+  .control label{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  .control span{
+    color:var(--muted);
+    font-weight:600;
+    white-space:nowrap;
+  }
+  input[type="range"], select{
+    width:100%;
+    accent-color:var(--blue);
+  }
+  select{
+    height:34px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:#fff;
+    padding:0 8px;
+  }
+  button{
+    height:38px;
+    border:none;
+    border-radius:10px;
+    padding:0 14px;
+    font-weight:700;
+    cursor:pointer;
+    background:var(--blue);
+    color:#fff;
+  }
+  button.secondary{
+    background:#fff;
+    color:var(--text);
+    border:1px solid var(--line);
+  }
+  .canvasWrap{ padding:14px; }
+  canvas{
+    width:100%;
+    height:100%;
+    display:block;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+  }
+  .footer{
+    border-top:1px solid var(--line);
+    padding:10px 16px;
+    font-size:12px;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#fcfdff;
+  }
+  .legend{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .legend span{white-space:nowrap}
+  .dot{
+    display:inline-block;
+    width:11px;
+    height:11px;
+    border-radius:3px;
+    margin-right:6px;
+    vertical-align:-1px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="title">
+      <h1>Comment un signal numérique peut passer dans un câble “analogique”</h1>
+      <div>Le câble transporte toujours une tension analogique ; le “numérique” vient du codage, du timing et du décodage</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="control">
+      <label>Fréquence sinus <span id="sigFreqVal">1.5 Hz</span></label>
+      <input id="sigFreq" type="range" min="0.5" max="4" step="0.1" value="1.5">
+    </div>
+    <div class="control">
+      <label>Échantillonnage <span id="fsVal">12 Hz</span></label>
+      <input id="fs" type="range" min="6" max="24" step="1" value="12">
+    </div>
+    <div class="control">
+      <label>Résolution <span id="bitsVal">4 bits</span></label>
+      <input id="bits" type="range" min="3" max="8" step="1" value="4">
+    </div>
+    <div class="control">
+      <label>Filtre de sortie <span id="fcVal">4.0 Hz</span></label>
+      <input id="fc" type="range" min="0.8" max="12" step="0.1" value="4">
+    </div>
+    <div class="control">
+      <label>Codage sur le câble </label>
+      <select id="mode">
+        <option value="BMC">AES simplifié (biphase mark)</option>
+        <option value="NRZ">Binaire simple (NRZ)</option>
+      </select>
+    </div>
+    <div class="control">
+      <label>Vitesse animation <span id="speedVal">1.0×</span></label>
+      <input id="speed" type="range" min="0" max="3" step="0.1" value="1">
+    </div>
+
+    <button id="toggleBtn">Pause</button>
+    <button id="exportBtn" class="secondary">Exporter PNG</button>
+  </div>
+
+  <div class="canvasWrap">
+    <canvas id="canvas" width="930" height="520"></canvas>
+  </div>
+
+  <div class="footer">
+    <div class="legend">
+      <span><i class="dot" style="background:#2563eb"></i>analogique</span>
+      <span><i class="dot" style="background:#dc2626"></i>échantillons / quantification</span>
+      <span><i class="dot" style="background:#f59e0b"></i>tension sur le câble</span>
+      <span><i class="dot" style="background:#16a34a"></i>signal reconstruit</span>
+      <span><i class="dot" style="background:#94a3b8"></i>référence</span>
+    </div>
+    <div>AES réel = codage, framing et synchro plus complexes ; ici c’est une version pédagogique</div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const els = {
+  sigFreq: document.getElementById('sigFreq'),
+  fs: document.getElementById('fs'),
+  bits: document.getElementById('bits'),
+  fc: document.getElementById('fc'),
+  mode: document.getElementById('mode'),
+  speed: document.getElementById('speed'),
+  sigFreqVal: document.getElementById('sigFreqVal'),
+  fsVal: document.getElementById('fsVal'),
+  bitsVal: document.getElementById('bitsVal'),
+  fcVal: document.getElementById('fcVal'),
+//   modeVal: document.getElementById('modeVal'),
+  speedVal: document.getElementById('speedVal'),
+  toggleBtn: document.getElementById('toggleBtn'),
+  exportBtn: document.getElementById('exportBtn')
+};
+
+const state = {
+  duration: 1.0,
+  amp: 1.0,
+  sigFreq: parseFloat(els.sigFreq.value),
+  fs: parseFloat(els.fs.value),
+  bits: parseInt(els.bits.value, 10),
+  fc: parseFloat(els.fc.value),
+  mode: els.mode.value,
+  speed: parseFloat(els.speed.value)
+};
+
+let running = true;
+let phase = 0;
+let lastTime = performance.now();
+
+function updateLabels(){
+  els.sigFreqVal.textContent = `${state.sigFreq.toFixed(1)} Hz`;
+  els.fsVal.textContent = `${state.fs.toFixed(0)} Hz`;
+  els.bitsVal.textContent = `${state.bits} bits`;
+  els.fcVal.textContent = `${state.fc.toFixed(1)} Hz`;
+//   els.modeVal.textContent = state.mode === 'BMC' ? 'AES simplifié' : 'NRZ';
+  els.speedVal.textContent = `${state.speed.toFixed(1)}×`;
+}
+updateLabels();
+
+['sigFreq','fs','bits','fc','mode','speed'].forEach(k => {
+  els[k].addEventListener('input', () => {
+    state.sigFreq = parseFloat(els.sigFreq.value);
+    state.fs = parseFloat(els.fs.value);
+    state.bits = parseInt(els.bits.value, 10);
+    state.fc = parseFloat(els.fc.value);
+    state.mode = els.mode.value;
+    state.speed = parseFloat(els.speed.value);
+    updateLabels();
+  });
+});
+
+els.toggleBtn.addEventListener('click', () => {
+  running = !running;
+  els.toggleBtn.textContent = running ? 'Pause' : 'Lecture';
+});
+
+els.exportBtn.addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'transmission_numerique_sur_cable.png';
+  a.click();
+});
+
+function analogSignal(t){
+  return state.amp * Math.sin(2 * Math.PI * state.sigFreq * t + phase);
+}
+
+function quantize(x, bits){
+  const levels = 1 << bits;
+  const code = Math.round((x + 1) * 0.5 * (levels - 1));
+  const q = (code / (levels - 1)) * 2 - 1;
+  return { q, code, bitsStr: code.toString(2).padStart(bits, '0') };
+}
+
+function makeSamples(){
+  const dt = 1 / state.fs;
+  const out = [];
+  for(let t=0; t<=state.duration + 1e-9; t += dt){
+    const x = analogSignal(t);
+    const qq = quantize(x, state.bits);
+    out.push({ t, x, q: qq.q, code: qq.code, bitsStr: qq.bitsStr });
+  }
+  return out;
+}
+
+function staircaseValueAt(t, samples){
+  if(t <= samples[0].t) return samples[0].q;
+  for(let i=0; i<samples.length-1; i++){
+    if(t >= samples[i].t && t < samples[i+1].t) return samples[i].q;
+  }
+  return samples[samples.length-1].q;
+}
+
+function makeFilteredCurve(samples, steps){
+  const out = [];
+  const dt = state.duration / steps;
+  const RC = 1 / (2 * Math.PI * Math.max(state.fc, 0.001));
+  const alpha = dt / (RC + dt);
+  let y = staircaseValueAt(0, samples);
+
+  for(let i=0; i<=steps; i++){
+    const t = i * dt;
+    const x = staircaseValueAt(t, samples);
+    y = y + alpha * (x - y);
+    out.push({t, y});
+  }
+  return out;
+}
+
+function serialBits(samples){
+  const count = Math.min(8, samples.length);
+  const bits = [];
+  for(let i=0; i<count; i++){
+    const word = samples[i].bitsStr;
+    for(const b of word) bits.push(b);
+  }
+  return {
+    bitArray: bits,
+    sampleCount: count,
+    words: samples.slice(0, count).map(s => s.bitsStr)
+  };
+}
+
+function drawRoundedRect(x, y, w, h, r, fill, stroke){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+  if(fill){ ctx.fillStyle = fill; ctx.fill(); }
+  if(stroke){ ctx.strokeStyle = stroke; ctx.stroke(); }
+}
+
+function drawPanel(x,y,w,h,title,sub){
+  drawRoundedRect(x,y,w,h,12,'#fff','#d7dee8');
+  ctx.fillStyle = '#1f2937';
+  ctx.font = 'bold 14px Inter, Arial';
+  ctx.fillText(title, x+12, y+22);
+  ctx.fillStyle = '#6b7280';
+  ctx.font = '12px Inter, Arial';
+  ctx.fillText(sub, x+12, y+40);
+
+  const gx = x + 18;
+  const gy = y + 54;
+  const gw = w - 36;
+  const gh = h - 72;
+  const y0 = gy + gh/2;
+
+  ctx.strokeStyle = '#edf2f7';
+  ctx.lineWidth = 1;
+  for(let i=0;i<=6;i++){
+    const xx = gx + gw*i/6;
+    ctx.beginPath(); ctx.moveTo(xx, gy); ctx.lineTo(xx, gy+gh); ctx.stroke();
+  }
+  for(let i=0;i<=4;i++){
+    const yy = gy + gh*i/4;
+    ctx.beginPath(); ctx.moveTo(gx, yy); ctx.lineTo(gx+gw, yy); ctx.stroke();
+  }
+
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.beginPath();
+  ctx.moveTo(gx, y0);
+  ctx.lineTo(gx+gw, y0);
+  ctx.stroke();
+
+  return {x,y,w,h,gx,gy,gw,gh,y0};
+}
+
+function toPoint(t, y, area, scale=0.36){
+  return {
+    x: area.gx + (t/state.duration)*area.gw,
+    y: area.y0 - y*area.gh*scale
+  };
+}
+
+function drawCurve(area, fn, color, width=2, alpha=1, dashed=false){
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.globalAlpha = alpha;
+  if(dashed) ctx.setLineDash([6,4]);
+  ctx.beginPath();
+  const steps = Math.max(220, Math.floor(area.gw));
+  for(let i=0;i<=steps;i++){
+    const t = state.duration * i / steps;
+    const p = toPoint(t, fn(t), area);
+    if(i===0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawSamplesQuant(area, samples){
+  // niveaux de quantification
+  const levels = 1 << state.bits;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(148,163,184,.22)';
+  ctx.lineWidth = 1;
+  for(let i=0;i<levels;i++){
+    const y = -1 + 2*i/(levels-1);
+    const p = toPoint(0, y, area);
+    ctx.beginPath();
+    ctx.moveTo(area.gx, p.y);
+    ctx.lineTo(area.gx + area.gw, p.y);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  drawCurve(area, t => analogSignal(t), '#94a3b8', 2, 0.7, true);
+
+  ctx.save();
+  ctx.strokeStyle = '#dc2626';
+  ctx.fillStyle = '#dc2626';
+  ctx.lineWidth = 1.2;
+  for(const s of samples){
+    const p = toPoint(s.t, s.q, area);
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    ctx.moveTo(p.x, area.y0);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3.3, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // afficher quelques mots binaires
+  ctx.fillStyle = '#475569';
+  ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+  const maxLabels = Math.min(6, samples.length);
+  for(let i=0; i<maxLabels; i++){
+    const s = samples[i];
+    const p = toPoint(s.t, s.q, area);
+    const tx = Math.min(p.x + 4, area.gx + area.gw - 34);
+    const ty = Math.max(area.gy + 14, p.y - 8);
+    ctx.fillText(s.bitsStr, tx, ty);
+  }
+}
+
+function drawCableWave(area, samples){
+  const ser = serialBits(samples);
+  const bits = ser.bitArray;
+  const totalBits = bits.length;
+  const cellW = area.gw / totalBits;
+
+  // separateurs mots
+  ctx.save();
+  for(let i=0; i<=ser.sampleCount; i++){
+    const x = area.gx + i * state.bits * cellW;
+    ctx.strokeStyle = i < ser.sampleCount ? 'rgba(37,99,235,.22)' : 'rgba(37,99,235,.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, area.gy);
+    ctx.lineTo(x, area.gy + area.gh);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // labels des bits
+  ctx.fillStyle = '#475569';
+  ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+  for(let i=0;i<bits.length;i++){
+    const x = area.gx + i*cellW + cellW*0.36;
+    if(cellW > 11) ctx.fillText(bits[i], x, area.gy + 12);
+  }
+
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+
+  const levelToY = (v) => area.y0 - v * area.gh * 0.28;
+
+  if(state.mode === 'NRZ'){
+    let first = true;
+    for(let i=0;i<bits.length;i++){
+      const level = bits[i] === '1' ? 0.95 : -0.95;
+      const x0 = area.gx + i*cellW;
+      const x1 = area.gx + (i+1)*cellW;
+      const y = levelToY(level);
+
+      if(first){ ctx.moveTo(x0, y); first = false; }
+      else ctx.lineTo(x0, y);
+
+      ctx.lineTo(x1, y);
+      if(i < bits.length-1){
+        const nextLevel = bits[i+1] === '1' ? 0.95 : -0.95;
+        ctx.lineTo(x1, levelToY(nextLevel));
+      }
+    }
+  } else {
+    // Biphase Mark simplifié (style AES pédagogique)
+    let level = -1;
+    let x = area.gx;
+    ctx.moveTo(x, levelToY(level));
+
+    for(let i=0;i<bits.length;i++){
+      // transition au début du bit
+      level *= -1;
+      ctx.lineTo(x, levelToY(level));
+      const xm = x + cellW/2;
+      ctx.lineTo(xm, levelToY(level));
+
+      if(bits[i] === '1'){
+        level *= -1;
+        ctx.lineTo(xm, levelToY(level));
+      }
+      const x1 = x + cellW;
+      ctx.lineTo(x1, levelToY(level));
+      x = x1;
+    }
+  }
+  ctx.stroke();
+
+  // annotation
+  drawRoundedRect(area.x + 10, area.y + area.h - 28, area.w - 20, 18, 8, '#f8fbff', '#e3e9f2');
+  ctx.fillStyle = '#64748b';
+  ctx.font = '11px Inter, Arial';
+  const txt = state.mode === 'NRZ'
+    ? 'Le câble transporte ici une tension haute/basse : les bits sont une forme analogique rectangulaire.'
+    : 'En AES simplifié, ce ne sont pas des “0/1 fixes”, mais surtout un codage par transitions.';
+  ctx.fillText(txt, area.x + 18, area.y + area.h - 15);
+}
+
+function drawReconstruction(area, samples){
+  drawCurve(area, t => analogSignal(t), '#94a3b8', 2, 0.75, true);
+
+  // escalier
+  ctx.save();
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 2.1;
+  ctx.beginPath();
+  for(let i=0; i<samples.length-1; i++){
+    const t0 = samples[i].t;
+    const t1 = samples[i+1].t;
+    const y = samples[i].q;
+    const p0 = toPoint(t0, y, area);
+    const p1 = toPoint(t1, y, area);
+    const p2 = toPoint(t1, samples[i+1].q, area);
+    if(i===0) ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  // filtré
+  const filt = makeFilteredCurve(samples, Math.max(260, Math.floor(area.gw)));
+  ctx.save();
+  ctx.strokeStyle = '#16a34a';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  filt.forEach((p, idx) => {
+    const c = toPoint(p.t, p.y, area);
+    if(idx===0) ctx.moveTo(c.x, c.y);
+    else ctx.lineTo(c.x, c.y);
+  });
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawTopInfo(){
+  drawRoundedRect(18, 10, canvas.width - 36, 34, 10, '#f8fbff', '#e3e9f2');
+  ctx.fillStyle = '#334155';
+  ctx.font = '13px Inter, Arial';
+  const txt = 'Idée clé : “numérique” = information discrète ; “analogique” = forme électrique physique sur le câble. Le câble transporte toujours une tension réelle.';
+  ctx.fillText(txt, 30, 31);
+}
+
+function render(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  drawTopInfo();
+
+  const margin = 18;
+  const top = 54;
+  const gapX = 14;
+  const gapY = 14;
+  const w = (canvas.width - margin*2 - gapX) / 2;
+  const h = (canvas.height - top - margin - gapY) / 2;
+
+  const p1 = drawPanel(margin, top, w, h,
+    '1. Signal analogique d’origine',
+    'Exemple : un sinus continu, comme une tension audio.'
+  );
+  const p2 = drawPanel(margin + w + gapX, top, w, h,
+    '2. Numérisation',
+    'On prélève des échantillons, on les quantifie, puis on obtient des mots binaires.'
+  );
+  const p3 = drawPanel(margin, top + h + gapY, w, h,
+    '3. Transport dans le câble',
+    state.mode === 'NRZ'
+      ? 'Les bits deviennent une tension électrique haute/basse sur le fil.'
+      : 'Le flux est encodé sur le câble par transitions : exemple AES simplifié.'
+  );
+  const p4 = drawPanel(margin + w + gapX, top + h + gapY, w, h,
+    '4. Réception / DAC',
+    'On retrouve des valeurs, puis un filtre reconstruit une forme analogique exploitable.'
+  );
+
+  const samples = makeSamples();
+
+  drawCurve(p1, t => analogSignal(t), '#2563eb', 2.5);
+  drawSamplesQuant(p2, samples);
+  drawCableWave(p3, samples);
+  drawReconstruction(p4, samples);
+
+  // légendes courtes
+  ctx.fillStyle = '#475569';
+  ctx.font = '12px Inter, Arial';
+  ctx.fillText('Bleu : signal continu', p1.x + 14, p1.y + p1.h - 14);
+  ctx.fillText('Rouge : valeurs quantifiées', p2.x + 14, p2.y + p2.h - 14);
+  ctx.fillText('Orange : tension réellement présente sur le câble', p3.x + 14, p3.y + p3.h - 14);
+  ctx.fillText('Orange : sortie brute · Vert : après filtrage', p4.x + 14, p4.y + p4.h - 14);
+}
+
+function animate(now){
+  const dt = (now - lastTime) / 1000;
+  lastTime = now;
+
+  if(running){
+    phase += dt * state.speed * 2 * Math.PI * 0.65;
+  }
+
+  render();
+  requestAnimationFrame(animate);
+}
+
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
