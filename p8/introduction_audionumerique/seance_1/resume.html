@@ -1,3 +1,71 @@
-# Résumé du cours 1
-
-coucou blablablablacoucou
+<strong>Introduction générale</strong>&nbsp;<br>Nous avons introduit la thématique du cours ainsi que nos objectifs :&nbsp;<p></p>
+<ul>
+    <li><span style="font-size: 0.9375rem;">introduire et développer les notions de traitement du signal et d'informatique indispensables pour la bonne compréhension de la chaîne audionumérique</span></li>
+    <li><span style="font-size: 0.9375rem;">introduction des procédés de traitement et de synthèse sonore</span></li>
+    <li><span style="font-size: 0.9375rem;">préhension du double aspect de l'audionumérique : technique et esthétique.</span></li>
+</ul>
+<p></p>
+<p><span style="font-size: 0.9375rem;">Après cela, nous avons présenté le calendrier des 11 séances, et le mode de validation (examen final).&nbsp;</span></p>
+<p><br><strong>Attention : obligation de présence au cours, si vous cumulez plus de trois absences, vous passez directement au rattrapage.&nbsp;<br></strong><br><strong>Base du signal<br></strong>Le contenu de la première séance est dédié à des rappels sur la notion de signal.&nbsp;<br><br></p>
+<ol>
+    <li>
+        <p><strong>Domaine temporel</strong> :</p>
+        <ul>
+            <li>Un <strong>signal</strong> représente une information physique (tension, courant, onde sonore). La discipline consistant à analyser / synthétiser ces signaux s'appelle le <strong>traitement du signal</strong>.</li>
+            <li>La matérialité de ces signaux est fondamentale pour l'information transmise : elle modèle les limites de leur captation, leur fidélité, ainsi que leur possibles procédés d'interaction et de manipulation.</li>
+            <li>Types : <strong>numérique</strong> (valeurs discrètes) ou <strong>analogique</strong> (valeurs continues).</li>
+            <li>Une représentation dans le domaine temporelle est la variation des signaux <strong>dépendant du temps</strong> dans des représentations cartésiennes (abscisse: temps, ordonnée : amplitude).<br><br></li>
+        </ul>
+    </li>
+    <li>
+        <p><strong>Signaux périodiques</strong> :<br>Nous avons rappelé les caractéristiques essentielles des signaux périodiques.&nbsp;</p>
+        <ul>
+            <li>Un signal <strong>périodique</strong> répète un <strong>cycle</strong> (durée = <strong>période</strong>, T), ou <strong>forme d'onde</strong>.&nbsp;</li>
+            <li><strong>Amplitude</strong> : c'est l'écart maximum entre la valeur minimum et la valeur maximale de l'onde.</li>
+            <li><strong>Fréquence</strong> (f) = nombre de cycles par seconde, mesurée en <strong>Hertz</strong> (f = 1/T).<br><br></li>
+        </ul>
+    </li>
+    <li>
+        <p><strong>Fonctions sinus et cosinus</strong> :<br>Rappels sur les signaux purs.&nbsp;</p>
+    </li>
+    <ul>
+        <li>Les fonctions trigonométriques de base, sinus et cosinus, sont basées sur les coordonnées (x, y) des points du cercle de rayon 1 (aussi appelé <strong>cercle unitaire</strong>). Si nous notons le centre du cercle <strong>O=(0,0),&nbsp;</strong>Chaque point <strong>P&nbsp;</strong>de ce cercle est identifié par l'<strong>angle&nbsp;θ</strong> entre <strong>(0,1)</strong>, intersection du cercle unitaire et de l'axe <strong>x </strong>des abscisses, et du point <strong>P.</strong></li>
+        <li><strong>Sinus</strong> : abscisse du point <strong>P&nbsp;</strong><span>correspondant à l'angle θ du cercle unité.&nbsp;</span></li>
+        <li><strong><span>Cosinus</span> : </strong>ordonnée du point<strong> P</strong> correspondant à l'angle θ du cercle unité.&nbsp;</li>
+        <li>Le cosinus est déphasé de 90° par rapport au sinus.</li>
+        <li>Ces signaux peuvent être qualifiés de <strong>purs </strong>: ce sont les éléments de base des fonctions périodiques.</li>
+        <li>Ces fonctions de base ont deux propriétés physiques :&nbsp;</li>
+        <ul>
+            <li>Elles se retrouvent dans bon nombre d'équations physiques, système masse-ressort (<a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_1/mass_spring"><strong><u>demo</u></strong></a>), corde libre (<strong><span><u>demo</u></span></strong>), etc.</li>
+            <li>En musique particulièrement, elles peuvent correspondre à :&nbsp;</li>
+            <ul>
+                <li>le signal le plus simple contenant une fréquence perçue (&gt;50Hz) (<strong><u>demo</u></strong>)</li>
+                <li>une variation d'amplitude, voire un rythme (&lt;20Hz)</li>
+            </ul>
+        </ul>
+        <li>La somme (pondérée) des ces signaux produit le même signal, avec une possible variation d'amplitude et de phase (<strong><u><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_1/cos_sin">demo</a></u></strong>)<br><br></li>
+    </ul>
+    <li>
+        <p><strong>Signaux complexes et harmoniques</strong> :</p>
+        <ul>
+            <li>A partir d'une fréquence fondamentale <strong>f<sub>0</sub></strong>, on peut définir une séquence de fréquences harmoniques : 2 * <strong>f<sub>0</sub></strong><strong>, </strong>3* <strong>f<sub>0</sub></strong>, ..., n*<strong>f<sub>0</sub></strong>, ...</li>
+            <li>Pour une onde pure de fréquence , on peut définir une suite d'<strong>harmoniques</strong>&nbsp;consistant en la suite d'ondes pures de fréquences&nbsp;2 *&nbsp;<strong>f<sub>0</sub></strong><strong>,&nbsp;</strong>3*&nbsp;<strong>f<sub>0</sub></strong>, ..., n*<strong>f<sub>0</sub></strong>, ...</li>
+            <li>On peut synthétiser des signaux périodiques de fréquence <strong>f<sub>0&nbsp;</sub></strong>de complexité arbitraire en sommant ces différentes harmoniques, avec des facteurs correspondant à l'amplitude de ces composantes (<u><strong><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_1/additive">demo</a></strong>)</u>. Ce procédé de synthèse s'appelle la <strong>synthèse additive.</strong></li>
+            <li>Des signaux complexes, comme l'onde <strong>carrée,&nbsp;</strong>ou en <strong>dents de scie</strong>&nbsp;sont la somme de plusieurs <strong>harmoniques (</strong><strong><u><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_1/complex">demo</a></u></strong><strong>)</strong>. En général, la somme de ces harmoniques produit une perception de hauteur, et la pondération de ces harmoniques influe sur le <strong>timbre</strong>&nbsp;du son perçu.</li>
+            <li>Dans le cas ou d'un signal composé de composants de fréquences non-harmoniques, nous appelons ces composants des&nbsp;<strong>partiels </strong>de ce son (<strong><u><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_1/inharm">demo</a></u></strong>)</li>
+            <li>Analyse fréquentielle distingue la <strong>fondamentale</strong> et les <strong>partiels</strong> (harmoniques ou non).<br><br></li>
+        </ul>
+    </li>
+    <li>
+        <p><strong>Série et transformée de Fourier</strong> :</p>
+        <ul>
+            <li>Le <a href="https://fr.wikipedia.org/wiki/S%C3%A9rie_de_Fourier" target="_blank"><strong><u>théorème des séries de Fourier</u></strong></a>&nbsp;permet de décomposer tout signal périodique <strong>x(t)</strong> en une somme d'harmoniques élémentaires.</li>
+            <li>La <span><span style=""><a href="https://fr.wikipedia.org/wiki/Transformation_de_Fourier" style="font-weight: bold; text-decoration-line: underline;">transformée de Fourier</a>&nbsp;permet de décomposer tout signal <strong>x(t)</strong> (périodique ou non) en une somme infinie de fréquences. Cette représentation du signal, appelé <strong>spectre</strong> ou <strong>X(f)</strong>, est strictement équivalente (un signal correspond à un et seulement un spectre). Ce spectre est constitué de deux composantes : la <strong>magnitude<u>,</u>&nbsp;</strong>correspondant à l'amplitudes de ces composantes fréquentielles, et la <strong>phase</strong>&nbsp;ou l'<strong>angle</strong>, correspondant au décalage temporel de ces composantes (à approfondir plus tard).</span></span></li>
+            <li><span><span style=""><strong>FFT</strong>&nbsp;: version rapide pour le traitement numérique de la transformée de Fourier dans le domaine numérique (à approfondir plus tard).<br></span></span></li>
+            <li>Ce passage du domaine <strong>temporel</strong> au domaine <strong>fréquentiel</strong> (<strong>spectre</strong>) efface le temps de la représentation, et provoque par exemple <strong><u><a href="https://fr.wikipedia.org/wiki/Principe_d%27incertitude">le principe d'incertitude.</a></u></strong></li>
+            <li>La <strong><u><a href="https://fr.wikipedia.org/wiki/Transform%C3%A9e_de_Fourier_%C3%A0_court_terme">transformée de Fourier court-terme</a></u></strong>, ou <strong>STFT</strong>, consiste a calculer le spectre d'un signal sur de petites parties découpées régulièrement. C'est donc un signal en 2 dimensions <strong>X(f, t)</strong>&nbsp;(donc similaire à une image), avec une contrainte cependant : si ces parties sont petites, le spectre évoluera vite mais avec une faible précision fréquentielle. Si les parties sont grandes, la précision fréquentielle sera grande mais évoluera lentement.</li>
+        </ul>
+    </li>
+</ol>
+<p dir="ltr" style="text-align: left;"></p>
+<p></p>
