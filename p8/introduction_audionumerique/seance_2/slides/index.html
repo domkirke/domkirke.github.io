@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+	<html class="sl-root decks export offline loaded">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, minimal-ui">
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		<link rel="manifest" href='data:application/manifest+json,{"display": "standalone", "name": "Séance 2"}' />
+		<title>Séance 2</title>
+
+
+		<link rel="stylesheet" type="text/css" href="lib/offline-v2.css">
+
+
+
+	</head>
+	<body class="reveal-viewport theme-font-montserrat theme-color-white-blue">
+		<div class="reveal">
+			<div class="slides">
+				<section class="stack" data-id="5418eba7ddb5b3219780271b850a7fe8"><section data-id="72c1b5386a396fb4ed107bffd70e75e7"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="0d4d8480a71b2574ac45ac5fdbdc8314">
+								<div class="sl-block-content" style="z-index: 10;" data-lt-tmp-id="lt-617774" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><h3>Séance 2</h3></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 815.689px; left: 72.1555px; top: 179px;" data-name="text-7903eb" data-block-id="35edbce544dd83ba27eecb13e76679f5">
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);"><div class="sl-block-content" style="z-index: 11; text-align: center;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+<p style="text-align:left">- Approfondissement des fonctions cosinus &amp; sinus</p>
+
+<p style="text-align:left">- Introduction de la notion de phase </p>
+
+<p style="text-align:left">- Approfondissement du spectre et de la STFT : magnitude et phase, utilisations créatives</p>
+</div></div>
+							</div></section><section data-id="e163f0b0edb576f7ea1af0407c19c7c4"><div class="sl-block" data-block-type="text" style="height: auto; width: 815.689px; left: 58.5725px; top: 29.4227px;" data-name="text-7903eb" data-block-id="3d219fedd1416c767d30e715194afd5d">
+								<div class="sl-block-style" style="z-index: 10; transform: rotate(0deg);"><div class="sl-block-content" style="z-index: 10; text-align: center;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+<p style="text-align:left">Unité d'angles : </p>
+
+<p style="text-align:left"><strong>- degrés (°)</strong> : cycle entre entre 0 et 360 (unité usuelle)</p>
+
+<p style="text-align:left"><strong>- radians (rad)</strong> : entre 0 et 2π (rayon du cercle)</p>
+
+<p style="text-align:left"> </p>
+</div></div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 294px; height: 294px; left: 46.5725px; top: 220px; min-width: 1px; min-height: 1px;" data-name="Image 1" data-block-id="5b67bed5a66914463689b5c925ed49f0"><div class="sl-block-content" style="z-index: 13;"><img class="" data-natural-width="1280" data-natural-height="1280" data-lazy-loaded="" data-src="introduction-audionumerique-2026/e90d419fc228bf79c229c0f5434fe270.png"></div></div>
+<div class="sl-block" data-block-type="text" style="height: 40px; width: 341.689px; left: 427px; top: 297px;" data-name="Text 2" data-block-id="f1ee274f7b533365d5616646a397b5ec" data-text-layout="fixed">
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);"><div class="sl-block-content" style="z-index: 11; text-align: center;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><p style="text-align:left">périmètre du cercle <strong>C</strong>: </p></div></div>
+							</div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 427px; top: 347px;" data-name="Math 1" data-block-id="a25c8f6fa10dcd06abc481d0a4c89cda"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 14;"><div class="math-input">C = \pi * D = 2 \pi * R</div></div></div></section><section data-id="ae98d1a0c8d1050fcc9f95af42afb6ff"><div class="sl-block" data-block-type="iframe" data-name="Iframe 1" style="width: 615px; height: 507px; left: 172.5px; top: 145px;" data-block-id="806b54ae4b02256a34b826f3c643780e"><div class="sl-block-content" style="z-index: 10;"><iframe allow="fullscreen; autoplay; accelerometer; geolocation; gyroscope; camera; encrypted-media; microphone; midi" data-preload="true" sandbox="allow-forms allow-scripts allow-popups allow-same-origin allow-pointer-lock allow-presentation" data-lazy-loaded="" data-src="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/angle"></iframe></div></div>
+<div class="sl-block" data-block-type="text" style="height: 40px; width: 341.689px; left: 35px; top: 52px;" data-name="Text 3" data-text-layout="fixed" data-block-id="9f3f0fa6ed3841ecb824586a0967e341">
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);"><div class="sl-block-content" style="z-index: 11; text-align: center;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><p style="text-align:left">angle en radian : longueur </p></div></div>
+							</div></section><section data-id="ec288ccce6e240a9366608e1311f0382"><div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 369px; top: 91.5px;" data-name="Math 1" data-block-id="6e02b3cba39f1f243777a015f104dc3a"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 11;"><div class="math-input">\begin{align*} 
+\cos{(\color{blue}{-\theta}} ) &amp;  = \cos{(\color{red}{\theta}}) \\
+
+\sin{(\color{blue}{-\theta}} ) &amp;  = - \sin{(\color{red}{\theta}})
+\end{align*} </div></div></div>
+<div class="sl-block" data-block-type="text" style="width: 104px; height: 43px; left: 827px; top: 98.5px;" data-name="Text 1" data-block-id="7b265fa06490eafd43d0a56f24e4482a" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 13;" data-placeholder-text="Text"><p><em>pair</em></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 104px; height: 43px; left: 817px; top: 177px;" data-name="Text 2" data-text-layout="fixed" data-block-id="8f6397afad8ca84567eaf59e03c42c4c"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 14;" data-placeholder-text="Text"><p><em>impair</em></p></div></div>
+<div class="sl-block" data-block-type="image" style="width: 226.5px; height: 226.5px; left: 58px; top: 39.25px; min-width: 1px; min-height: 1px;" data-name="Image 1" data-block-id="daf98631d649a280fcc4ee91ad5e283a"><div class="sl-block-content" style="z-index: 15;"><img class="" data-natural-width="250" data-natural-height="250" data-lazy-loaded="" data-src="introduction-audionumerique-2026/c563d691f280aa444ae5f446fcda09b0.png"></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 232.262px; top: 114.247px;" data-name="Line 1" data-block-id="54477a3ac144ebab1dd88d575a32db5e"><div class="sl-block-content" data-line-x1="12.73824333346842" data-line-y1="30.75283981646813" data-line-x2="0" data-line-y2="0" data-line-color="#ff0000" data-line-width="2px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 16;" data-line-c="6"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="12.73824333346842" height="30.75283981646813" viewbox="0 0 12.73824333346842 30.75283981646813"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#ff0000" stroke-width="2" stroke-linecap="round" d="M12.738 30.753 A26.025 26.025 0 0 0 1.731 1.001"></path><path stroke="#ff0000" stroke-width="2" d="M 2.179 8.766 L 0.62 0.425 L 8.961 -1.134 L 0.62 0.425" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M12.738 30.753 A26.083 26.083 0 0 0 0 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M12.738 30.753 A26.083 26.083 0 0 0 0 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 233px; top: 158.5px;" data-name="Line 2" data-block-id="db6fa5c91917e4850c6ca5a3c23916b6"><div class="sl-block-content" data-line-x1="12.47624333346842" data-line-y1="0" data-line-x2="0" data-line-y2="29.24716018353187" data-line-color="#0000ff" data-line-width="2px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 17;" data-line-c="-7"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="12.47624333346842" height="29.24716018353187" viewbox="0 0 12.47624333346842 29.24716018353187"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#0000ff" stroke-width="2" stroke-linecap="round" d="M12.476 0 A21.515 21.515 0 0 1 1.853 28.497"></path><path stroke="#0000ff" stroke-width="2" d="M 8.751 31.483 L 0.668 28.902 L 3.249 20.819 L 0.668 28.902" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M12.476 0 A21.555 21.555 0 0 1 0 29.247"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M12.476 0 A21.555 21.555 0 0 1 0 29.247"></path></svg></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 259px; top: 106.5px;" data-name="Math 2" data-block-id="c6f38afd9ea7f76bb82e5a4e74550a28"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 18; font-size: 49%;"><div class="math-input">\color{red}{\theta}</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 259px; top: 163.5px;" data-name="Math 3" data-block-id="152a00497f0104c7aa8edfea294a2116"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 23; font-size: 49%;"><div class="math-input">\color{blue}{-\theta}</div></div></div>
+<div class="sl-block" data-block-type="image" style="width: 227.562px; height: 227.562px; left: 62.438px; top: 350px; min-width: 1px; min-height: 1px;" data-name="Image 2" data-block-id="eff0e6f749de1b12563d576942af5935"><div class="sl-block-content" style="z-index: 10;"><img class="" data-natural-width="250" data-natural-height="250" data-lazy-loaded="" data-src="introduction-audionumerique-2026/f19beb1f05f7baf7b3db46572a16f78e.png"></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 369px; top: 388.781px;" data-name="Math 4" data-block-id="95ab6a2a247f9ffe66ff99a5984309f3"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 12;"><div class="math-input">\begin{align*} 
+\sin{(\color{green}{\theta + \frac{\pi}{2}}} ) &amp;  = \cos{(\color{red}{\theta}}) \\
+\cos{(\color{green}{\theta + \frac{\pi}{2}}} ) &amp;  = - \sin{(\color{red}{\theta}}) 
+\end{align*} </div></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 220.262px; top: 432.781px;" data-name="Line 3" data-block-id="194051cd8fab745d97c6f06615ffb0a3"><div class="sl-block-content" data-line-x1="12.73824333346842" data-line-y1="30.75283981646813" data-line-x2="0" data-line-y2="0" data-line-color="#ff0000" data-line-width="2px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 19;" data-line-c="6"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="12.73824333346842" height="30.75283981646813" viewbox="0 0 12.73824333346842 30.75283981646813"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#ff0000" stroke-width="2" stroke-linecap="round" d="M12.738 30.753 A26.025 26.025 0 0 0 1.731 1.001"></path><path stroke="#ff0000" stroke-width="2" d="M 2.179 8.766 L 0.62 0.425 L 8.961 -1.134 L 0.62 0.425" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M12.738 30.753 A26.083 26.083 0 0 0 0 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M12.738 30.753 A26.083 26.083 0 0 0 0 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 239.476px; top: 428.534px;" data-name="Math 5" data-block-id="5d85ee34dedaf111ad330eacbfaa329b"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 21; font-size: 49%;"><div class="math-input">\color{red}{\theta}</div></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 154.262px; top: 423.534px;" data-name="Line 4" data-block-id="18bc89ef6c7f6dd024e23927bb8b0c7f"><div class="sl-block-content" data-line-x1="65.73824333346842" data-line-y1="39.99983981646814" data-line-x2="0" data-line-y2="0" data-line-color="#018001" data-line-width="2px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 20;" data-line-c="22"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="65.73824333346842" height="39.99983981646814" viewbox="0 0 65.73824333346842 39.99983981646814"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#018001" stroke-width="2" stroke-linecap="round" d="M65.738 40 A44.638 44.638 0 0 0 1.783 -0.905"></path><path stroke="#018001" stroke-width="2" d="M 8.625 2.681 L 0.685 -0.31 L 3.676 -8.251 L 0.685 -0.31" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M65.738 40 A44.645 44.645 0 0 0 0 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M65.738 40 A44.645 44.645 0 0 0 0 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 100.262px; top: 427.534px;" data-name="Math 6" data-block-id="869b3c6021e0d83d3792be953efe9e88"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 22; font-size: 36%; color: rgb(1, 128, 1);"><div class="math-input">\color{green}{\theta} + \frac{\pi}{2}</div></div></div></section><section data-id="d0b98b6960f731aad6ad4927fde4e0da"><div class="sl-block" data-block-type="image" style="width: 798.395px; height: 419.935px; left: 80.8025px; top: 121.032px; min-width: 1px; min-height: 1px;" data-name="Image 1" data-block-id="558e6fda4f60815d0c3db69382903656"><div class="sl-block-content" style="z-index: 10;"><img class="" data-natural-width="1540" data-natural-height="810" data-lazy-loaded="" data-src="introduction-audionumerique-2026/04519cea98583909fa4323c7e74b39c1.png"></div></div>
+<div class="sl-block" data-block-type="text" style="width: 442px; height: 43px; left: 419.803px; top: 579.5px;" data-name="Text 1" data-block-id="37dd35114f6cc919c583d1bbdae53567" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 11;" data-placeholder-text="Text"><p><a href="https://fr.wikiversity.org/wiki/Trigonom%C3%A9trie/Relations_trigonom%C3%A9triques" target="_blank">lien vers formules complètes</a></p></div></div></section><section data-id="d0678dccb159ac8bfb38f4fe449987af"><div class="sl-block" data-block-type="text" style="height: auto; width: 815.689px; left: 56.073px; top: 68.4227px;" data-name="text-7903eb" data-block-id="d3286834c80972f9c9f2268f9216301b">
+								<div class="sl-block-style" style="z-index: 10; transform: rotate(0deg);"><div class="sl-block-content" style="z-index: 10; text-align: center;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+<p style="text-align:left">Unité de fréquences : </p>
+
+<p style="text-align:left"><strong>- fréquence </strong>(Hz): inverse de la période en s</p>
+
+<p style="text-align:left"><strong>- pulsation</strong>: 2π * fréquence</p>
+</div></div>
+							</div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 375px; top: 417.5px;" data-name="Math 1" data-block-id="7670ee353860f083c8516f06a26cde91"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 12;"><div class="math-input">x(t) = \sin{(2 \pi f \cdot t)}</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 185px; top: 417.5px;" data-name="Math 2" data-block-id="3c7be1bc315be5eec6f99fc8cc78a1ab"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 13;"><div class="math-input">t \in \mathbb{R}</div></div></div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 815.689px; left: 56.073px; top: 350px;" data-name="Text 2" data-block-id="d998b57cb5272d268b7b5f27e23e1bcb">
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);"><div class="sl-block-content" style="z-index: 11; text-align: center;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><p style="text-align:left">Équation d'une onde pure de fréquence <em>f</em> : </p></div></div>
+							</div></section><section data-id="6a658d2dc11e92bd0e2afd33bd013532"><div class="sl-block" data-block-type="iframe" style="width: 960px; height: 700px; left: 0px; top: 0px;" data-name="Iframe 1" data-block-id="d5de4139db0339941931da9d15a46a79"><div class="sl-block-content" style="z-index: 10;"><iframe allow="fullscreen; autoplay; accelerometer; geolocation; gyroscope; camera; encrypted-media; microphone; midi" data-preload="true" sandbox="allow-forms allow-scripts allow-popups allow-same-origin allow-pointer-lock allow-presentation" data-lazy-loaded="" data-src="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/cos_sin"></iframe></div></div></section><section data-id="6e0f449c5dcfac5e1d59d4597601222c"><div class="sl-block" data-block-type="text" style="height: auto; width: 815.689px; left: 56.073px; top: 91.423px;" data-name="text-7903eb" data-block-id="25aebfd87b98a142f4ddbcc299dc81eb">
+								<div class="sl-block-style" style="z-index: 10; transform: rotate(0deg);"><div class="sl-block-content" style="z-index: 10; text-align: center;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+<p style="text-align:left">La notion de <strong>phase</strong> est très importante pour les ondes. </p>
+
+<p style="text-align:left">La <strong>phase</strong> représente le "décalage temporel" de cette onde par rapport à une référence (en général par rapport à la phase nulle) </p>
+</div></div>
+							</div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 315px; top: 328.186px;" data-name="Math 1" data-block-id="457869af9b6f2a88a49786daabfd5f72"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 14;"><div class="math-input">x(t) = \sin{(2 \pi f \cdot t)}</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 125px; top: 328.186px;" data-name="Math 2" data-block-id="fed7655f8cce1de3ecbf02b0bae4b725"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 15;"><div class="math-input">t \in \mathbb{R}</div></div></div>
+<div class="sl-block" data-block-type="text" style="height: 39px; width: 816.689px; left: 55.073px; top: 283px;" data-name="Text 2" data-block-id="921a1711b55bd1df28d576908e4f53c9" data-text-layout="fixed">
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);"><div class="sl-block-content" style="z-index: 11; text-align: center;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><p style="text-align:left">Équation d'une onde pure de fréquence <em>f</em> : </p></div></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: 39px; width: 816.689px; left: 56.073px; top: 441.5px;" data-name="Text 3" data-block-id="1c8e271a0d3626f1bf6f62336c29953f" data-text-layout="fixed">
+								<div class="sl-block-style" style="z-index: 12; transform: rotate(0deg);"><div class="sl-block-content" style="z-index: 12; text-align: center;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><p style="text-align:left">Équation d'une onde pure de fréquence <em>f</em> et de phase <strong>𝜑</strong></p></div></div>
+							</div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 321px; top: 480.5px;" data-name="Math 3" data-block-id="2b7fd850a0144e9a2f77b9db81337e95"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 16;"><div class="math-input">x(t) = \sin{(2 \pi f \cdot t + \varphi)}</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 131px; top: 480.5px;" data-name="Math 4" data-block-id="b3a944428a84550ed8c9403f5103c8fe"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 17;"><div class="math-input">t \in \mathbb{R}</div></div></div></section><section data-id="f2b138e5903e8d1d5286c668aa0316d1"><div class="sl-block" data-block-type="iframe" data-name="Iframe 1" style="width: 909px; height: 598px; left: 25.5px; top: 51px;" data-block-id="d877f8ba8fa645513520e17dabfe92a1"><div class="sl-block-content" style="z-index: 10;"><iframe allow="fullscreen; autoplay; accelerometer; geolocation; gyroscope; camera; encrypted-media; microphone; midi" data-preload="true" sandbox="allow-forms allow-scripts allow-popups allow-same-origin allow-pointer-lock allow-presentation" data-lazy-loaded="" data-src="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/phase"></iframe></div></div></section><section data-id="857f3048cf6a1330fd2814ecdaca2a78"><div class="sl-block" data-block-type="iframe" data-name="Iframe 1" style="width: 960px; height: 700px; left: 0px; top: 0px;" data-block-id="ae7c4c06678b8c2099ce8b0cf3e6bf9c"><div class="sl-block-content" style="z-index: 10;"><iframe allow="fullscreen; autoplay; accelerometer; geolocation; gyroscope; camera; encrypted-media; microphone; midi" data-preload="true" sandbox="allow-forms allow-scripts allow-popups allow-same-origin allow-pointer-lock allow-presentation" data-lazy-loaded="" data-src="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/phase_sum"></iframe></div></div></section><section data-id="e4f9b2fc7884e12bcfbbe133a8fe9b64"><div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 128.5px; top: 148px;" data-name="Math 1" data-block-id="2bf7ec07457e2aa780c85bca00d89fcf"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 10; font-size: 72%;"><div class="math-input">\begin{align*}
+\cos(a) + \cos(b) &amp;= 2\cos\Big(\frac{a + b}{2}\Big) \cos \Big(\frac{a - b}{2} \Big) \\
+\sin(a) - \sin(b) &amp;= 2\cos\Big(\frac{a + b}{2}\Big) \cos \Big(\frac{a - b}{2} \Big)
+\end{align*}</div></div></div>
+<div class="sl-block" data-block-type="text" style="width: 826px; height: 52.5px; left: 54px; top: 412.5px;" data-name="Text 1" data-block-id="6e3a9f9dd5fceeaa6571275f9449077f" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 11;" data-placeholder-text="Text"><p>...  que se passe-t-il pour des ondes quand a et b sont très proches? </p></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 80px; top: 337.75px;" data-name="Math 2" data-block-id="af5443de4e4f51fb82bc6c3b5593b8f8"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 14;"><div class="math-input">b = a + \delta</div></div></div>
+<div class="sl-block" data-block-type="text" style="width: 115px; height: 48.5px; left: 312px; top: 350px;" data-name="Text 2" data-text-layout="fixed" data-block-id="08ef81f47336b894cad2a8b15bb79eee"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 13;" data-placeholder-text="Text"><p>(𝛿 petit)</p></div></div></section><section data-id="4207c396d699168f96431f0c373f40b9"><div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 50.5px; top: 235px;" data-name="Math 3" data-block-id="22663efe1ec4f9b318e0d8a981d3796a"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 11; font-size: 72%;"><div class="math-input">\begin{align*}
+\cos(\omega_1 t) + \cos(\omega_2 t) &amp;= 2\cos\Bigg(\frac{(\omega_1 + \omega_2)t}{2}\Bigg) \cos \Bigg(\frac{\delta t}{2} \Bigg) \\
+\end{align*}</div></div></div>
+<div class="sl-block" data-block-type="shape" data-name="Shape 1" style="width: 165px; height: 157px; left: 696px; top: 209.5px;" data-block-id="5542dc7c31457e7624fb1fca9de41a9f"><div class="sl-block-content" data-shape-type="rect" data-shape-fill-color="rgba(0, 0, 0, 0)" data-shape-stretch="true" style="z-index: 12;" data-shape-stroke-color="#ff0000" data-shape-stroke-width="5px"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100%" height="100%" preserveaspectratio="none" viewbox="0 0 165 157"><defs><clippath id="shape-mask-1-1769791113807"><rect width="165" height="157" rx="0" ry="0" fill="rgba(0, 0, 0, 0)" stroke="#ff0000" stroke-width="10"></rect></clippath></defs><rect width="165" height="157" rx="0" ry="0" class="shape-element" fill="rgba(0, 0, 0, 0)" stroke="#ff0000" stroke-width="10" clip-path="url(#shape-mask-1-1769791113807)"></rect></svg></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 120px; top: 173px;" data-name="Math 1" data-block-id="fb90861647949544cb2c665a8306427a"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 13; font-size: 79%;"><div class="math-input">\omega_2 = \omega_1 - \delta</div></div></div>
+<div class="sl-block" data-block-type="text" style="width: 32px; height: 37px; left: 75px; top: 182.5px;" data-name="Text 1" data-block-id="9267d6a909016335c3393b32f16494cb" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 16;" data-placeholder-text="Text"><p>si </p></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 635px; top: 389px;" data-name="Line 1" data-block-id="886c1bdd3c37840d87d9cbddaa8ff00f"><div class="sl-block-content" data-line-x1="82" data-line-y1="0" data-line-x2="0" data-line-y2="108" data-line-color="#ff0000" data-line-width="5px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 17;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="82" height="108" viewbox="0 0 82 108"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#ff0000" stroke-width="5" stroke-linecap="round" d="M82 0 L3.024 104.018"></path><path stroke="#ff0000" stroke-width="5" d="M 16.826 104.443 L 1.063 106.6 L -1.094 90.837 L 1.063 106.6" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M82 0 L0 108"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M82 0 L0 108"></path></svg></div></div>
+<div class="sl-block" data-block-type="text" style="width: 600px; height: auto; left: 178.5px; top: 504px;" data-name="Text 2" data-block-id="9a0727a436e0ab4659a3ed97866cdf55"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 19; color: rgb(255, 0, 0);" data-placeholder-text="Text"><p>si inférieur à 20Hz, ça devient une modulation d'amplitude! </p></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 334px; top: 158.5px;" data-name="Line 2" data-block-id="e198b1002da6f59603a8262736cd311d"><div class="sl-block-content" data-line-x1="0" data-line-y1="29" data-line-x2="60" data-line-y2="0" data-line-color="#000000" data-line-width="3px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 18;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="60" height="29" viewbox="0 0 60 29"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="3" stroke-linecap="round" d="M0 29 L57.299 1.306"></path><path stroke="#000000" stroke-width="3" d="M 50.307 -2.812 L 59.321 0.328 L 56.181 9.343 L 59.321 0.328" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 29 L60 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 29 L60 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="text" style="width: 435px; height: 38.75px; left: 407px; top: 134.25px;" data-name="Text 3" data-text-layout="fixed" data-block-id="c663719fcf7b156f9be648eb56dc74e3"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 10;" data-placeholder-text="Text"><p><span style="color:rgb(0, 0, 0)">𝛿 : </span>différence entre      et </p></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 679px; top: 133.625px;" data-name="Math 4" data-block-id="75331ba1389603bc5b3949994eb83d0d"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 14; font-size: 60%;"><div class="math-input">\omega_1
+
+</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 754px; top: 133.625px;" data-name="Math 5" data-block-id="6017ce4e67a5e0db3b5cb5424eef3ef8"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 15; font-size: 60%;"><div class="math-input">\omega_2
+
+</div></div></div></section><section data-id="851b2c71fd50649372b6d2a322ffa7a0"><div class="sl-block" data-block-type="iframe" data-name="Iframe 1" style="width: 960px; height: 700px; left: 0px; top: 0px;" data-block-id="eb9bee2b6d429072b070db325208badd"><div class="sl-block-style" style="z-index: 10; transform: rotate(0deg);"><div class="sl-block-content" style="z-index: 10;"><iframe allow="fullscreen; autoplay; accelerometer; geolocation; gyroscope; camera; encrypted-media; microphone; midi" data-preload="true" sandbox="allow-forms allow-scripts allow-popups allow-same-origin allow-pointer-lock allow-presentation" data-lazy-loaded="" data-src="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/cos_prod"></iframe></div></div></div></section><section data-id="f9a21728ae5ce4ef540252cd03cba667"><div class="sl-block" data-block-type="iframe" data-name="Iframe 1" style="width: 960px; height: 700px; left: 0px; top: 0px;" data-block-id="501ac71678e8161df35ef99f7bb46fa5"><div class="sl-block-style" style="z-index: 10; transform: rotate(0deg);"><div class="sl-block-content" style="z-index: 10;"><iframe allow="fullscreen; autoplay; accelerometer; geolocation; gyroscope; camera; encrypted-media; microphone; midi" data-preload="true" sandbox="allow-forms allow-scripts allow-popups allow-same-origin allow-pointer-lock allow-presentation" data-lazy-loaded="" data-src="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/cos_prod_audio"></iframe></div></div></div></section><section data-id="38f29976303ed3e1ee4e5ead0a819f21"><div class="sl-block" data-block-type="iframe" data-name="Iframe 1" style="width: 617px; height: 529px; left: 34px; top: 29px;" data-block-id="4bed9335f8d03e560e06d9268df57de8"><div class="sl-block-content" style="z-index: 10;"><iframe allow="fullscreen; autoplay; accelerometer; geolocation; gyroscope; camera; encrypted-media; microphone; midi" data-preload="true" sandbox="allow-forms allow-scripts allow-popups allow-same-origin allow-pointer-lock allow-presentation" data-lazy-loaded="" data-src="https://fr.wikipedia.org/wiki/Formule_de_trigonom%C3%A9trie"></iframe></div></div>
+<div class="sl-block" data-block-type="text" style="width: 752px; height: 88.75px; left: 104px; top: 578.25px;" data-name="Text 3" data-text-layout="fixed" data-block-id="8b09303d209607b51581d6e4495d9786"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 11;" data-placeholder-text="Text"><p>... pas que des délires mathématiques! ça a influence fondamentale sur l'acoustique et la musique</p></div></div></section><section data-id="d61693706674953160cc0450616927b1"><div class="sl-block" data-block-type="text" style="width: 600px; height: auto; left: 71px; top: 104.5px;" data-name="Text 1" data-block-id="ff50dbe1690066ab71f53ccd2ebeb43d"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 10; font-size: 124%;" data-placeholder-text="Text"><p><strong>annulation de phase</strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 727px; height: 155px; left: 142px; top: 173.5px;" data-name="Text 2" data-block-id="e648e141b202488114f8c55d874cfaeb" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 12;" data-placeholder-text="Text">
+<p>superpositon d'ondes de même fréquence en opposition de phase (𝜑=90°;𝜋 rad) </p>
+
+<p><strong>attenuation, voir suppression d'amplitude</strong></p>
+</div></div>
+<div class="sl-block" data-block-type="text" style="width: 600px; height: auto; left: 71px; top: 380.5px;" data-name="Text 3" data-block-id="97d6f69c861b1be7d7fcb78df3c6e273"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 11; font-size: 124%;" data-placeholder-text="Text"><p><strong>battements</strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 727px; height: 155px; left: 142px; top: 439.5px;" data-name="Text 4" data-text-layout="fixed" data-block-id="2d97149283897c64405a36362f3ad509"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 13;" data-placeholder-text="Text">
+<p>superposition d'ondes de fréquences proches</p>
+
+<p>apparition d'une<strong> onde de fréquence égale à la moyenne des deux fréquences, </strong>modulée par une<strong> onde de basse fréquence (LFO)</strong></p>
+</div></div></section><section data-id="b8c3f461fad36ff40d7c8b31d20f8ea0"><div class="sl-block" data-block-type="text" style="width: 752px; height: 88.75px; left: 28px; top: 39.25px;" data-name="Text 3" data-text-layout="fixed" data-block-id="724c4ec53d102c125105f622052e5ca5"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 10;" data-placeholder-text="Text"><p>implications directes : <strong>mixage stéréo</strong></p></div></div>
+<div class="sl-block" data-block-type="image" style="width: 71.114px; height: 71.114px; left: 184.171px; top: 273.443px; min-width: 1px; min-height: 1px;" data-name="Image 2" data-block-id="0655fc791733943fc2bc72e956d2a48a"><div class="sl-block-content" style="z-index: 16;"><img class="" data-natural-width="512" data-natural-height="512" data-lazy-loaded="" data-src="introduction-audionumerique-2026/90347290da84886bc3764e09e494f8d3.png"></div></div>
+<div class="sl-block" data-block-type="image" style="width: 71.114px; height: 71.114px; left: 184.171px; top: 355.443px; min-width: 1px; min-height: 1px;" data-name="Image 3" data-block-id="d605814dbf28253332591f012de6a502"><div class="sl-block-content" style="z-index: 19;"><img class="" data-natural-width="512" data-natural-height="512" data-lazy-loaded="" data-src="introduction-audionumerique-2026/90347290da84886bc3764e09e494f8d3.png"></div></div>
+<div class="sl-block" data-block-type="text" style="width: 56px; height: 40.75px; left: 191.728px; top: 232.693px;" data-name="Text 4" data-text-layout="fixed" data-block-id="c00254ca5dbbb29063ab5ab0faebed59"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 11;" data-placeholder-text="Text"><p><strong>left</strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 81.272px; height: 39.547px; left: 179.092px; top: 426.557px;" data-name="Text 5" data-text-layout="fixed" data-block-id="3496611127ad1aaf71bb1fa48e727b9a"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 15;" data-placeholder-text="Text"><p><strong>right</strong></p></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 289px; top: 306.104px;" data-name="Line 1" data-block-id="b88d81ee7eb1675c7f80a63bcb179576"><div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="96.11900000000003" data-line-y2="95" data-line-color="#000000" data-line-width="3px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 20;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="96.11900000000003" height="95" viewbox="0 0 96.11900000000003 95"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="3" stroke-linecap="round" d="M0 0 L93.985 92.891"></path><path stroke="#000000" stroke-width="3" d="M 95.527 84.924 L 95.583 94.47 L 86.037 94.526 L 95.583 94.47" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L96.119 95"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L96.119 95"></path></svg></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 289.119px; top: 306.104px;" data-name="Line 2" data-block-id="9661528f9363f2f4336be2ad78e05055"><div class="sl-block-content" data-line-x1="0" data-line-y1="84.89599999999996" data-line-x2="96" data-line-y2="0" data-line-color="#000000" data-line-width="3px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 21;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="96" height="84.89599999999996" viewbox="0 0 96 84.89599999999996"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="3" stroke-linecap="round" d="M0 84.896 L93.753 1.987"></path><path stroke="#000000" stroke-width="3" d="M 85.907 -0.086 L 95.435 0.499 L 94.85 10.027 L 95.435 0.499" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 84.896 L96 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 84.896 L96 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 96.171px; top: 283.104px;" data-name="Math 1" data-block-id="9f54e9822a964637e8233590ca1b872c"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 22; font-size: 61%;"><div class="math-input">x_{L}(t)</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 96.171px; top: 368.104px;" data-name="Math 2" data-block-id="2ca480bca4fc6711839e38fff5b7d99c"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 25; font-size: 61%;"><div class="math-input">x_{R}(t)</div></div></div>
+<div class="sl-block" data-block-type="image" style="width: 71.114px; height: 71.114px; left: 433px; top: 273.443px; min-width: 1px; min-height: 1px;" data-name="Image 4" data-block-id="1b9709aae59d57e779122b04d79d96a4"><div class="sl-block-content" style="z-index: 17;"><img class="" data-natural-width="512" data-natural-height="512" data-lazy-loaded="" data-src="introduction-audionumerique-2026/90347290da84886bc3764e09e494f8d3.png"></div></div>
+<div class="sl-block" data-block-type="text" style="width: 76px; height: 40.75px; left: 433px; top: 232.693px;" data-name="Text 6" data-text-layout="fixed" data-block-id="01981d72406fcf6cfda7b9cbbf4a5df1"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 12;" data-placeholder-text="Text"><p><strong>mid</strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 76px; height: 40.75px; left: 433px; top: 232.693px;" data-name="Text 7" data-text-layout="fixed" data-block-id="2e0bd72df93f413a35ebd96f34a78726"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 13;" data-placeholder-text="Text"><p><strong>mid</strong></p></div></div>
+<div class="sl-block" data-block-type="image" style="width: 71.114px; height: 71.114px; left: 433px; top: 353.604px; min-width: 1px; min-height: 1px;" data-name="Image 5" data-block-id="5be3f72d6fff63f914ff185986234316"><div class="sl-block-content" style="z-index: 18;"><img class="" data-natural-width="512" data-natural-height="512" data-lazy-loaded="" data-src="introduction-audionumerique-2026/90347290da84886bc3764e09e494f8d3.png"></div></div>
+<div class="sl-block" data-block-type="text" style="width: 76px; height: 40.75px; left: 433px; top: 426.557px;" data-name="Text 8" data-text-layout="fixed" data-block-id="926b6933907a11bb1e4c7ae084e5815d"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 14;" data-placeholder-text="Text"><p><strong>side</strong></p></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 557px; top: 265.104px;" data-name="Math 3" data-block-id="1c8fcc2057944150f6f21a62bd821663"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 23; font-size: 61%;"><div class="math-input">x_{M}(t) = \frac{x_L(t) + x_R(t)}{2}
+</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 561px; top: 357.161px;" data-name="Math 4" data-block-id="9aae52c73783746034a43319bc49fe8e"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 24; font-size: 61%;"><div class="math-input">x_{S}(t) = \frac{x_L(t) - x_R(t)}{2}
+</div></div></div></section><section data-id="a243d21558afeda28612754393d1ba10"><div class="sl-block" data-block-type="text" style="width: 752px; height: 88.75px; left: 28px; top: 39.25px;" data-name="Text 3" data-text-layout="fixed" data-block-id="4391d9a6ffb8afdddb881da753d32f1d"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 10;" data-placeholder-text="Text"><p>implications directes : <strong>mixage stéréo</strong></p></div></div>
+<div class="sl-block" data-block-type="image" style="width: 71.114px; height: 71.114px; left: 184.171px; top: 273.443px; min-width: 1px; min-height: 1px;" data-name="Image 2" data-block-id="39a6a72926e4a9b4cd64fbe15e3a65df"><div class="sl-block-content" style="z-index: 17;"><img class="" data-natural-width="512" data-natural-height="512" data-lazy-loaded="" data-src="introduction-audionumerique-2026/90347290da84886bc3764e09e494f8d3.png"></div></div>
+<div class="sl-block" data-block-type="image" style="width: 71.114px; height: 71.114px; left: 184.171px; top: 355.443px; min-width: 1px; min-height: 1px;" data-name="Image 3" data-block-id="3e2740df4f5b078e96eecabcf2cb6b44"><div class="sl-block-style" style="z-index: 18; opacity: 0.29;"><div class="sl-block-content" style="z-index: 18;"><img class="" data-natural-width="512" data-natural-height="512" data-lazy-loaded="" data-src="introduction-audionumerique-2026/90347290da84886bc3764e09e494f8d3.png"></div></div></div>
+<div class="sl-block" data-block-type="text" style="width: 56px; height: 40.75px; left: 191.728px; top: 232.693px;" data-name="Text 4" data-text-layout="fixed" data-block-id="82cd2997b6979b0bacff37577b601400"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 12;" data-placeholder-text="Text"><p><strong>left</strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 81.272px; height: 39.547px; left: 179.092px; top: 426.557px;" data-name="Text 5" data-text-layout="fixed" data-block-id="41c2cdf9c73592566375a1836ac81d2a"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 16;" data-placeholder-text="Text"><p><strong>right</strong></p></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; left: 289px; top: 306.104px;" data-name="Line 1" data-block-id="ddef8803e1216811263fd238e0726a27"><div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="96.11900000000003" data-line-y2="95" data-line-color="#000000" data-line-width="3px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 20;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="96.11900000000003" height="95" viewbox="0 0 96.11900000000003 95"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="3" stroke-linecap="round" d="M0 0 L93.985 92.891"></path><path stroke="#000000" stroke-width="3" d="M 95.527 84.924 L 95.583 94.47 L 86.037 94.526 L 95.583 94.47" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L96.119 95"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L96.119 95"></path></svg></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; left: 289.119px; top: 306.104px;" data-name="Line 2" data-block-id="14dd0405ce9ece0266e57bafe8d93593"><div class="sl-block-content" data-line-x1="0" data-line-y1="84.89599999999996" data-line-x2="96" data-line-y2="0" data-line-color="#000000" data-line-width="3px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 21;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="96" height="84.89599999999996" viewbox="0 0 96 84.89599999999996"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="3" stroke-linecap="round" d="M0 84.896 L93.753 1.987"></path><path stroke="#000000" stroke-width="3" d="M 85.907 -0.086 L 95.435 0.499 L 94.85 10.027 L 95.435 0.499" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 84.896 L96 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 84.896 L96 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 96.171px; top: 283.104px;" data-name="Math 1" data-block-id="0fbdc3166f06baa2ca75a743602cb81a"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 24; font-size: 61%;"><div class="math-input">x_{L}(t)</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 96.171px; top: 368.104px;" data-name="Math 2" data-block-id="4d17a411640f42961cb36c6eaff8bda9"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 27; font-size: 61%;"><div class="math-input">x_{R}(t)</div></div></div>
+<div class="sl-block" data-block-type="text" style="width: 76px; height: 40.75px; left: 433px; top: 232.693px;" data-name="Text 6" data-text-layout="fixed" data-block-id="958fe6786b948fa5929cc3c85930ab3d"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 13;" data-placeholder-text="Text"><p><strong>mid</strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 76px; height: 40.75px; left: 433px; top: 232.693px;" data-name="Text 7" data-text-layout="fixed" data-block-id="dad4c6a440895a0899a7ec07034b2b47"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 14;" data-placeholder-text="Text"><p><strong>mid</strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 76px; height: 40.75px; left: 433px; top: 426.557px;" data-name="Text 8" data-text-layout="fixed" data-block-id="7e360eaa0cf3b4e80a5eeecfd25b42c7"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 15;" data-placeholder-text="Text"><p><strong>side</strong></p></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 73.119px; top: 505.161px;" data-name="Math 3" data-block-id="5e7f10c13621486a101337f8806162d0"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 25; font-size: 61%;"><div class="math-input">x_R(t) = \cos(\omega t + \varphi)</div></div></div>
+<div class="sl-block" data-block-type="image" style="width: 71.114px; height: 71.114px; left: 191.25px; top: 356.443px; min-width: 1px; min-height: 1px;" data-name="Image 6" data-block-id="7c855275e3abfbf4604fdeae5f249656"><div class="sl-block-content" style="z-index: 19;"><img class="" data-natural-width="512" data-natural-height="512" data-lazy-loaded="" data-src="introduction-audionumerique-2026/90347290da84886bc3764e09e494f8d3.png"></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 218.364px; top: 357.161px;" data-name="Line 3" data-block-id="a494a8e42eca7c2fd155c2713cfc747c"><div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="44.01136216933077" data-line-y2="0" data-line-color="#000000" data-line-width="3px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 28;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="44.01136216933077" height="1" viewbox="0 0 44.01136216933077 1"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="3" stroke-linecap="round" d="M0 0 L41.011 0"></path><path stroke="#000000" stroke-width="3" d="M 36.508 -6.75 L 43.258 0 L 36.508 6.75 L 43.258 0" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L44.011 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L44.011 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 115.364px; top: 164.104px;" data-name="Math 4" data-block-id="d6372ef1bd13c7b114a729f3086fee99"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 26; font-size: 61%;"><div class="math-input">x_L(t) = \cos(\omega t)</div></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; left: 426.114px; top: 308px;" data-name="Line 4" data-block-id="5465d95944784209df6e009b497fce06"><div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="78.00006933330252" data-line-y2="0" data-line-color="#000000" data-line-width="6px" data-line-start-type="none" data-line-end-type="none" data-line-style="solid-rounded" style="z-index: 22;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="78.00006933330252" height="1" viewbox="0 0 78.00006933330252 1"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="6" stroke-linecap="round" d="M0 0 L78 0"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L78 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L78 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; left: 426.114px; top: 390px;" data-name="Line 5" data-block-id="20b08d31f585255e1076a7485b3b7d47"><div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="78.00006933330252" data-line-y2="0" data-line-color="#000000" data-line-width="6px" data-line-start-type="none" data-line-end-type="none" data-line-style="solid-rounded" style="z-index: 23;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="78.00006933330252" height="1" viewbox="0 0 78.00006933330252 1"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="6" stroke-linecap="round" d="M0 0 L78 0"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L78 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L78 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="text" style="width: 320px; height: 58.75px; left: 576px; top: 327.786px;" data-name="Text 9" data-text-layout="fixed" data-block-id="fcfb4429dd81ba42ffb6dee8b390701c"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 11; color: rgb(255, 0, 0);" data-placeholder-text="Text"><p><strong>annulation de phase!</strong></p></div></div></section><section data-id="a522bd5792ae0a8349a4e6effb102379"><div class="sl-block" data-block-type="iframe" style="width: 960px; height: 543px; left: 0px; top: 78.5px;" data-name="Iframe 1" data-block-id="1de2b90279530f650ee7631c962f5a65"><div class="sl-block-content" style="z-index: 11;"><iframe allow="fullscreen; autoplay; accelerometer; geolocation; gyroscope; camera; encrypted-media; microphone; midi" data-preload="true" sandbox="allow-forms allow-scripts allow-popups allow-same-origin allow-pointer-lock allow-presentation" data-lazy-loaded="" data-src="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/space"></iframe></div></div></section><section data-id="1e17228cc23f0f4093b33266e39dae96"><div class="sl-block" data-block-type="text" style="width: 751px; height: 45.75px; left: 28px; top: 39.25px;" data-name="Text 3" data-text-layout="fixed" data-block-id="b9b4c16cad77add411767d713dc0a8fe"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 10;" data-placeholder-text="Text"><p>implications directes : <strong>mixage live</strong></p></div></div>
+<div class="sl-block" data-block-type="image" style="width: 696.496px; height: 431px; left: 140px; top: 134.5px; min-width: 1px; min-height: 1px;" data-name="Image 1" data-block-id="a4f0321e95dd8b7247ea967b4bffc17e"><div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="808" data-natural-height="500" data-lazy-loaded="" data-src="introduction-audionumerique-2026/4c62df3d32f8d8092eb7d356a2b1c4ec.png"></div></div>
+<div class="sl-block" data-block-type="text" style="width: 751px; height: 45.75px; left: 53px; top: 615.5px;" data-name="Text 4" data-text-layout="fixed" data-block-id="b74747e8f3e5bdf08fd32d8fca025062"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 11;" data-placeholder-text="Text"><p>déphasage pour scènes profondes : <a href="domkirke.github.io/p8/introduction_audionumerique/seance_2/stage" target="_top">demo</a></p></div></div></section><section data-id="4570bb78ac6de1f6df37bdc7f7e40108"><div class="sl-block" data-block-type="text" style="width: 751px; height: 45.75px; left: 28px; top: 41.25px;" data-name="Text 3" data-text-layout="fixed" data-block-id="96496ae01ecfb7cb0c811490bb602b8f"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 10;" data-placeholder-text="Text"><p>le bon côté des choses : le <strong>contrôle actif</strong></p></div></div>
+<div class="sl-block" data-block-type="image" style="width: 148px; height: 148px; left: 361px; top: 116px; min-width: 1px; min-height: 1px;" data-name="Image 1" data-block-id="b995daad26c3db766d849efe3aac96ea"><div class="sl-block-content" style="z-index: 13;"><img class="" data-natural-width="1350" data-natural-height="1350" data-lazy-loaded="" data-src="introduction-audionumerique-2026/d1d8d510f5b40d1b2af3adc4d586d409.png"></div></div>
+<div class="sl-block" data-block-type="text" style="width: 162px; height: 40.4107px; left: 468px; top: 281.313px;" data-name="Text 4" data-text-layout="fixed" data-block-id="80ce4ae429130e3b7421a50a53359301"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 11; font-size: 103%;" data-placeholder-text="Text"><p>musique<br>
+ </p></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 435px; top: 251.643px;" data-name="Line 1" data-block-id="35c9572a1afccd719fa5965dd30eadbe"><div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="7.71746139406988e-15" data-line-y2="126.03570922560003" data-line-color="#000000" data-line-width="6px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 14;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="1" height="126.03570922560003" viewbox="0 0 1 126.03570922560003"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="6" stroke-linecap="round" d="M0 0 L0 120.036"></path><path stroke="#000000" stroke-width="6" d="M 13.5 110.276 L 0 123.776 L -13.5 110.276 L 0 123.776" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L0 126.036"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L0 126.036"></path></svg></div></div>
+<div class="sl-block" data-block-type="image" style="width: 179.305px; height: 153px; left: 345.347px; top: 407px; min-width: 1px; min-height: 1px;" data-name="Image 2" data-block-id="5579dc9e1b6a726ed91a68933715b5ea"><div class="sl-block-content" style="z-index: 16;"><img class="" data-natural-width="1002" data-natural-height="855" data-lazy-loaded="" data-src="introduction-audionumerique-2026/6cbcce7d324f7fef008558fb35e28461.png"></div></div>
+<div class="sl-block" data-block-type="image" style="width: 128.182px; height: 47px; left: 186px; top: 436.5px; min-width: 1px; min-height: 1px;" data-name="Image 3" data-block-id="48b6f94c7ec0eec0d9bbbc6118b712ca"><div class="sl-block-content" style="z-index: 17;"><img class="" data-natural-width="850" data-natural-height="519" data-crop-x="0.088235" data-crop-y="0.651252" data-crop-width="0.423529" data-crop-height="0.254335" style="left: -27px; top: -120px; width: 303px; height: 185px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/0c7d20e5133aad7a39ddd55e3b69305a.png"></div></div>
+<div class="sl-block" data-block-type="text" style="width: 132px; height: 42.75px; left: 201px; top: 494.268px;" data-name="Text 5" data-text-layout="fixed" data-block-id="b37836b13e2d230a0a165e1ad59deca3"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 12;" data-placeholder-text="Text"><p>bruit<br>
+ambiant</p></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 230.091px; top: 226.036px;" data-name="Line 2" data-block-id="837283d2492219ccb42f065b30bd8ebd"><div class="sl-block-content" data-line-x1="0" data-line-y1="196.964" data-line-x2="166" data-line-y2="0" data-line-color="#000000" data-line-width="6px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 15;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="166" height="196.964" viewbox="0 0 166 196.964"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="6" stroke-linecap="round" d="M0 196.964 L162.133 4.588"></path><path stroke="#000000" stroke-width="6" d="M 145.521 3.35 L 164.544 1.728 L 166.167 20.75 L 164.544 1.728" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 196.964 L166 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 196.964 L166 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="text" style="width: 427px; height: 45.6787px; left: 468px; top: 321.724px;" data-name="Text 1" data-block-id="bb5ae7dc7d6eeee1210d932f16ae8a44" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 18; color: rgb(0, 0, 0);" data-placeholder-text="Text"><p><strong><span style="color:rgb(0, 0, 0); font-size:30.9px">+ bruit ambiant en opposition de phase</span></strong></p></div></div></section><section data-id="96c0757dfd76857b15f0c0fb3bc208bc"><div class="sl-block" data-block-type="image" style="width: 338px; height: 338px; left: 65.4248px; top: 112.5px; min-width: 1px; min-height: 1px;" data-name="Image 1" data-block-id="a95442efe12c79d746c29aeded47b934"><div class="sl-block-content" style="z-index: 10;"><img class="" data-natural-width="1350" data-natural-height="1350" data-lazy-loaded="" data-src="introduction-audionumerique-2026/92d1616ef1d74c625409f3ac7d9e3dd5.png"></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 51.25px; top: 423.5px;" data-name="Line 1" data-block-id="3b4c9c59eebda6bafd2082fd78845d11"><div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="366.3495598468763" data-line-y2="0" data-line-color="#000000" data-line-width="6px" data-line-start-type="none" data-line-end-type="none" data-line-style="solid-rounded" style="z-index: 11;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="366.3495598468763" height="1" viewbox="0 0 366.3495598468763 1"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="6" stroke-linecap="round" d="M0 0 L366.35 0"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L366.35 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L366.35 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 51.25px; top: 409.5px;" data-name="Line 2" data-block-id="3305dd7e239bdd72446e826d38eccf92"><div class="sl-block-style" style="z-index: 12; opacity: 0.32;"><div class="sl-block-content" data-line-x1="0" data-line-y1="30" data-line-x2="366.3495598468763" data-line-y2="0" data-line-color="#000000" data-line-width="6px" data-line-start-type="none" data-line-end-type="none" data-line-style="solid-rounded" style="z-index: 12;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="366.3495598468763" height="30" viewbox="0 0 366.3495598468763 30"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="6" stroke-linecap="round" d="M0 30 L366.35 0"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 30 L366.35 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 30 L366.35 0"></path></svg></div></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 58.25px; top: 409.5px;" data-name="Line 3" data-block-id="55ba3d0a3b05acdc96afc22c3b72eacc"><div class="sl-block-style" style="z-index: 13; opacity: 0.32;"><div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="359.3495598468763" data-line-y2="30" data-line-color="#000000" data-line-width="6px" data-line-start-type="none" data-line-end-type="none" data-line-style="solid-rounded" style="z-index: 13;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="359.3495598468763" height="30" viewbox="0 0 359.3495598468763 30"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="6" stroke-linecap="round" d="M0 0 L359.35 30"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L359.35 30"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L359.35 30"></path></svg></div></div></div>
+<div class="sl-block" data-block-type="image" style="width: 69px; height: 69px; left: 199.925px; top: 518.5px; min-width: 1px; min-height: 1px;" data-name="Image 2" data-block-id="84005017ff5e78f3261b117cff3e2a25"><div class="sl-block-content" style="z-index: 14;"><img class="" data-natural-width="1350" data-natural-height="1350" data-lazy-loaded="" data-src="introduction-audionumerique-2026/1b29fd113bf5cfde412ff71dc0f32f21.png"></div></div>
+<div class="sl-block" data-block-type="image" style="width: 97px; height: 97px; left: 185.925px; top: 439.5px; min-width: 1px; min-height: 1px;" data-name="Image 3" data-block-id="ba327323b1a0cb209345374885eb619a"><div class="sl-block-content" style="z-index: 17;"><img class="" data-natural-width="1024" data-natural-height="1024" data-lazy-loaded="" data-src="introduction-audionumerique-2026/2870d2d46889b6eae7d1d4e4a0654dcb.png"></div></div>
+<div class="sl-block" data-block-type="image" style="width: 250px; height: 276px; left: 579.25px; top: 203.5px; min-width: 1px; min-height: 1px;" data-name="Image 4" data-block-id="bd3c2b13713da115879267740c17522d"><div class="sl-block-content" style="z-index: 18;"><img class="" data-natural-width="1350" data-natural-height="1350" data-crop-x="0.047101" data-crop-y="0" data-crop-width="0.905797" data-crop-height="1" style="left: -13px; top: 0px; width: 276px; height: 276px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/bcdfee19aa47631a353fe97297c130ee.png"></div></div>
+<div class="sl-block" data-block-type="image" style="width: 146px; height: 146px; left: 535.25px; top: 287.5px; min-width: 1px; min-height: 1px;" data-name="Image 5" data-block-id="5afacfd0788eda044afee1a43bbd25dd"><div class="sl-block-style" style="z-index: 19; transform: rotate(90deg);"><div class="sl-block-content" style="z-index: 19;"><img class="" data-natural-width="1350" data-natural-height="1350" data-lazy-loaded="" data-src="introduction-audionumerique-2026/84cec1dd5fd009d525d7fd5ff38cd7e6.png"></div></div></div>
+<div class="sl-block" data-block-type="image" style="width: 146px; height: 146px; left: 579.25px; top: 248.5px; min-width: 1px; min-height: 1px;" data-name="Image 6" data-block-id="371d3e7a484fe46d15650762e385714b"><div class="sl-block-style" style="z-index: 21; transform: rotate(90deg);"><div class="sl-block-content" style="z-index: 21;"><img class="" data-natural-width="1350" data-natural-height="1350" data-lazy-loaded="" data-src="introduction-audionumerique-2026/84cec1dd5fd009d525d7fd5ff38cd7e6.png"></div></div></div>
+<div class="sl-block" data-block-type="image" style="width: 146px; height: 146px; left: 683.25px; top: 255.5px; min-width: 1px; min-height: 1px;" data-name="Image 7" data-block-id="7f44cc5d09aa70e4cc86d50486dd09e4"><div class="sl-block-style" style="z-index: 22; transform: rotate(90deg);"><div class="sl-block-content" style="z-index: 22;"><img class="" data-natural-width="1350" data-natural-height="1350" data-lazy-loaded="" data-src="introduction-audionumerique-2026/84cec1dd5fd009d525d7fd5ff38cd7e6.png"></div></div></div>
+<div class="sl-block" data-block-type="image" style="width: 146px; height: 146px; left: 734.25px; top: 287.5px; min-width: 1px; min-height: 1px;" data-name="Image 8" data-block-id="da014d8f4639fa8f7e5690eb8d5e7ce4"><div class="sl-block-style" style="z-index: 23; transform: rotate(90deg);"><div class="sl-block-content" style="z-index: 23;"><img class="" data-natural-width="1350" data-natural-height="1350" data-lazy-loaded="" data-src="introduction-audionumerique-2026/84cec1dd5fd009d525d7fd5ff38cd7e6.png"></div></div></div>
+<div class="sl-block" data-block-type="image" style="width: 69px; height: 69px; left: 506.75px; top: 315.5px; min-width: 1px; min-height: 1px;" data-name="Image 9" data-block-id="def3d24ae03b70ca0cbfb636eba02b1a"><div class="sl-block-content" style="z-index: 15;"><img class="" data-natural-width="1350" data-natural-height="1350" data-lazy-loaded="" data-src="introduction-audionumerique-2026/1b29fd113bf5cfde412ff71dc0f32f21.png"></div></div>
+<div class="sl-block" data-block-type="image" style="width: 146px; height: 146px; left: 535.25px; top: 287.5px; min-width: 1px; min-height: 1px;" data-name="Image 10" data-block-id="97a81b1b3aa8e965d694724647cd461b"><div class="sl-block-style" style="z-index: 20; transform: rotate(90deg);"><div class="sl-block-content" style="z-index: 20;"><img class="" data-natural-width="1350" data-natural-height="1350" data-lazy-loaded="" data-src="introduction-audionumerique-2026/84cec1dd5fd009d525d7fd5ff38cd7e6.png"></div></div></div>
+<div class="sl-block" data-block-type="image" style="width: 69px; height: 69px; left: 839.75px; top: 315.5px; min-width: 1px; min-height: 1px;" data-name="Image 11" data-block-id="31a6b80d51e7953eb14e71d1c46090e0"><div class="sl-block-content" style="z-index: 16;"><img class="" data-natural-width="1350" data-natural-height="1350" data-lazy-loaded="" data-src="introduction-audionumerique-2026/1b29fd113bf5cfde412ff71dc0f32f21.png"></div></div></section><section data-id="f1b59f33e207657e9a39fb41d228dec3"><div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 428px; top: 40px;" data-name="Math 1" data-block-id="31b1b39315f59f6891611855dc38f85f"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 10;"><div class="math-input">x(t)</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 244px; top: 271px;" data-name="Math 2" data-block-id="acb0d684f355a995acf403b59d38502b"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 11;"><div class="math-input">X(f) = \int_{-\infty}^{\infty} x(t)e^{i\omega t}dt</div></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 469px; top: 126px;" data-name="Line 1" data-block-id="2bbce5f5f02a274426a6c43a1a958b8b"><div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="6.8036817747347824e-15" data-line-y2="111.11255554616679" data-line-color="#000000" data-line-width="6px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 14;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="1" height="111.11255554616679" viewbox="0 0 1 111.11255554616679"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="6" stroke-linecap="round" d="M0 0 L0 105.113"></path><path stroke="#000000" stroke-width="6" d="M 13.5 95.353 L 0 108.853 L -13.5 95.353 L 0 108.853" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L0 111.113"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L0 111.113"></path></svg></div></div>
+<div class="sl-block" data-block-type="text" style="width: 355px; height: 40px; left: 507px; top: 148.556px;" data-name="Text 1" data-block-id="b3e6e44f911fcc533ef65d25445a79c1" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 17;" data-placeholder-text="Text"><p>transformée de fourier</p></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 264px; top: 390px;" data-name="Line 2" data-block-id="6c6ddaa10ea625420fd21715782982b4"><div class="sl-block-content" data-line-x1="95" data-line-y1="0" data-line-x2="0" data-line-y2="111.113" data-line-color="#000000" data-line-width="6px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 15;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="95" height="111.113" viewbox="0 0 95 111.113"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="6" stroke-linecap="round" d="M95 0 L3.899 106.553"></path><path stroke="#000000" stroke-width="6" d="M 20.502 107.908 L 1.468 109.396 L -0.02 90.362 L 1.468 109.396" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M95 0 L0 111.113"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M95 0 L0 111.113"></path></svg></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 568.5px; top: 390.113px;" data-name="Line 3" data-block-id="3e6f2c352d72e3c4d406a5da4a529328"><div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="116" data-line-y2="111" data-line-color="#000000" data-line-width="6px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 16;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="116" height="111" viewbox="0 0 116 111"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="6" stroke-linecap="round" d="M0 0 L111.665 106.852"></path><path stroke="#000000" stroke-width="6" d="M 113.947 90.351 L 114.368 109.438 L 95.28 109.858 L 114.368 109.438" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L116 111"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L116 111"></path></svg></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 132px; top: 521px;" data-name="Math 3" data-block-id="de0ef3435d89ef3aee3042dbe4882b59"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 12;"><div class="math-input">\vert X(f) \vert</div></div></div>
+<div class="sl-block" data-block-type="text" style="width: 166px; height: 40px; left: 120px; top: 601.556px;" data-name="Text 2" data-text-layout="fixed" data-block-id="97962027943a67a45a7eb2ccb84517cb"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 18;" data-placeholder-text="Text"><p><strong>magnitude</strong></p></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 658px; top: 521px;" data-name="Math 4" data-block-id="dda8200ff96d8109adbb518a387b01a5"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 13;"><div class="math-input">\angle X(f)</div></div></div>
+<div class="sl-block" data-block-type="text" style="width: 166px; height: 40px; left: 684.5px; top: 594px;" data-name="Text 3" data-text-layout="fixed" data-block-id="a118a3c1dfe494c87b200eab843f5a3f"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 19;" data-placeholder-text="Text"><p><strong>phase</strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 237px; height: 57px; left: 379px; top: 500.5px;" data-name="Text 4" data-block-id="fa9787c6390b1572f62a98d5f369bab0" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 20;" data-placeholder-text="Text"><p><span style="font-size:1.4em"><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/mag_and_phase.html" target="_blank"><strong>demo</strong></a> (fft)</span></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 237px; height: 57px; left: 379px; top: 565.5px;" data-name="Text 5" data-text-layout="fixed" data-block-id="38b65d05a2552b20c8f88050158674e2"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 21;" data-placeholder-text="Text"><p><span style="font-size:1.4em"><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/mag_and_phase.html" target="_blank"><strong>demo</strong></a> (stft)</span></p></div></div></section><section data-id="908628701fbe4f48f79f744723d04a59"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="bc5f02342a869b20e64958b3d5763c05">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 271.893px; left: 12.6985px; top: 140px;" data-name="text-d73b69" data-block-id="fd70275766f0f9ea0ca30c39b6caba11">
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-lt-tmp-id="lt-810836" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+										<p><u>Définition :</u></p>
+									</div>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 640px; left: 160px; top: 264px;" data-name="text-c4a091" data-block-id="896a96546af8e72c77621d36dc5cbec1">
+								<div class="sl-block-content" style="z-index: 12;" data-placeholder-tag="p" data-placeholder-text="Text"><blockquote>
+<p>Transformation d'un signal analogique, dont les variations sont continues, <em>en une suite de valeurs discrètes</em></p>
+</blockquote></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 640px; left: 140px; top: 420px;" data-block-id="d4bbe69b2ff32c1b0c95dcd503639610" data-name="text-f28289">
+								<div class="sl-block-content" style="z-index: 13;" data-placeholder-tag="p" data-placeholder-text="Text" data-gramm="false"><p>Continu - Discret</p></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 397.987px; left: 12.6985px; top: 498px;" data-block-id="c6815482857bbf647fb16e8a77fdbb47" data-name="text-e83b3c">
+								<div class="sl-block-content" style="z-index: 14; font-size: 73%;" data-placeholder-tag="p" data-placeholder-text="Text" data-gramm="false"><p>ce qui est d'un seul tenant<br>
+ce qui module avec tous les degrés intermédiaires</p></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 397.987px; left: 508.609px; top: 503px;" data-block-id="0fad8688e660fa6f739df8faf7a4da6b" data-name="text-ab7a94">
+								<div class="sl-block-content" style="z-index: 15; font-size: 73%;" data-placeholder-tag="p" data-placeholder-text="Text" data-gramm="false"><p>ce qui est composé de valeurs distinctes séparées les unes des autres</p></div>
+							</div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 297.889px; top: 465.287px;" data-name="line-144425" data-block-id="122af194f04f0e47c7d7d39d5c89e052"><div class="sl-block-content" data-line-x1="0" data-line-y1="32.53588516746409" data-line-x2="76.83284457478005" data-line-y2="0" data-line-color="#000000" data-line-start-type="none" data-line-end-type="none" style="z-index: 16;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="76.83284457478005" height="32.53588516746409" viewbox="0 0 76.83284457478005 32.53588516746409"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="2" d="M0 32.536 L76.833 0"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 32.536 L76.833 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 32.536 L76.833 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 508.442px; top: 464.5px;" data-block-id="bd690f79f003baf5fa8adc523d8319d9" data-name="line-1d51d6"><div class="sl-block-content" data-line-x1="69.02299737613832" data-line-y1="33.32288516746405" data-line-x2="0" data-line-y2="0" data-line-color="#000000" data-line-start-type="none" data-line-end-type="none" style="z-index: 17;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="69.02299737613832" height="33.32288516746405" viewbox="0 0 69.02299737613832 33.32288516746405"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="2" d="M69.023 33.323 L0 0"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M69.023 33.323 L0 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M69.023 33.323 L0 0"></path></svg></div></div></section><section data-id="e5440ad5ce361a135d2652b2b57e50d9"><div class="sl-block" data-block-type="text" style="height: auto; width: 249px; left: 83px; top: 137px;" data-name="text-f28289" data-block-id="44a6515d933736ac8b60e822d61a1ae6">
+								<div class="sl-block-content" style="z-index: 10; text-align: left;" data-placeholder-tag="p" data-gramm="false" data-placeholder-text="Text"><p><span style="font-size:1.1em"><strong>Discret </strong></span></p></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="width: 351px; height: 41px; left: 83px; top: 180px;" data-name="Text 1" data-block-id="a114dee772a9d75ede3faf079c1c3b8c" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 11;" data-placeholder-text="Text"><p><span style="font-size:0.7em"><span style="color:rgb(0, 0, 0); text-align:center">ensemble dénombrable de valeurs</span></span></p></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 499px; top: 63px;" data-name="Math 1" data-block-id="c2d91934fa8b818e0fa80e1e3f2946a9"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 16; font-size: 60%;"><div class="math-input">\{ 0, 1, 2, 3 \}</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 499px; top: 116px;" data-name="Math 2" data-block-id="757601c793cd1d66a9d4ca1fb76d89e1"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 17; font-size: 60%;"><div class="math-input">\mathbb{N} = \{0, 1, 2, 3, \dots \}</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 499px; top: 159px;" data-name="Math 3" data-block-id="1e6bf8d5e0135cf124ff9fa8e8ff6c36"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 18; font-size: 60%;"><div class="math-input">\mathbb{Z} = \{\dots, -2, -1, 0, 1, 2, 3, \dots \}</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 499px; top: 219px;" data-name="Math 4" data-block-id="8aac028a2af8b018ab7efd1b8fbba288"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 19; font-size: 60%;"><div class="math-input">\mathbb{Q} = \Big\{ \frac{n}{d}, n\in\mathbb{Z}, d\in\mathbb{Z}\Big\}</div></div></div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 249px; left: 81px; top: 388px;" data-name="Text 2" data-block-id="5912b51b0c829372395f5d3b8800309e">
+								<div class="sl-block-content" style="z-index: 12; text-align: left;" data-placeholder-tag="p" data-gramm="false" data-placeholder-text="Text"><p><span style="font-size:33px"><strong>Continu</strong></span></p></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="width: 351px; height: 41px; left: 81px; top: 431px;" data-name="Text 3" data-text-layout="fixed" data-block-id="0e0e95b9dce7b3e999c159d9f211cb66"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 13;" data-placeholder-text="Text"><p><span style="font-size:0.7em"><span style="color:rgb(0, 0, 0); text-align:center">ensemble indénombrable de valeurs</span></span></p></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 497px; top: 406px;" data-name="Math 5" data-block-id="5d98fd08fd94d319b96b52cc637bfc75"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 20; font-size: 60%;"><div class="math-input">\mathbb{R}</div></div></div>
+<div class="sl-block" data-block-type="text" style="width: 351px; height: 41px; left: 519px; top: 401px;" data-name="Text 4" data-text-layout="fixed" data-block-id="72408b69abe9052addbde6c636a33606"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 14;" data-placeholder-text="Text"><p style="text-align:center"><span style="font-size:21px">ensemble des nombres réels</span></p></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 497px; top: 459px;" data-name="Math 6" data-block-id="dfabd93260c7df05a8c2239e53116815"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 21; font-size: 60%;"><div class="math-input">\mathbb{C}</div></div></div>
+<div class="sl-block" data-block-type="text" style="width: 351px; height: 41px; left: 548px; top: 459px;" data-name="Text 5" data-text-layout="fixed" data-block-id="76320693d0933ee5e8df9dd8ad9f051d"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 15;" data-placeholder-text="Text"><p style="text-align:center"><span style="font-size:21px">ensemble des nombres complexes</span></p></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 165px; top: 586px;" data-name="Line 1" data-block-id="76f65d0f6fe92dc02b1067f92111a98c"><div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="652.0030674774467" data-line-y2="0" data-line-color="#000000" data-line-width="3px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 22;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="652.0030674774467" height="1" viewbox="0 0 652.0030674774467 1"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="3" stroke-linecap="round" d="M0 0 L649.003 0"></path><path stroke="#000000" stroke-width="3" d="M 644.499 -6.75 L 651.249 0 L 644.499 6.75 L 651.249 0" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L652.003 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L652.003 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="text" style="width: 332px; height: 52px; left: 353px; top: 560px;" data-name="Text 6" data-block-id="10bfbf1c29dc5404296b26f732c8c570" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 23; color: rgb(0, 0, 255);" data-placeholder-text="Text"><p><strong><span style="font-size:1.2em">[                              ] </span></strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 195px; height: 47px; left: 410.5px; top: 560px;" data-name="Text 7" data-text-layout="fixed" data-block-id="941255bfaf09e0bea5af9986e6634ce8"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 24; color: rgb(255, 0, 0);" data-placeholder-text="Text"><p><strong><span style="font-size:1.2em">[                 ] </span></strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 108.5px; height: 50px; left: 455.5px; top: 560px;" data-name="Text 8" data-text-layout="fixed" data-block-id="db6bea9294c745de2f50d5086be19947"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 25; color: rgb(0, 255, 0);" data-placeholder-text="Text"><p><strong><span style="font-size:1.2em">[        ] </span></strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 36px; height: 39px; left: 491.75px; top: 583.5px;" data-name="Text 9" data-block-id="0a49403d76f2c8452b5ae1285656fcbb" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 26;" data-placeholder-text="Text"><p>...</p></div></div></section><section data-id="12484ff472ceecfd2496a6b13079dfa3"><div class="sl-block" data-block-type="image" style="width: 653.4px; height: 311.143px; left: 153.3px; top: 194.429px; min-width: 1px; min-height: 1px;" data-name="Image 1" data-block-id="a841d1d57ad4fc3f0fab49c37fa5ce63"><div class="sl-block-content" style="z-index: 10;"><img class="" data-natural-width="1050" data-natural-height="500" data-lazy-loaded="" data-src="introduction-audionumerique-2026/6f162264707f63864580591fc17943e2.png"></div></div>
+<div class="sl-block" data-block-type="text" style="height: 69.1071px; width: 249px; left: 69px; top: 63px;" data-name="Text 2" data-block-id="e6ebf99abc06c27a7c7d7d375c48006b" data-text-layout="fixed">
+								<div class="sl-block-content" style="z-index: 11; text-align: left;" data-placeholder-tag="p" data-gramm="false" data-placeholder-text="Text"><p><span style="font-size:33px"><strong>Continu</strong></span></p></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="width: 351px; height: 65.8929px; left: 246px; top: 63px;" data-name="Text 3" data-text-layout="fixed" data-block-id="12d52c0dd7bfa957828d48e0a3b07f62"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 12;" data-placeholder-text="Text"><p><span style="font-size:0.7em"><span style="color:rgb(0, 0, 0); text-align:center">sympa mais pas sympa</span></span></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 288px; height: 42px; left: 355px; top: 492.572px;" data-name="Text 1" data-block-id="f9004053c6c04fbad9e845acb058a261" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 13;" data-placeholder-text="Text"><p><a href="https://fr.wikipedia.org/wiki/Paradoxes_de_Z%C3%A9non" target="_blank">paradoxe de Zénon</a></p></div></div></section><section data-id="5bd5367b18321438ebb944d079140990"><div class="sl-block" data-block-type="text" style="height: 34.8095px; width: 249px; left: 72px; top: 62px;" data-name="text-f28289" data-block-id="3e97becb23de5e1caa12391658b79a89" data-text-layout="fixed">
+								<div class="sl-block-content" style="z-index: 10; text-align: left;" data-placeholder-tag="p" data-gramm="false" data-placeholder-text="Text"><p><span style="font-size:1.1em"><strong>Discret </strong></span></p></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="width: 351px; height: 33.1905px; left: 72px; top: 96.81px;" data-name="Text 1" data-text-layout="fixed" data-block-id="fd181f945be585100c40293df8488919"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 11;" data-placeholder-text="Text"><p><span style="font-size:0.7em"><span style="color:rgb(0, 0, 0); text-align:center">ensemble dénombrable de valeurs</span></span></p></div></div>
+<div class="sl-block" data-block-type="text" style="height: 28.6667px; width: 249px; left: 508px; top: 61.8093px;" data-name="Text 2" data-block-id="3af6561208a9dc61b0c0a8019ce2f0fd" data-text-layout="fixed">
+								<div class="sl-block-content" style="z-index: 14; text-align: left;" data-placeholder-tag="p" data-gramm="false" data-placeholder-text="Text"><p><span style="font-size:33px"><strong>Continu</strong></span></p></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="width: 379px; height: 41.3333px; left: 508px; top: 90.4763px;" data-name="Text 3" data-text-layout="fixed" data-block-id="71483f7b1a2af87ed5950c71967ea913"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 15;" data-placeholder-text="Text"><p><span style="font-size:0.7em"><span style="color:rgb(0, 0, 0); text-align:center">ensemble indénombrable de valeurs</span></span></p></div></div>
+<div class="sl-block" data-block-type="image" style="width: 403.667px; height: 329px; left: 508px; top: 191px; min-width: 1px; min-height: 1px;" data-name="Image 1" data-block-id="b50f7eb65d07ea934b0c39dee9271a3b"><div class="sl-block-content" style="z-index: 16;"><img class="" data-natural-width="1557" data-natural-height="1350" data-lazy-loaded="" data-crop-x="0" data-crop-y="0" data-crop-width="1" data-crop-height="0.94" style="left: 0px; top: 0px; width: 404px; height: 350px;" data-src="introduction-audionumerique-2026/e5e35bb008275c3fdf57ab3e9da36547.png"></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 96px; top: 170.986px;" data-name="Line 1" data-block-id="4c914402ca15dc0231feb11dc7a24bec"><div class="sl-block-content" data-line-x1="0" data-line-y1="325.01384585891105" data-line-x2="1.9901358300484333e-14" data-line-y2="0" data-line-color="#000000" data-line-width="1px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 17;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="1" height="325.01384585891105" viewbox="0 0 1 325.01384585891105"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="1" stroke-linecap="round" d="M0 325.014 L0 1"></path><path stroke="#000000" stroke-width="1" d="M -6 7 L 0 1 L 6 7 L 0 1" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 325.014 L0 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 325.014 L0 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 79px; top: 474px;" data-name="Line 2" data-block-id="5c74ca075fea359d1b3b9a052ff9a6ea"><div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="319.385" data-line-y2="0" data-line-color="#000000" data-line-width="1px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 18;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="319.385" height="1" viewbox="0 0 319.385 1"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="1" stroke-linecap="round" d="M0 0 L318.385 0"></path><path stroke="#000000" stroke-width="1" d="M 312.385 -6 L 318.385 0 L 312.385 6 L 318.385 0" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L319.385 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L319.385 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="shape" style="width: 14px; height: 14px; left: 157px; top: 315px;" data-name="Shape 1" data-block-id="8357e078f9d896cc2158b00c79de9997"><div class="sl-block-content" data-shape-type="rect" data-shape-fill-color="#000000" data-shape-stretch="true" style="z-index: 19;" data-shape-corner-radius="200px"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100%" height="100%" preserveaspectratio="none" viewbox="0 0 14 14"><rect width="14" height="14" rx="200" ry="200" class="shape-element" fill="#000000"></rect></svg></div></div>
+<div class="sl-block" data-block-type="shape" style="width: 14px; height: 14px; left: 228.5px; top: 219px;" data-name="Shape 2" data-block-id="49f29f88fa8b7cacb2c7fb949e78c174"><div class="sl-block-content" data-shape-type="rect" data-shape-fill-color="#000000" data-shape-stretch="true" style="z-index: 20;" data-shape-corner-radius="200px"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100%" height="100%" preserveaspectratio="none" viewbox="0 0 14 14"><rect width="14" height="14" rx="200" ry="200" class="shape-element" fill="#000000"></rect></svg></div></div>
+<div class="sl-block" data-block-type="shape" style="width: 14px; height: 14px; left: 309px; top: 240px;" data-name="Shape 3" data-block-id="9d98b549498fd3f478d607490f2bbd3a"><div class="sl-block-content" data-shape-type="rect" data-shape-fill-color="#000000" data-shape-stretch="true" style="z-index: 21;" data-shape-corner-radius="200px"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100%" height="100%" preserveaspectratio="none" viewbox="0 0 14 14"><rect width="14" height="14" rx="200" ry="200" class="shape-element" fill="#000000"></rect></svg></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 164px; top: 323.97px;" data-name="Line 3" data-block-id="ec565af34a32fc0610e66698cd6ca5ad"><div class="sl-block-content" data-line-x1="0" data-line-y1="149.03019828209315" data-line-x2="9.125467765123038e-15" data-line-y2="0" data-line-color="#000000" data-line-width="1px" data-line-start-type="none" data-line-end-type="none" data-line-style="solid-rounded" style="z-index: 22;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="1" height="149.03019828209315" viewbox="0 0 1 149.03019828209315"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="1" stroke-linecap="round" d="M0 149.03 L0 0"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 149.03 L0 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 149.03 L0 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 235px; top: 222px;" data-name="Line 4" data-block-id="d05cdc788f8b9e333c3c7526989a306d"><div class="sl-block-content" data-line-x1="0" data-line-y1="252.03012377221026" data-line-x2="0.5" data-line-y2="0" data-line-color="#000000" data-line-width="1px" data-line-start-type="none" data-line-end-type="none" data-line-style="solid-rounded" style="z-index: 23;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="1" height="252.03012377221026" viewbox="0 0 1 252.03012377221026"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="1" stroke-linecap="round" d="M0 252.03 L0.5 0"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 252.03 L0.5 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 252.03 L0.5 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 316px; top: 243px;" data-name="Line 5" data-block-id="36ed90419c96597a602dbc2ca015e507"><div class="sl-block-content" data-line-x1="0" data-line-y1="231.06012377221023" data-line-x2="0" data-line-y2="0" data-line-color="#000000" data-line-width="1px" data-line-start-type="none" data-line-end-type="none" data-line-style="solid-rounded" style="z-index: 24;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="1" height="231.06012377221023" viewbox="0 0 1 231.06012377221023"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="1" stroke-linecap="round" d="M0 231.06 L0 0"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 231.06 L0 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 231.06 L0 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="text" style="width: 19px; height: 15px; left: 157px; top: 482px;" data-name="Text 4" data-block-id="37ac4cff3f006d3a435767c580b2b05d" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 25; font-size: 50%;" data-placeholder-text="Text"><p><strong>1</strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 19px; height: 15px; left: 228.5px; top: 482px;" data-name="Text 5" data-text-layout="fixed" data-block-id="ed87f9d7da568ba998bf3e91c09f7326"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 26; font-size: 50%;" data-placeholder-text="Text"><p><strong>2</strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 19px; height: 15px; left: 309px; top: 482px;" data-name="Text 6" data-text-layout="fixed" data-block-id="7dcd2edab7c0cebecbdd062f137ddbe9"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 27; font-size: 50%;" data-placeholder-text="Text"><p><strong>3</strong></p></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 72px; top: 553.986px;" data-name="Math 1" data-block-id="fa764c9b19c3f72802e2488477365e1c"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 31; font-size: 50%;"><div class="math-input">\sum_{i=0}^{\infty} x[n] = x[0] + x[1] + x[2] + \dots</div></div></div>
+<div class="sl-block" data-block-type="text" style="width: 352px; height: auto; left: 66.5px; top: 626.986px;" data-name="Text 7" data-block-id="3cd8af6da4fb3210df58ecdd6f0c9f16"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 12;" data-placeholder-text="Text"><p><strong><span style="font-size:0.7em"><span style="color:rgb(0, 0, 0); text-align:center">somme discrète</span></span></strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 19px; height: 15px; left: 651px; top: 520px;" data-name="Text 8" data-text-layout="fixed" data-block-id="6e28ad971e9934e77a6c7da97b07ee2e"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 28; font-size: 50%;" data-placeholder-text="Text"><p><strong>1</strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 19px; height: 15px; left: 722.5px; top: 520px;" data-name="Text 9" data-text-layout="fixed" data-block-id="2d0cf453022be11adbf68281bef714cb"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 29; font-size: 50%;" data-placeholder-text="Text"><p><strong>2</strong></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 19px; height: 15px; left: 794.5px; top: 520px;" data-name="Text 10" data-text-layout="fixed" data-block-id="05b00b80026af2e935b647f7fed180b2"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 30; font-size: 50%;" data-placeholder-text="Text"><p><strong>3</strong></p></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 565.5px; top: 566.5px;" data-name="Math 2" data-block-id="a277cc7102730a8544883df09d10ab44"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 32; font-size: 50%;"><div class="math-input">\int_{x=0}^{\infty} f(x)dx = \lim_{p\rightarrow 0} \sum_{i=0}^{\infty}f(x_i) * p</div></div></div>
+<div class="sl-block" data-block-type="text" style="width: 352px; height: auto; left: 565.5px; top: 626.986px;" data-name="Text 11" data-block-id="71fde4ba905a4921f7ec4d2ec903c50c"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 13;" data-placeholder-text="Text"><p><strong><span style="font-size:0.7em"><span style="color:rgb(0, 0, 0); text-align:center">intégration ~ somme continue</span></span></strong></p></div></div></section><section data-id="915538d4b87fa7deae0f1b4666c9e773"><div class="sl-block" data-block-type="iframe" data-name="Iframe 1" style="width: 960px; height: 700px; left: 0px; top: 0px;" data-block-id="29ca58d6979b5d1e7f56f9dc8b4047a7"><div class="sl-block-content" style="z-index: 10;"><iframe allow="fullscreen; autoplay; accelerometer; geolocation; gyroscope; camera; encrypted-media; microphone; midi" data-preload="true" sandbox="allow-forms allow-scripts allow-popups allow-same-origin allow-pointer-lock allow-presentation" data-lazy-loaded="" data-src="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/integration"></iframe></div></div></section><section data-id="bcc85b4433a7cff7c3b4fbae1d633752"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="be24cbe1bfbb93627da7ce86079afb39">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+
+<div class="sl-block" data-block-type="image" style="width: 438.557px; height: 461.818px; left: 0px; top: 119.091px; min-width: 1px; min-height: 1px;" data-name="image-041a68" data-block-id="8c90ac14969cc12011b537eab763f701"><div class="sl-block-content" style="z-index: 11;"><img class="" data-natural-width="1282" data-natural-height="1350" data-lazy-loaded="" data-src="introduction-audionumerique-2026/f712ab697321e7a0bfa293481bb5188c.png"></div></div>
+<div class="sl-block" data-block-type="shape" style="width: 120.995px; height: 11.9424px; left: 39.005px; top: 296.848px;" data-name="shape-4a405d" data-block-id="aaadfc1966ee08189800ed90f528fce6"><div class="sl-block-style" style="z-index: 12; opacity: 0.7; filter: blur(9px);"><div class="sl-block-content" data-shape-type="rect" data-shape-fill-color="rgb(0, 255, 0)" data-shape-stretch="true" style="z-index: 12;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100%" height="100%" preserveaspectratio="none" viewbox="0 0 121 12"><rect width="120.995" height="11.9424" rx="0" ry="0" class="shape-element" fill="rgb(0, 255, 0)"></rect></svg></div></div></div>
+<div class="sl-block" data-block-type="image" style="width: 526.245px; height: 362.42px; left: 416.943px; top: 168.79px; min-width: 1px; min-height: 1px;" data-name="image-f41717" data-block-id="03a6b66136023bb887c4749cf73b34da"><div class="sl-block-content" style="z-index: 13;"><img class="" data-natural-width="1574" data-natural-height="1084" data-lazy-loaded="" data-src="introduction-audionumerique-2026/8426d39461e5ec41826f7adad61967ea.png"></div></div>
+<div class="sl-block" data-block-type="shape" style="width: 146.925px; height: 11.9424px; left: 548.669px; top: 198.058px;" data-block-id="c8b1fe8817393b8f793bc1ab8de52231" data-name="shape-53351f"><div class="sl-block-style" style="z-index: 14; opacity: 0.7; filter: blur(9px);"><div class="sl-block-content" data-shape-type="rect" data-shape-fill-color="rgb(0, 255, 0)" data-shape-stretch="true" style="z-index: 14;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100%" height="100%" preserveaspectratio="none" viewbox="0 0 147 12"><rect width="146.925" height="11.9424" rx="0" ry="0" class="shape-element" fill="rgb(0, 255, 0)"></rect></svg></div></div></div></section><section data-id="e8ef94e1a082a2c4f4433097c5bb63f2"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="bf39818c5571a172fd236bc769b43506">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+
+
+<div class="sl-block" data-block-type="image" style="width: 367.558px; height: 549.077px; left: 272.442px; top: 99.7438px; min-width: 1px; min-height: 1px;" data-name="image-bfdb5e" data-block-id="9e118f918740e6fcdf33cd9f18284d5e"><div class="sl-block-style" style="z-index: 11; transform: rotate(180deg);"><div class="sl-block-content" style="z-index: 11; border-style: solid; border-width: 1px;"><img class="" data-natural-width="954" data-natural-height="1350" data-crop-x="0.19174" data-crop-y="0.169102" data-crop-width="0.528024" data-crop-height="0.557411" style="left: -133px; top: -167px; width: 696px; height: 985px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/68fdcc5594bdefcbd94f8378cf940c8b.jpg"></div></div></div></section><section data-id="75108e93bcd2ebfc3b36393e58641c31"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="bfb6400c8a7f3c6e2dabb4b3986e869b">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+
+
+<div class="sl-block" data-block-type="text" style="height: auto; width: 749.097px; left: 185.452px; top: 252.5px;" data-name="text-14badb" data-block-id="d04f9adbd5db15d2793776da8f14c35f"><div class="sl-block-content" data-placeholder-tag="p" data-placeholder-text="Text" style="z-index: 11;"><p style="text-align:left">ADC : analog to digital converter<br>
+CAN : convertisseur analogique-numérique<br>
+<br>
+DAC : digital to analog converter<br>
+CNA : convertisseur numérique-analogique</p></div></div></section><section data-id="7366959a0cb91a5fb0638143be14b3d4"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="d721577a3d1baaa028c8bb763b812c37">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+
+<div class="sl-block" data-block-type="image" style="width: 218.089px; height: 67.0381px; left: 250.549px; top: -195.576px; min-width: 1px; min-height: 1px;" data-name="image-5aff5f" data-block-id="f8c5c405abca57ed74517bcb494c654d"><div class="sl-block-style" style="z-index: 11; transform: rotate(180deg);"><div class="sl-block-content" style="z-index: 11;"><img class="" data-natural-width="954" data-natural-height="1350" data-crop-x="0.126844" data-crop-y="0.553236" data-crop-width="0.59587" data-crop-height="0.129436" style="left: -46px; top: -287px; width: 366px; height: 518px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/15cb8cecadb17f005e328af431908fa5.jpg"></div></div></div>
+<div class="sl-block" data-block-type="image" style="width: 711.74px; height: 220.455px; left: 112.768px; top: 190.553px; min-width: 1px; min-height: 1px;" data-name="image-354733" data-block-id="e62bec55fd4bd6bae6d562ceac59e8a2"><div class="sl-block-style" style="z-index: 12; transform: rotate(180deg);"><div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="954" data-natural-height="1350" data-crop-x="0.135693" data-crop-y="0.553236" data-crop-width="0.572271" data-crop-height="0.125261" style="left: -169px; top: -974px; width: 1244px; height: 1760px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/15cb8cecadb17f005e328af431908fa5.jpg"></div></div></div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 991.258px; left: -26.991px; top: 420px;" data-name="text-b4efad" data-block-id="b08d810b12ae604a93fb42c230f904ec"><div class="sl-block-content" data-placeholder-tag="p" data-placeholder-text="Text" style="z-index: 13;">
+<p><span style="font-size:0.7em"><strong>Échantillonnage</strong></span></p>
+
+<p><span style="font-size:0.7em"><em>Denis Mercier, Livre des techniques du son, p.420</em></span></p>
+</div></div></section><section data-id="78b3f32ff43d78f6675581450bd730ce"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="7fb75d808825322c2d78786039bf820b">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 488.019px; left: 12.6985px; top: 122px;" data-name="text-d73b69" data-block-id="59ca1b6ec31291be6ac3b95d94dd2b7c">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+										<pre><span style="font-size:1.2em"><u>A) Échantillonnage :</u></span></pre>
+									</div>
+								</div>
+		
+							</div>
+<div class="sl-block" data-block-type="iframe" style="width: 520.134px; height: 386.226px; left: 219.933px; top: 206.887px;" data-name="iframe-f37b3b" data-block-id="d52f21a80f0316b053a85ba2cb79c16c">
+								<div class="sl-block-content" style="z-index: 12;"><iframe allow="fullscreen; accelerometer; geolocation; gyroscope; camera; encrypted-media; microphone; midi; autoplay" sandbox="allow-forms allow-scripts allow-popups allow-same-origin allow-pointer-lock allow-presentation" data-preload="true" scrolling="no" data-lazy-loaded="" data-gtm-yt-inspected-6="true" data-src="https://jackschaedler.github.io/circles-sines-signals/sampling.html#fourWaveAlias"></iframe></div>
+							</div></section><section data-id="d6906ad4140cccfeaa0093fa222eea64"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="9c91d36e07a42c79d695ea1a22b4b629">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 334px; height: 400.781px; left: 66.067px; top: 154.107px; min-width: 1px; min-height: 1px;" data-name="Image 1" data-block-id="0da732cf338fa699b6a67d2df92ebb37"><div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="2240" data-natural-height="1350" data-crop-x="0" data-crop-y="0" data-crop-width="0.502256" data-crop-height="1" style="left: 0px; top: 0px; width: 665px; height: 401px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/b75f7c006a271e7734f287ec2823100f.png"></div></div>
+<div class="sl-block" data-block-type="image" style="width: 330px; height: 391.786px; left: 574px; top: 158.605px; min-width: 1px; min-height: 1px;" data-name="Image 2" data-block-id="26872e22932544009ae081aec0961b37"><div class="sl-block-content" style="z-index: 13;"><img class="" data-natural-width="2240" data-natural-height="1350" data-crop-x="0.503759" data-crop-y="0.022444" data-crop-width="0.496241" data-crop-height="0.977556" style="left: -335px; top: -9px; width: 665px; height: 401px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/b75f7c006a271e7734f287ec2823100f.png"></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 429px; top: 336px;" data-name="Line 1" data-block-id="8e94b1822806d868f04f3f52efb81814"><div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="125.01599897613104" data-line-y2="0" data-line-color="#000000" data-line-width="3px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 14;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="125.01599897613104" height="1" viewbox="0 0 125.01599897613104 1"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="3" stroke-linecap="round" d="M0 0 L122.016 0"></path><path stroke="#000000" stroke-width="3" d="M 117.512 -6.75 L 124.262 0 L 117.512 6.75 L 124.262 0" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L125.016 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L125.016 0"></path></svg></div></div>
+<div class="sl-block" data-block-type="text" style="height: 53px; width: 543.933px; left: 208.034px; top: 589px;" data-name="Text 2" data-block-id="a45d7fef5851298ed0f20583e5b2b56c" data-text-layout="fixed">
+								<div class="sl-block-content" style="z-index: 11; font-size: 125%;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><p><span style="font-size:0.7em">discrétisation temporelle </span><strong><span style="font-size:0.7em">: échantillonage</span></strong></p></div>
+							</div></section><section data-id="625f2c9590a879415e39dd291a49d538"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="c2e1af92ab3642146c83db47d1ed86e8">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 334px; height: 400.781px; left: 66.067px; top: 154.107px; min-width: 1px; min-height: 1px;" data-name="Image 1" data-block-id="c5cc50b20b4ceb7476b1041b9052b056"><div class="sl-block-content" style="z-index: 11;"><img class="" data-natural-width="2240" data-natural-height="1350" data-crop-x="0" data-crop-y="0" data-crop-width="0.502256" data-crop-height="1" style="left: 0px; top: 0px; width: 665px; height: 401px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/b75f7c006a271e7734f287ec2823100f.png"></div></div>
+<div class="sl-block" data-block-type="image" style="width: 330px; height: 391.786px; left: 574px; top: 158.605px; min-width: 1px; min-height: 1px;" data-name="Image 2" data-block-id="886d1a8865a63a2f0a34df3767f29e48"><div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="2240" data-natural-height="1350" data-crop-x="0.503759" data-crop-y="0.022444" data-crop-width="0.496241" data-crop-height="0.977556" style="left: -335px; top: -9px; width: 665px; height: 401px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/b75f7c006a271e7734f287ec2823100f.png"></div></div>
+<div class="sl-block" data-block-type="line" style="width: auto; height: auto; left: 429px; top: 336px;" data-name="Line 1" data-block-id="e7150ea1651444af2f45fd6398abf8ed"><div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="125.01599897613104" data-line-y2="0" data-line-color="#000000" data-line-width="3px" data-line-start-type="none" data-line-end-type="line-arrow" data-line-style="solid-rounded" style="z-index: 13;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveaspectratio="xMidYMid" width="125.01599897613104" height="1" viewbox="0 0 125.01599897613104 1"><path class="line-element" fill="rgba(0,0,0,0)" stroke="#000000" stroke-width="3" stroke-linecap="round" d="M0 0 L122.016 0"></path><path stroke="#000000" stroke-width="3" d="M 117.512 -6.75 L 124.262 0 L 117.512 6.75 L 124.262 0" stroke-linecap="round" stroke-linejoin="round" class="line-end"></path><path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L125.016 0"></path><path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L125.016 0"></path></svg></div></div>
+
+<div class="sl-block" data-block-type="image" style="width: 356.477px; height: 422.638px; left: 554.016px; top: 154.107px; min-width: 1px; min-height: 1px;" data-name="Image 3" data-block-id="f78d8802706b46a71c946a5c2c3d6545"><div class="sl-block-content" style="z-index: 14;"><img class="" data-natural-width="2240" data-natural-height="1350" data-crop-x="0.491667" data-crop-y="0" data-crop-width="0.508333" data-crop-height="1" style="left: -345px; top: 0px; width: 701px; height: 423px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/2cec18491c981a8494dc4c840a5d3980.png"></div></div>
+<div class="sl-block" data-block-type="text" style="height: 53px; width: 543.933px; left: 208.034px; top: 597px;" data-name="Text 2" data-text-layout="fixed" data-block-id="bb1fbbd523c0a12a6368c6c60b5b4c49">
+								<div class="sl-block-content" style="z-index: 15; font-size: 125%;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><p><span style="font-size:0.7em">discrétisation d'amplitude </span><strong><span style="font-size:0.7em">: quantification</span></strong></p></div>
+							</div></section><section data-id="ebea5de368c1c05f6df0629b3effa5aa"><div class="sl-block" data-block-type="text" style="width: 749px; height: 54px; left: 67px; top: 242.5px;" data-name="Text 1" data-block-id="84e61e5e0bd3846d84d08cc6a9b1db34" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 10;" data-placeholder-text="Text"><p>effet principal de l'échantillonage temporel :</p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 430px; height: 80px; left: 281px; top: 310px;" data-name="Text 2" data-text-layout="fixed" data-block-id="f8b3da7f596543fc564ed078e4d22e6d"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 11;" data-placeholder-text="Text"><h2><strong>le repliement</strong></h2></div></div></section><section data-id="76d0484f5395de4558fccc6836959a95"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="48ad76e1b4ea69e7fccf88872f76b1a3">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 584.889px; left: 27.5555px; top: 123px;" data-name="text-d73b69" data-block-id="d472965a7cbd8b9771ae890e1b5d9904">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>A.2) <strong>Phénomène de repliement (aliasing) et incertitudes</strong></u></span></pre></div>
+								</div>
+		
+							</div>
+<div class="sl-block" data-block-type="video" style="min-width: 30px; min-height: 30px; width: 784.984px; height: 379px; left: 87.508px; top: 251px;" data-name="video-2dedfe" data-block-id="c7b3abd79a22b38a7845828ffba7cfb5"><div class="sl-block-content" style="z-index: 12;" data-media-id="11106047" data-video-thumb="introduction-audionumerique-2026/b0a2efb7cb78548bf2d92d681caf3c34.jpg"><video playsinline="" controls="controls" poster="introduction-audionumerique-2026/b0a2efb7cb78548bf2d92d681caf3c34.jpg" data-paused-by-reveal="" data-lazy-loaded="" data-src="introduction-audionumerique-2026/3be91dd0038ef32adb58aa245720741f.mp4"></video></div></div></section><section data-id="608af4e98c2e55a0c0d38f494a684182"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="ab958df4deb2f70d5fc7df63e186d60d">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 584.889px; left: 34.5555px; top: 127.5px;" data-name="text-d73b69" data-block-id="d8e463c2201a4122b1959387a381099c">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px; text-align: left;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><p><strong>ambiguité de l'échantillonage</strong></p></div>
+								</div>
+		
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 648.91px; height: 461.374px; left: 169.361px; top: 210px; min-width: 1px; min-height: 1px;" data-name="image-98d38c" data-block-id="60fa761e8443125fa8696b2dd23cb231"><div class="sl-block-style" style="z-index: 12; transform: rotate(180deg);"><div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="1070" data-natural-height="1350" data-crop-x="0.052308" data-crop-y="0.317848" data-crop-width="0.603077" data-crop-height="0.339853" style="left: -56px; top: -432px; width: 1076px; height: 1358px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/7badfcf9e462c887f6ad2eb7d267c8fb.jpeg"></div></div></div></section><section data-id="e5a3bd6bc776e418ddd3dcab082bb6b5"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="bf0d8cfa0f02b6bf712e217e0610eafc">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+
+<div class="sl-block" data-block-type="iframe" style="width: 733px; height: 387px; left: 104px; top: 234px;" data-name="iframe-8f8d18" data-block-id="db6f6c96a9399b4e2581279378d0c23e">
+								<div class="sl-block-content" style="z-index: 11;"><iframe allow="fullscreen; accelerometer; geolocation; gyroscope; camera; encrypted-media; microphone; midi; autoplay" data-preload="true" sandbox="allow-forms allow-scripts allow-popups allow-same-origin allow-pointer-lock allow-presentation" scrolling="no" data-lazy-loaded="" data-gtm-yt-inspected-6="true" data-src="https://jackschaedler.github.io/circles-sines-signals/sampling3.html#sinc"></iframe></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 584.889px; left: 45.5555px; top: 133.5px;" data-name="text-d73b69" data-block-id="30961bce9af5721a930b3de065456658">
+		
+								<div class="sl-block-style" style="z-index: 12; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 12; border-width: 1px; text-align: left;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><p><strong>repliement</strong></p></div>
+								</div>
+		
+							</div></section><section data-id="98549efd58104f36737133c4c2b88e60"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 181px; top: 32.5px;" data-name="text-588504" data-block-id="07ac992904a809832a6fb60d4f87f8c4">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: 60px; width: 899.714px; left: 19.5555px; top: 107px;" data-name="text-d73b69" data-block-id="17cf426e7adfbf45f02d638140cd4938" data-text-layout="fixed">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u><strong>Théorème </strong></u></span><u><strong>d'échantillonnage</strong><span style="font-size:1.0em"><strong> de Shannon-Nyquist</strong> :</span></u></pre></div>
+								</div>
+		
+							</div>
+
+
+
+<div class="sl-block" data-block-type="text" style="height: auto; width: 701.559px; left: 141.132px; top: 593px;" data-name="text-146338" data-block-id="63fe5a57184a15a72ef5daabba799630"><div class="sl-block-content fragment fade-out" data-placeholder-tag="p" data-placeholder-text="Text" style="z-index: 12;" data-fragment-index="0" data-lt-tmp-id="lt-267704" data-gramm="false"><p><span style="font-size:0.7em"><em>Trad. de Claude Shannon dans "Communication in the Presence of Noise" 1949</em></span></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 799px; height: 161px; left: 92.412px; top: 204px;" data-name="Text 1" data-block-id="8a9e3d3fcc715aed543cabf928b32af4" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 13;" data-placeholder-text="Text"><p>Un signal continu peut-être intégralement décrit en prélevant des échantillons à intervalles réguliers à une fréquence au moins deux fois supérieure à la fréquence de la composante la plus élevée du signal.</p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 826.857px; height: 176px; left: 92.412px; top: 403px;" data-name="Text 2" data-block-id="6876ddb343afe213814aefc4477f8c68" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 14;" data-placeholder-text="Text"><p>Si une fonction f(t) ne contient aucune fréquence supérieure à W Hz, elle est <strong>entièrement déterminée</strong> par la valeur de ses ordonnées à une série de points espacés de 1/2W secondes.</p></div></div></section><section data-id="e0bc42d98a86637369ca170ef5df671c"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="bdbee367f62ec56ef4e092c7dd54fe37">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="sl-block" data-block-type="image" style="width: 818.891px; height: 381.353px; left: 70.5545px; top: 187.647px; min-width: 1px; min-height: 1px;" data-name="image-47047b" data-block-id="77475fb6152d611b5e8ea7f35a1dbd6d"><div class="sl-block-style" style="z-index: 12; transform: rotate(180deg);"><div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="954" data-natural-height="1350" data-crop-x="0.150442" data-crop-y="0.077244" data-crop-width="0.589971" data-crop-height="0.194154" style="left: -209px; top: -152px; width: 1388px; height: 1964px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/15cb8cecadb17f005e328af431908fa5.jpg"></div></div></div></section><section data-id="9c089fa10bf71ce6b011d4f14a5fb843"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 181px; top: 32.5px;" data-name="text-588504" data-block-id="813d6e4d065b88a6257875659eba7322">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+
+
+
+
+<div class="sl-block" data-block-type="text" style="width: 815px; height: 133px; left: 97px; top: 177.5px;" data-name="Text 1" data-block-id="348272ab9a0d666f374da642396c32ea" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 11;" data-placeholder-text="Text"><p><span style="color:rgb(0, 0, 0); text-align:justify">On appelle cette fréquence la <strong>fréquence de Nyquist</strong>, la fréquence maximale enregistrable à une fréquence d'échantillonnage Fe (<em>sampling rate</em> en anglais). </span></p></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 396px; top: 409.5px;" data-name="Math 1" data-block-id="dcae8e87b008bd16afa44eef98caf7cf"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 14;"><div class="math-input">f_n = \frac{f_e}{2}</div></div></div>
+<div class="sl-block" data-block-type="text" style="width: 231px; height: 19.5px; left: 158px; top: 448.5px;" data-name="Text 2" data-text-layout="fixed" data-block-id="e84994f9da0bfc9b5d53ed9a00aa9e9c"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: right; z-index: 12; font-size: 76%;" data-placeholder-text="Text"><p style="text-align:justify"><em>fréquence de Nyquist</em></p></div></div>
+<div class="sl-block" data-block-type="text" style="width: 313px; height: 39px; left: 579px; top: 419.25px;" data-name="Text 3" data-text-layout="fixed" data-block-id="c5fadd6270525ad6cae53673fd59e0cb"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 13; font-size: 76%;" data-placeholder-text="Text"><p style="text-align:justify"><em>fréquence d'échantillonage</em></p></div></div></section><section data-id="e4b38dc2c228a3ae939e12d3f3692310"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 181px; top: 32.5px;" data-name="text-588504" data-block-id="02c94ee54d09952df4cd699593da10d0">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="width: 836px; height: 126px; left: 57px; top: 125.5px;" data-name="Text 1" data-block-id="27e9321f1a1ac3e178d40c2a36a24848" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 11;" data-placeholder-text="Text"><p>En audio, il faut donc choisir une fréquence d'échantillonage qui est <strong>le double</strong> de la fréquence maximum qu'on veut numériser</p></div></div>
+<div class="sl-block" data-block-type="image" style="width: 493.415px; height: 428px; left: 26px; top: 257.5px; min-width: 1px; min-height: 1px;" data-name="Image 1" data-block-id="b10ab22953b9d1f668b22ea868080cc6"><div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="640" data-natural-height="480" data-crop-x="0.151199" data-crop-y="0.061995" data-crop-width="0.717805" data-crop-height="0.830189" style="left: -104px; top: -32px; width: 687px; height: 516px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/b5678e52437270857b6ce51d696ff286.png"></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 553px; top: 385px;" data-name="Math 1" data-block-id="8b1267a44a894e4f7c512eecad61f4a6"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 13;"><div class="math-input">\begin{align*}
+&amp; \sim 2 * 20000 \mathrm{Hz} \\ 
+&amp; \sim 40000 \mathrm{Hz} 
+\end{align*}</div></div></div></section><section data-id="57001fe59c1bf42476ba0c084d4d4154"><div class="sl-block" data-block-type="text" style="width: 838px; height: 196px; left: 61px; top: 252px;" data-name="Text 1" data-text-layout="fixed" data-block-id="0957f7c4e3c3cdc7c08cf84cd85b8061"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 10;" data-placeholder-text="Text">
+<p>Fréquences d'échantillonages usuelles : </p>
+
+<ul>
+	<li>
+<strong>44100 Hz</strong> : norme audio (format CD)</li>
+	<li>
+<strong>48000 Hz</strong> : norme audio / vidéo ou formats US </li>
+	<li>
+<strong>96000 Hz</strong> : norme "audiophile" (mais pk donc??)</li>
+</ul>
+</div></div></section><section data-id="ce1aa5cca38664ee1ce61b5c7250d404"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="14021058c953aaaa5905f51d7c451c34">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+
+<div class="sl-block" data-block-type="image" style="width: 563.2px; height: 358.4px; left: 198.4px; top: 142px; min-width: 1px; min-height: 1px;" data-name="image-6cff3c" data-block-id="d00bcbb10b99aa795d6168e5caaf3f9e">
+								<div class="sl-block-content" style="z-index: 11;"><img class="" data-natural-width="1034" data-natural-height="658" data-lazy-loaded="" data-src="introduction-audionumerique-2026/f2fc5acdd0a5c1ecd2f4cba47b748f4a.png"></div>
+							</div>
+
+
+<div class="sl-block" data-block-type="text" style="width: 843px; height: 118px; left: 74px; top: 558.4px;" data-name="Text 1" data-block-id="276e1fec53e6d18341f39d1f4baede64" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="text-align: left; z-index: 12;" data-placeholder-text="Text"><p>on filtre le signal avant numérisation pour éviter que les fréquences se replient pendant la numérisation ! </p></div></div></section><section data-id="fc3d2138c866a9b6201362b03b37c77f"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="7df5bbca83ba257d4eae54fb926fdf89">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 889.889px; left: 27.5555px; top: 123px;" data-name="text-d73b69" data-block-id="39c00459681307cf954b0eade96a6fee">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>A.3) <strong>Filtre anti-aliasing</strong></u></span><u><span style="font-size:1.0em"> : </span></u>Filtrage analogique</pre></div>
+								</div>
+		
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 428px; left: 52px; top: 192.5px;" data-name="text-e8f418" data-block-id="ad553feed0e5b0cb58958b04f60d58c6">
+								<div class="sl-block-content" style="z-index: 12; line-height: 1.183;" data-has-line-height="" data-lt-tmp-id="lt-968930" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<p style="text-align:justify"><span style="font-size:0.7em">Réalité :</span></p>
+		
+									<p style="text-align:justify"><span style="font-size:0.7em">Difficulté de réalisation, nécessite un filtre analogique d'ordre 13 minimum. Très difficile à réaliser sans "ripples" et très cher.</span></p>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 431.56px; height: 258px; left: 521.62px; top: 401px; min-width: 1px; min-height: 1px;" data-name="image-6a6afb" data-block-id="76932b05ede73bb6e8db4bc6516cc1c1">
+								<div class="sl-block-content" style="z-index: 13; border-style: solid; border-width: 2px;"><img class="" data-natural-width="502" data-natural-height="296" data-crop-x="0" data-crop-y="0" data-crop-width="0.986301" data-crop-height="1" style="left: 0px; top: 0px; width: 438px; height: 258px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/b9c0e6879bf1f5a9e5fa2695917f4f98.png"></div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 442px; height: 294.16px; left: 27.5555px; top: 374.122px; min-width: 1px; min-height: 1px;" data-name="image-db00d9" data-block-id="794f2ad9c33f126dd6929623e988f973">
+								<div class="sl-block-content" style="z-index: 14;"><img class="" data-natural-width="1746" data-natural-height="1162" style="" data-lazy-loaded="" data-src="introduction-audionumerique-2026/6f628ea29793b70860be355293196c47.png"></div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 433.144px; height: 236.918px; left: 520.856px; top: 170.541px; min-width: 1px; min-height: 1px;" data-name="image-6afd9d" data-block-id="9d5dd0eddddb1f352a2a9340c8d30e1e">
+								<div class="sl-block-content" style="z-index: 15;"><img class="" data-natural-width="479" data-natural-height="262" data-lazy-loaded="" data-src="introduction-audionumerique-2026/64c11c2d2c6ab6cd5a4b3b04ffd223cb.gif"></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 345px; left: 607.5px; top: 659px;" data-name="text-fdbe1f" data-block-id="17bec3577a39039d491d380b94921610">
+								<div class="sl-block-content" style="z-index: 16;" data-placeholder-tag="p" data-placeholder-text="Text">
+									<p style="text-align: right;"><span style="font-size:0.5em">voir Max "spat5.filterdesign.chebyshev.maxhelp"</span></p>
+								</div>
+							</div></section><section data-id="8cf443636c60fb8f1f34adf74e1d7727"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="725f3962d3264e06e10c34bba58deb35">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 584.889px; left: 27.5555px; top: 123px;" data-name="text-d73b69" data-block-id="e572ea104c3804dacc3485e35de5e038">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>A.3) <strong>Filtre anti-repliement (anti-aliasing</strong></u></span><u><span style="font-size:1.0em">) :</span></u></pre></div>
+								</div>
+		
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 286px; left: 337px; top: 490px;" data-name="text-a5cb67" data-block-id="b71cb62ae4067b59ffae106bddd5e3c7">
+								<div class="sl-block-content" style="z-index: 12;" data-placeholder-tag="p" data-placeholder-text="Text"><p><a href="https://src.infinitewave.ca/" target="_blank">Src Comparison</a></p></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 244px;" data-name="text-d6990d" data-block-id="e98243b1a0a518d472025d18adcae59c">
+								<div class="sl-block-content" style="z-index: 13; line-height: 2.34;" data-has-line-height="" data-placeholder-tag="p" data-placeholder-text="Text"><ul>
+	<li>Filtrage analogique</li>
+	<li>Filtrage numérique</li>
+	<li>OverSampling / Delta Sigma</li>
+</ul></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 82px; left: 0px; top: 672px;" data-name="text-56f6ac" data-block-id="936dd78617522ed30bc3cb86e36aa340">
+								<div class="sl-block-content" style="z-index: 14; font-size: 57%;" data-placeholder-tag="p" data-placeholder-text="Text"><p><a href="https://www.eletimes.com/antialiasing-filtering-considerations-for-high-precision-sar-analog-to-digital-converters" target="_blank">more</a></p></div>
+							</div></section><section data-id="47538673e6f76f1956f238354e8fdb6d"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="dec326840497e2dfa6e78524b017d447">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 889.889px; left: 27.5555px; top: 123px;" data-name="text-d73b69" data-block-id="79b05d790fe0bd2bf5215622212f166f">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>A.4) <strong>Sur-échantillonnage (oversampling)</strong></u></span></pre></div>
+								</div>
+		
+							</div>
+
+<div class="sl-block" data-block-type="text" style="height: auto; width: 97px; left: 10px; top: 648.782px;" data-name="text-edb7fb" data-block-id="48680f5f891c3fb8d5fcb39602b32781">
+								<div class="sl-block-content" style="z-index: 13;" data-placeholder-tag="p" data-placeholder-text="Text">
+									<p style="text-align: left;"><span style="font-size:0.5em"><a href="https://www.analog.com/en/analog-dialogue/articles/practical-filter-design-precision-adcs.html" target="_blank">more info</a></span></p>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 806.4px; height: 109.24px; left: 58.5px; top: 462px; min-width: 1px; min-height: 1px;" data-name="image-5b6391" data-block-id="ea52921be5ca9ba2b39cd7b522130feb">
+								<div class="sl-block-content" style="z-index: 14;"><img class="" data-natural-width="1063" data-natural-height="144" data-lazy-loaded="" data-src="introduction-audionumerique-2026/316dcc0762131d985ecce0500eb9a6f6.png"></div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 418.906px; height: 219.427px; left: 240px; top: 188.354px; min-width: 1px; min-height: 1px;" data-name="image-d9f027" data-block-id="52329713ffc12f52eadc1d058acb1541">
+								<div class="sl-block-content" style="z-index: 15;"><img class="" data-natural-width="630" data-natural-height="330" data-lazy-loaded="" data-src="introduction-audionumerique-2026/3e1a06555b5dc24dfeb353ec3aaad27d.jpg"></div>
+							</div>
+
+
+
+</section><section data-id="022e587f6f1616e5e7574c2dbbb38383"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="d52c3d161851c5117fa4d6ac08d38a82">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 889.889px; left: 27.5555px; top: 123px;" data-name="text-d73b69" data-block-id="58743fecdef15f7b49ed9d2a16e9cf7f">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>A.4) <strong>Sur-échantillonnage</strong></u></span><u><span style="font-size:1.0em">: </span></u>Filtrage numérique</pre></div>
+								</div>
+		
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 441.999px; height: 294.16px; left: 27.5555px; top: 374.122px; min-width: 1px; min-height: 1px;" data-name="image-db00d9" data-block-id="2d92114527d1c972d1505ed00b069a45">
+								<div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="1746" data-natural-height="1162" style="" data-lazy-loaded="" data-src="introduction-audionumerique-2026/cd1a5e43607d01fbee9728e0dd8f3f9f.png"></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 345px; left: 607.5px; top: 661px;" data-name="text-fdbe1f" data-block-id="78bd34ac94c34e7afd2c68712bf819e7">
+								<div class="sl-block-content" style="z-index: 13;" data-lt-tmp-id="lt-121772" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<p style="text-align:right"><span style="font-size:0.5em">voir Plugin Doctor "fabfilter Pro Q 3"</span></p>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 97px; left: 10px; top: 648.782px;" data-name="text-edb7fb" data-block-id="a27edaadf5b934e327eacfd05e906fd4">
+								<div class="sl-block-content" style="z-index: 14;" data-placeholder-tag="p" data-placeholder-text="Text">
+									<p style="text-align: left;"><span style="font-size:0.5em"><a href="https://www.analog.com/en/analog-dialogue/articles/practical-filter-design-precision-adcs.html" target="_blank">more info</a></span></p>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 355px; left: 52px; top: 210px;" data-name="text-e8f418" data-block-id="8d9051443140350beadb2467cd9d8e9a">
+								<div class="sl-block-content" style="z-index: 15; line-height: 1.183;" data-has-line-height="" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><p style="text-align:justify"><span style="font-size:0.7em">Simple à réaliser, il peut atteindre facilement des ordres élevés. Il peut induire beaucoup de latence.</span></p></div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 349.147px; height: 495.634px; left: 568.298px; top: 172.648px; min-width: 1px; min-height: 1px;" data-name="image-fcb8fa" data-block-id="84167737aec46d7f2b91e3cd02b5a1ec">
+								<div class="sl-block-content" style="z-index: 17;"><img class="" data-natural-width="951" data-natural-height="1350" data-lazy-loaded="" data-src="introduction-audionumerique-2026/29e317f72c76ba4bfbec48ba4daa4bea.png"></div>
+							</div></section><section data-id="529fe5022bd730ccffcaa1e14349b9ed"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="244495fba525c984eccea9cf4509109d">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 889.889px; left: 27.5555px; top: 123px;" data-name="text-d73b69" data-block-id="ec8070297f573ab7de90b34c558c1717">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text" data-lt-tmp-id="lt-736951"><pre><span style="font-size:1.0em"><u>A.4) <strong>Sur-échantillonnage (oversampling)</strong></u></span></pre></div>
+								</div>
+		
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 345px; left: 607.5px; top: 659px;" data-name="text-fdbe1f" data-block-id="99465dbfb19525fb750567d3461e6c6a">
+								<div class="sl-block-content" style="z-index: 12;" data-placeholder-tag="p" data-placeholder-text="Text">
+									<p style="text-align: right;"><span style="font-size:0.5em">voir Max "spat5.filterdesign.chebyshev.maxhelp"</span></p>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 97px; left: 10px; top: 648.782px;" data-name="text-edb7fb" data-block-id="8302b2fc1130917862e7580098be593e">
+								<div class="sl-block-content" style="z-index: 13;" data-placeholder-tag="p" data-placeholder-text="Text">
+									<p style="text-align: left;"><span style="font-size:0.5em"><a href="https://www.analog.com/en/analog-dialogue/articles/practical-filter-design-precision-adcs.html" target="_blank">more info</a></span></p>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 806.4px; height: 109.24px; left: 58.5px; top: 462px; min-width: 1px; min-height: 1px;" data-name="image-5b6391" data-block-id="7d6d66b6adcaf5370eae39795e88b769">
+								<div class="sl-block-content" style="z-index: 14;"><img class="" data-natural-width="1063" data-natural-height="144" data-lazy-loaded="" data-src="introduction-audionumerique-2026/316dcc0762131d985ecce0500eb9a6f6.png"></div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 311.945px; height: 163.4px; left: 552.955px; top: 198px; min-width: 1px; min-height: 1px;" data-name="image-d9f027" data-block-id="a2290acd77c0128619e47bd81d9170e0">
+								<div class="sl-block-content" style="z-index: 15;"><img class="" data-natural-width="630" data-natural-height="330" data-lazy-loaded="" data-src="introduction-audionumerique-2026/3e1a06555b5dc24dfeb353ec3aaad27d.jpg"></div>
+							</div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 50px; top: 193.5px;" data-name="math-c9f507" data-block-id="ff042d566cb9eb903b49bac12d234d11">
+								<div class="sl-block-content notranslate" style="z-index: 16; font-size: 45%;">
+									<div class="math-input">SNR = 6.02 × N + 1.76 dB + 10 × log_{10}(OSR)</div>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 136.5px; top: 280px;" data-name="math-d6796f" data-block-id="1ba47f1a20f5b8b0cab0958bedcd012d">
+								<div class="sl-block-content notranslate" style="z-index: 17; font-size: 71%;">
+									<div class="math-input">OSR = \frac{f_s}{2* BW}
+									</div>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 191px; left: 224.5px; top: 350px;" data-name="text-4a897d" data-block-id="0ccae88464c2a7a76c268b099405fa01">
+								<div class="sl-block-content" style="z-index: 18; font-size: 60%;" data-placeholder-tag="p" data-placeholder-text="Text">
+									<p style="text-align: left;">à 48 kHz = 0.8dB</p>
+		
+									<p style="text-align: left;">à 96 KhZ = 3.8 dB</p>
+		
+									<p style="text-align: left;">à 128x24kHz = 19 dB</p>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 25.5px; top: 350px;" data-name="math-704746" data-block-id="2bc6509cb2636ccf2cf70ef2a2f809a2">
+								<div class="sl-block-content notranslate" style="z-index: 19; font-size: 45%;">
+									<div class="math-input">10 × log_{10}(OSR)</div>
+								</div>
+							</div></section><section data-id="8fe0b2a22a282449d3b86f25f49a11cb"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="6079adbc3c32314bd478a40c30e6942c">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+
+
+
+
+
+
+
+
+<div class="sl-block" data-block-type="image" style="width: 543.188px; height: 572px; left: 208.406px; top: 114px; min-width: 1px; min-height: 1px;" data-name="image-bfe1ad" data-block-id="767b0c2b9bdc356df0f822e66748437e"><div class="sl-block-content" style="z-index: 11;"><img class="" data-natural-width="1282" data-natural-height="1350" data-lazy-loaded="" data-src="introduction-audionumerique-2026/c58fccc1eb2f076c88a302c93d2b4c5e.png"></div></div>
+<div class="sl-block" data-block-type="shape" style="width: 183.995px; height: 15.9424px; left: 276.503px; top: 497.848px;" data-name="shape-4a405d" data-block-id="9c919b7ad896bd71cf5770d35ab74bb7"><div class="sl-block-style" style="z-index: 12; opacity: 0.7; filter: blur(9px);"><div class="sl-block-content" data-shape-type="rect" data-shape-fill-color="rgb(0, 255, 0)" data-shape-stretch="true" style="z-index: 12;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100%" height="100%" preserveaspectratio="none" viewbox="0 0 184 16"><rect width="183.995" height="15.9424" rx="0" ry="0" class="shape-element" fill="rgb(0, 255, 0)"></rect></svg></div></div></div></section><section data-id="7082b5c5c2c4795382420a804dd1aa48"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="b807437691c6c243e446505e5dab3a2e">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 488.019px; left: 12.6985px; top: 122px;" data-name="text-d73b69" data-block-id="25eefe3b91902dac4493e9472286df96">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+										<pre><span style="font-size:1.2em"><u>B) Quantification :</u></span></pre>
+									</div>
+								</div>
+		
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 435px; left: 489.718px; top: 252.5px;" data-name="text-272372" data-block-id="923e24a13f09f8ceef7d806d1671374d">
+								<div class="sl-block-content" style="z-index: 12;" data-placeholder-tag="p" data-placeholder-text="Text"><blockquote>
+<p style="text-align:justify"><span class="tlf_cdefinition">Action de calculer, de façon automatique, des valeurs numériques discrètes multiples d'un quantum, correspondant à une grandeur physique</span><br>
+CNRTL</p>
+</blockquote></div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 423.918px; height: 260.3px; left: 44.749px; top: 219.85px; min-width: 1px; min-height: 1px;" data-name="image-276802" data-block-id="30e16c42b8fa3ed70749ae751c994517">
+								<div class="sl-block-content" style="z-index: 13;"><img class="" data-natural-width="570" data-natural-height="350" data-lazy-loaded="" data-src="introduction-audionumerique-2026/422600b3fe61e934d334610106099f96.svg"></div>
+							</div>
+</section><section data-id="39113ecfd949ee0b15f8362739163de2"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="279a3ec3d99b2d32e584095698367434">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+
+
+
+<div class="sl-block" data-block-type="text" style="height: auto; width: 350px; left: 50px; top: 176.5px;" data-name="text-0f8369" data-block-id="c6bdea2f6a75402fea7db5f6689ddff3"><div class="sl-block-content" data-placeholder-tag="p" style="z-index: 11;" data-placeholder-text="Text"><p>Système de numération base 10 (décimal)</p></div></div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 350px; left: 540.718px; top: 165px;" data-block-id="4e73b195f9803df818ca9a4aa8c513dd" data-name="text-21957f"><div class="sl-block-content" data-placeholder-tag="p" style="z-index: 12;" data-gramm="false" data-placeholder-text="Text"><p>Système de numération base 2 (binaire)</p></div></div>
+
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 130px; top: 320.5px;" data-name="Math 1" data-block-id="76be4dd3d3e241890af183a617d0ceb8"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 15; font-size: 85%;"><div class="math-input">\begin{align*}
+&amp; 1, 2, \dots, 9, 10, \\ 
+&amp; 11, 12, \dots, 99, \\
+&amp; 100, 101, 102 \dots
+\end{align*}</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 575.718px; top: 281.666px;" data-name="Math 2" data-block-id="d6d8212040da7d8930f1824f3141523f"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 16; font-size: 85%;"><div class="math-input">\begin{align*}
+&amp; 0, 1, \\
+&amp; 10, 11 \\
+&amp; 100, 101, 110, 111 \\
+&amp; 1000, 1001 \dots 1111
+\end{align*}</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 32.5px; top: 327px;" data-name="Math 3" data-block-id="279a8fc24518ba940905bcc1fdcf60f7"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 17; font-size: 42%;"><div class="math-input">10^1 = 10</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 21.5px; top: 394.666px;" data-name="Math 4" data-block-id="657416e4df1733c1b4cd2e08579dd99e"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 22; font-size: 42%;"><div class="math-input">10^2 = 100</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 21.5px; top: 463px;" data-name="Math 5" data-block-id="90d43412f6e7688c2d332b812c363899"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 23; font-size: 42%;"><div class="math-input">10^3 = 100</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 490.5px; top: 291.166px;" data-name="Math 6" data-block-id="4645412d9a1c148f40125bfa40b84aea"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 18; font-size: 42%;"><div class="math-input">2^1 = 2
+</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 490.5px; top: 353.666px;" data-name="Math 7" data-block-id="b2d84da91e6a6bd4b4ba43d5b6a0117e"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 19; font-size: 42%;"><div class="math-input">2^2 = 4
+</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 490.5px; top: 416.832px;" data-name="Math 8" data-block-id="62806823399b3b1f595a71904754cf06"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 20; font-size: 42%;"><div class="math-input">2^3 = 8
+</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 490.5px; top: 479.832px;" data-name="Math 9" data-block-id="a9560a34177135bfb90f728f2405c219"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 21; font-size: 42%;"><div class="math-input">2^4 = 16
+</div></div></div></section><section data-id="581b76f0809b075d3cd22b7002550ab7"><div class="sl-block" data-block-type="text" style="height: 74px; width: 594px; left: 180px; top: 128px;" data-name="text-21957f" data-block-id="7ba40f7c26e339ae96eee0757c83805b" data-text-layout="fixed"><div class="sl-block-content" data-placeholder-tag="p" style="z-index: 10;" data-gramm="false" data-placeholder-text="Text"><p>Système de numération base 16 (héxadécimal)</p></div></div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="17cb6804df00ae246a87e3a9d8833009">
+								<div class="sl-block-content" style="z-index: 11;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 165.859px; top: 327.5px;" data-name="Math 2" data-block-id="47ddab99d865783e78a56cd7b8d5e98a"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 12; font-size: 80%;"><div class="math-input">\begin{align*}
+&amp; 0, 1, \dots \mathrm{9, A, B, C, D, E, F} \\
+&amp; \mathrm{10, 11 \dots 1E, 1F, 20, 21 \dots, 99, A0, A1 \dots FF} \\
+&amp; \mathrm{100, 101, \dots 109, 1A0 \dots FFF \\}
+\end{align*}</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 58.141px; top: 335px;" data-name="Math 3" data-block-id="e09fe7a660ee382eb921162da866e585"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 13; font-size: 42%;"><div class="math-input">16^1 = 16</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 47.141px; top: 392.5px;" data-name="Math 4" data-block-id="d7551b660b56dadd4315047cb476b0b3"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 14; font-size: 42%;"><div class="math-input">16^2 = 256</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 37.141px; top: 450.5px;" data-name="Math 5" data-block-id="9cbd9b49dc94cbdf0b1b6c1af7bf5840"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 15; font-size: 42%;"><div class="math-input">16^3 = 4096</div></div></div></section><section data-id="00fa60a810ed826a8948f6b35b096175"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="3a16ee703fd02c84c56565d4a7d68260">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 556.827px; left: 12.6985px; top: 122px;" data-name="text-d73b69" data-block-id="17630c46f8b2530eb4cbc138c74f6b92">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.2em"><u>B.2) Multiplet et unités</u></span></pre></div>
+								</div>
+		
+							</div>
+
+
+<div class="sl-block" data-block-type="text" style="height: auto; width: 350px; left: -5px; top: 248px;" data-name="text-0f8369" data-block-id="3336986e24bcdb10c61e4b8dfe631d3f"><div class="sl-block-content" data-placeholder-tag="p" style="z-index: 12;" data-gramm="false" data-placeholder-text="Text"><p>Binary digIT: Bit (b)</p></div></div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 350px; left: 285.718px; top: 253.25px;" data-block-id="8ab56a6ba144f9e890a5003acdfb3c93" data-name="text-7ee737"><div class="sl-block-content" data-placeholder-tag="p" data-placeholder-text="Text" style="z-index: 13;" data-gramm="false"><p>Octet (o)</p></div></div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 350px; left: 285.718px; top: 303.75px;" data-block-id="9cac85585e2c171ec12dd93079c69a26" data-name="text-36504f"><div class="sl-block-content" data-placeholder-tag="p" data-placeholder-text="Text" style="z-index: 14;" data-gramm="false"><p>= 8bits</p></div></div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 350px; left: 610px; top: 253.25px;" data-block-id="4f572eaa93b0b11fd80a39a79a9c990e" data-name="text-4e7f99"><div class="sl-block-content" data-placeholder-tag="p" data-placeholder-text="Text" style="z-index: 15;" data-gramm="false"><p>Bytes (B)</p></div></div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 350px; left: 570px; top: 303.75px;" data-block-id="8d6aab1e5ecb02dd0ceb03589dde7c92" data-name="text-575436"><div class="sl-block-content" data-placeholder-tag="p" data-placeholder-text="Text" style="z-index: 16;" data-gramm="false"><p>Généralement =8bits</p></div></div>
+<div class="sl-block" data-block-type="table" style="height: auto; min-width: 526px; width: 768px; left: 105px; top: 402px;" data-name="table-068c83" data-block-id="9834f2f0a88bc008831974f0dbfe9ebc"><div class="sl-block-content" style="z-index: 17;" data-table-cols="4" data-table-rows="3"><table><tbody>
+<tr>
+<th style="width: 129px;">Kilo</th>
+<th style="width: 147px;">Méga</th>
+<th style="width: 210px;">Giga</th>
+<th>Tera</th>
+</tr>
+<tr>
+<td style="width: 129px;">1000</td>
+<td style="width: 147px;">1 000 000</td>
+<td style="width: 210px;">1 000 000 000</td>
+<td>1 000 000 000 000</td>
+</tr>
+<tr>
+<td style="width: 129px;"></td>
+<td style="width: 147px;"></td>
+<td style="width: 210px;"></td>
+<td></td>
+</tr>
+</tbody></table></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 142px; top: 506.5px;" data-name="math-c51b4d" data-block-id="f6be51e272d5af8fd786e2e208ec9d68"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 18; font-size: 61%;"><div class="math-input">10^3</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 273.112px; top: 510px;" data-block-id="c57340317dbec215c855f5ea10a70e00" data-name="math-2c6ee0"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 19; font-size: 61%;"><div class="math-input">10^6</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 446px; top: 506.5px;" data-block-id="1293022679a59791249e288c04e62528" data-name="math-b02fc4"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 20; font-size: 61%;"><div class="math-input">10^9</div></div></div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 672.718px; top: 510px;" data-block-id="93d1ad2f38f5b205f433fcfadc49a407" data-name="math-c4dca2"><div class="sl-block-content notranslate" data-math-display="true" style="z-index: 21; font-size: 61%;"><div class="math-input">10^{12}</div></div></div></section><section data-id="e93342d622fa520e2bb3a86b8f8838d3"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="21ac4680744b3798315b64d992b40ee6">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 850.019px; left: 12.6985px; top: 122px;" data-name="text-d73b69" data-block-id="fb1c6a1379dc916e2396628e6481daff">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>B.3) Quantification en bits entiers :</u></span></pre></div>
+								</div>
+		
+							</div>
+
+<div class="sl-block" data-block-type="image" style="width: 516.874px; height: 517.59px; left: 180px; top: 158px; min-width: 1px; min-height: 1px;" data-name="image-427a92" data-block-id="06c3eb254b6711e933ab7aeafc78a501"><div class="sl-block-style" style="z-index: 12; transform: rotate(180deg);"><div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="954" data-natural-height="1350" data-crop-x="0.120219" data-crop-y="0.30796" data-crop-width="0.584699" data-crop-height="0.41376" style="left: -106px; top: -385px; width: 884px; height: 1251px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/0079944937ef8528b332fb717f848743.jpg"></div></div></div>
+<div class="sl-block" data-block-type="shape" style="width: 747px; height: 81px; left: 74px; top: 499px;" data-name="shape-e64770" data-block-id="97a55252ec576df4df5fce04ada979ce"><div class="sl-block-content" data-shape-type="rect" data-shape-fill-color="rgb(255, 255, 255)" data-shape-stretch="true" style="z-index: 13;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100%" height="100%" preserveaspectratio="none" viewbox="0 0 747 81"><rect width="747" height="81" rx="0" ry="0" class="shape-element" fill="rgb(255, 255, 255)"></rect></svg></div></div></section><section data-id="f55ec365dbf4a6273e0a9bfe4b432c20"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="ac9e3c54a0314730963fb31dd718b78b">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 850.019px; left: 12.6985px; top: 122px;" data-name="text-d73b69" data-block-id="cfcf8c0513e38c68055d806c78908405">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>B.3) Quantification en bits entiers :</u></span></pre></div>
+								</div>
+		
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 334px; left: 567px; top: 250.5px;" data-name="text-4c3dda" data-block-id="ddd99114bb7f9cecff43b2f80381cd5a">
+								<div class="sl-block-content" style="z-index: 12; font-size: 80%; text-align: left; color: rgb(60, 120, 216);" data-placeholder-tag="p" data-placeholder-text="Text">
+									<p>Pour n bits, on a        valeurs</p>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 757px; top: 238px;" data-name="math-d2bec9" data-block-id="923236fc7b208494a2abbdf4fd82f1d6">
+								<div class="sl-block-content notranslate" style="z-index: 13; font-size: 80%; color: rgb(60, 120, 216);">
+									<div class="math-input">2^n</div>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 506.086px; height: 425px; left: 35.625px; top: 180px; min-width: 1px; min-height: 1px;" data-name="image-205f6f" data-block-id="372a8caa783a1f1bb123adbbb9f3b04a">
+								<div class="sl-block-content" style="z-index: 14;"><img class="" data-natural-width="724" data-natural-height="608" data-lazy-loaded="" data-src="introduction-audionumerique-2026/f8d4e23163760f8bc98bd22c7801332a.png"></div>
+							</div></section><section data-id="7e7d2ba3d62aec2a0082dfd6cb8c8485"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="56b483baf9a2f740317455b971dbaaf9">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 850.019px; left: 12.6985px; top: 122px;" data-name="text-d73b69" data-block-id="a667b5ebcac2b89b0fa6984e944381e6">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>B.3) Quantification en bits entiers :</u></span></pre></div>
+								</div>
+		
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 826.611px; left: 98.107px; top: 538px;" data-name="text-beefb4" data-block-id="2e4b167c0e87accc491df2ca426c1753">
+								<div class="sl-block-content" style="z-index: 12; font-size: 55%;" data-placeholder-tag="p" data-placeholder-text="Text"><blockquote>
+<p><span style="font-size:calc(var(--scale-factor)*11.97px)">Le code binaire signé est obtenu en rajoutant un bit de signe devant le MSB au code binaire</span><br>
+<span style="font-size:calc(var(--scale-factor)*11.97px)">naturel. Pour un bit de signe nul, le nombre est positif, il est négatif pour un bit égale à un.</span> <span style="font-size:calc(var(--scale-factor)*11.97px)">Le code binaire signé est peu propice aux opérations arithmétiques.</span><span style="font-size:calc(var(--scale-factor)*11.97px)"> Le code complément à 2 correspond au code binaire naturel pour les positifs, et à 2^n - A pour les négatifs</span></p>
+</blockquote></div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 428.497px; height: 353px; left: 298.503px; top: 171.5px; min-width: 1px; min-height: 1px;" data-name="image-64fd25" data-block-id="7a562630c89d33f053f26d9f2ebda622">
+								<div class="sl-block-content" style="z-index: 13;"><img class="" data-natural-width="840" data-natural-height="692" data-lazy-loaded="" data-src="introduction-audionumerique-2026/a21a3a6401faab0c4d9314f570878a22.png"></div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 173.935px; height: 337px; left: 46.579px; top: 177px; min-width: 1px; min-height: 1px;" data-name="image-bbebc0" data-block-id="d48270e10f34a229b6b7dad81b1974c4">
+								<div class="sl-block-content" style="z-index: 14;"><img class="" data-natural-width="536" data-natural-height="556" data-crop-x="0" data-crop-y="0" data-crop-width="0.535385" data-crop-height="1" style="left: 0px; top: 0px; width: 325px; height: 337px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/7946ec96e8470bebf6c773314f292656.png"></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 200px; left: 749px; top: 207px;" data-name="text-4c3dda" data-block-id="92fa6a8fe701cec712fb1175ba54bb6f">
+								<div class="sl-block-content" style="z-index: 15; font-size: 80%; text-align: left; color: rgb(60, 120, 216);" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<p>Pour n bits, la valeur maximale absolue est :</p>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 780px; top: 309px;" data-name="math-d2bec9" data-block-id="8546918fa479e729dc49746871d5513a">
+								<div class="sl-block-content notranslate" style="z-index: 16; font-size: 80%; color: rgb(60, 120, 216);">
+									<div class="math-input">2^n-1</div>
+								</div>
+							</div></section><section data-id="0828a22953366b7cb432c59de5a1249e"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="2f06c941fad8a0933dc4dfe31c09106b">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 850.019px; left: 12.6985px; top: 122px;" data-name="text-d73b69" data-block-id="a71998bb2940feebfdbf413136ec57f8">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>B.8) Quantification à bit flottant :</u></span></pre></div>
+								</div>
+		
+							</div>
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 212.708px; top: 499.5px;" data-name="math-a42fae" data-block-id="d11465f283001e327cc73d0321ed24c1">
+								<div class="sl-block-content notranslate" style="z-index: 12;">
+									<div class="math-input">Mantissa × 2^{exponent}</div>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 732.397px; height: 140px; left: 80px; top: 280px; min-width: 1px; min-height: 1px;" data-name="image-6173d2" data-block-id="658350654fd543cb2da6217cb65057c0">
+								<div class="sl-block-content" style="z-index: 13;"><img class="" data-natural-width="1266" data-natural-height="242" data-lazy-loaded="" data-src="introduction-audionumerique-2026/6eed52ccf6c2d4de17fb637faa98b7e8.png"></div>
+							</div></section><section data-id="4825eb56ed34cee97779eeaa5da89b4b"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="a804c464430fe779f7c6191da65a13d2">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 850.019px; left: 12.6985px; top: 122px;" data-name="text-d73b69" data-block-id="2d425ef149234e1ddd67ccee4cc46159">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>B.4) Erreur de quantification &amp; bruit</u></span></pre></div>
+								</div>
+		
+							</div>
+
+
+<div class="sl-block" data-block-type="image" style="width: 432.64px; height: 264.522px; left: 221.388px; top: 155.478px; min-width: 1px; min-height: 1px;" data-name="image-8f7ccc" data-block-id="0fb911e87f1c8775a3f344dc01c19d77"><div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="736" data-natural-height="450" data-lazy-loaded="" data-src="introduction-audionumerique-2026/ecd65be63189fffc25508c230791e4f3.png"></div></div>
+<div class="sl-block" data-block-type="image" style="width: 360.242px; height: 278px; left: 221.388px; top: 401px; min-width: 1px; min-height: 1px;" data-name="image-c1bc2f" data-block-id="f1831741092a92324d5d27b069e0d362"><div class="sl-block-content" style="z-index: 13;"><img class="" data-natural-width="622" data-natural-height="480" data-lazy-loaded="" data-src="introduction-audionumerique-2026/81601b7939c13abaea8288169c5eec91.png"></div></div></section><section data-id="f08e3a9006f796ebda426956fed8a582"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="70285bd63045f6d346e8d900287645c7">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 850.019px; left: 12.6985px; top: 122px;" data-name="text-d73b69" data-block-id="e83aaf8c1a90c9fbd0ce0a432314c3c8">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>B.4) Erreur de quantification &amp; bruit</u></span></pre></div>
+								</div>
+		
+							</div>
+
+
+<div class="sl-block" data-block-type="image" style="width: 806.4px; height: 453.6px; left: 56.3175px; top: 167.2px; min-width: 1px; min-height: 1px;" data-name="image-256286" data-block-id="ba6302510022898092fac98e5f049ec9"><div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="1920" data-natural-height="1080" data-lazy-loaded="" data-src="introduction-audionumerique-2026/da55d321d3cab6a64b16ceacfadadc47.png"></div></div></section><section data-id="fa858d5f25018b48ea0cba5d6ad4389d"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="212683383c1c76b152ddcbca48817cb5">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 850.019px; left: 12.6985px; top: 122px;" data-name="text-d73b69" data-block-id="9c0195953cdb501f7b27a6c4d9503d51">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>B.5) Rapport signal sur bruit (RSBn)</u></span></pre></div>
+								</div>
+		
+							</div>
+
+<div class="sl-block" data-block-type="math" style="width: auto; height: auto; left: 80px; top: 210px;" data-name="math-c9f507" data-block-id="20c85187658ec316323fe49a8c18b8f5">
+								<div class="sl-block-content notranslate" style="z-index: 12; color: rgb(60, 120, 216); font-size: 97%;">
+									<div class="math-input">SNR = 6.02 × N + 1.76 dB</div>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 161.183px; height: 518px; left: 726.409px; top: 123.894px; min-width: 1px; min-height: 1px;" data-name="image-30ba34" data-block-id="035f1b6301eed4690fc15c7d87696fa3">
+								<div class="sl-block-content" style="z-index: 13;"><img class="" data-natural-width="262" data-natural-height="842" data-lazy-loaded="" data-src="introduction-audionumerique-2026/2a35e3712a9be710df04cffd3af3b8eb.png"></div>
+							</div></section><section data-id="19f8bb224f4c391fd75b9f6a8995713b"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="da620fd99d511f2d1c778d1e41bb36fb">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 850.019px; left: 12.6985px; top: 122px;" data-name="text-d73b69" data-block-id="47ce90610bf4abefc1375f0d93eb50bb">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>B.6) Distortion harmonique et dithering</u></span></pre></div>
+								</div>
+		
+							</div>
+
+
+<div class="sl-block" data-block-type="image" style="width: 617.087px; height: 377.98px; left: 150.887px; top: 196px; min-width: 1px; min-height: 1px;" data-name="image-34d39b" data-block-id="45343f59f98cdbfc4594229551cc9ee7"><div class="sl-block-style" style="z-index: 12; transform: rotate(180deg);"><div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="954" data-natural-height="1350" data-crop-x="0.035519" data-crop-y="0.138996" data-crop-width="0.606557" data-crop-height="0.262548" style="left: -36px; top: -200px; width: 1017px; height: 1440px;" data-lazy-loaded="" data-src="introduction-audionumerique-2026/41ad48ec1346c074acc973eb586b6f49.jpg"></div></div></div></section><section data-id="16db7823e803993034d95299e4d75cab"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="4c5793bbf2d30ed76e00d0bd1af109a7">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 850.019px; left: 12.6985px; top: 122px;" data-name="text-d73b69" data-block-id="41a476738057ce828fc971827e636263">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>B.6) Distortion harmonique et dithering</u></span></pre></div>
+								</div>
+		
+							</div>
+
+
+<div class="sl-block" data-block-type="image" style="width: 449.86px; height: 372.767px; left: 240px; top: 196px; min-width: 1px; min-height: 1px;" data-name="image-e5649f" data-block-id="cc312ffb30c9a4ca672a14481007f0e7"><div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="992" data-natural-height="822" data-lazy-loaded="" data-src="introduction-audionumerique-2026/cb810228dc3cbbdccc95cc34e969d4a1.png"></div></div></section><section data-id="38af0b9dfe5c8d3193a8c03356e431c8"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="580c5bc9feaed4727f5680fdcee69e2d">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 850.019px; left: 12.6985px; top: 122px;" data-name="text-d73b69" data-block-id="42568255fafa19c250d92685c597c093">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text"><pre><span style="font-size:1.0em"><u>B.7) Quantification non-uniforme :</u></span></pre></div>
+								</div>
+		
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 477.044px; height: 422px; left: 25.926px; top: 196px; min-width: 1px; min-height: 1px;" data-name="image-c2f12f" data-block-id="7b8f857c05ff0cf2c8a8707f0f77ef4b">
+								<div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="364" data-natural-height="322" data-lazy-loaded="" data-src="introduction-audionumerique-2026/4f6d2aa833576eb6c89f1716f2512672.svg"></div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 401px; left: 519.5px; top: 210px;" data-name="text-819ae2" data-block-id="af19727ad9a229f40ef87d5addb8ff7a">
+								<div class="sl-block-content" style="z-index: 13;" data-placeholder-tag="p" data-placeholder-text="Text">
+<blockquote>
+<p style="text-align:justify"><span style="font-size:0.7em">Dans certaines applications, le signal présente rarement de grandes amplitudes mais il est souvent d’amplitude faible. C’est le cas des signaux de parole. Aussi, il est intéressant d’avoir une quantification où le pas de quantification est différent dans les faibles et les grandes amplitudes. En téléphonie, la « loi A » permet d’obtenir la quantification représentée.</span></p>
+</blockquote>
+
+<p style="text-align:justify"><span style="font-size:0.7em">Vincent Mazet </span></p>
+</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 707.857px; left: 194.951px; top: 639.358px;" data-name="text-71a447" data-block-id="82c8b0d0365c7a95f1fb5942febd5ec7"><div class="sl-block-content" data-placeholder-tag="p" data-placeholder-text="Text" style="z-index: 14;"><p><span style="font-size:0.7em"><a href="https://vincmazet.github.io/signal1/numerisation/quantification.html" target="_blank">https://vincmazet.github.io/signal1/numerisation/quantification.html</a></span></p></div></div></section><section data-id="1fad703ded5e9d6e1d9b978f93d5223e"><div class="sl-block" data-block-type="iframe" data-name="Iframe 1" style="width: 960px; height: 700px; left: 0px; top: 0px;" data-block-id="99dfe0458d69a6705e2c6cfc2ac085e3"><div class="sl-block-content" style="z-index: 10;"><iframe allow="fullscreen; autoplay; accelerometer; geolocation; gyroscope; camera; encrypted-media; microphone; midi" data-src="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/quantification" sandbox="allow-forms allow-scripts allow-popups allow-same-origin allow-pointer-lock allow-presentation"></iframe></div></div></section><section data-id="477079b45431acd52630678abf518d3c"><div class="sl-block" data-block-type="text" style="height: auto; width: 600px; left: 180px; top: 33.5px;" data-name="text-588504" data-block-id="b1ce20c2353605d983a84bd615becd5b">
+								<div class="sl-block-content" style="z-index: 10;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+									<h3>2. Numérisation d'un signal</h3>
+								</div>
+							</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 850.019px; left: 12.6985px; top: 122px;" data-name="text-d73b69" data-block-id="c8967ad5bb6654dc70913b78ca0019dd">
+		
+								<div class="sl-block-style" style="z-index: 11; transform: rotate(0deg);">
+									<div class="sl-block-content" style="z-index: 11; border-width: 1px;" data-gramm="false" data-placeholder-tag="p" data-placeholder-text="Text">
+										<pre><span style="font-size:1.2em"><u>C) Numérisation :</u></span></pre>
+									</div>
+								</div>
+		
+							</div>
+<div class="sl-block" data-block-type="image" style="width: 913.401px; height: 392.677px; left: 12.6985px; top: 197px; min-width: 1px; min-height: 1px;" data-name="image-467930" data-block-id="436b1b29f64237d20d4ea4760a49ecc0">
+								<div class="sl-block-content" style="z-index: 12;"><img class="" data-natural-width="1284" data-natural-height="552" data-lazy-loaded="" data-src="introduction-audionumerique-2026/7fd78e61f5ffd60458ff65f44f9afad5.png"></div>
+							</div></section></section>
+			</div>
+		</div>
+
+		<script>
+			var SLConfig = {"deck": {"id":3533964,"slug":"introduction-audionumerique-2026","title":"Séance 2","description":"","width":960,"height":700,"margin":0.05,"visibility":"all","published_at":"2026-02-03T12:10:52.002Z","sanitize_messages":null,"thumbnail_url":"https://s3.amazonaws.com/media-p.slid.es/thumbnails/a35a2cbbee62846ca25da86a54756446/thumb.jpg?1770120802","view_count":0,"user":{"id":3033928,"username":"axelcrs","name":null,"description":null,"thumbnail_url":"https://www.gravatar.com/avatar/1074c28a3f29b94c9f8e9e77bdd5813f?s=140\u0026d=https%3A%2F%2Fstatic.slid.es%2Fimages%2Fdefault-profile-picture.png","account_type":"lite","team_id":null,"settings":{"id":57648738,"present_controls":true,"present_upsizing":true,"present_pointer":true,"present_notes":true,"default_deck_tag_id":null}},"background_transition":"slide","transition":"slide","theme_id":null,"theme_font":"montserrat","theme_color":"white-blue","auto_slide_interval":0,"comments_enabled":false,"forking_enabled":true,"rolling_links":false,"center":false,"shuffle":false,"should_loop":false,"share_notes":false,"slide_number":false,"slide_count":68,"rtl":false,"version":2,"collaborative":false,"deck_user_editor_limit":1,"data_updated_at":1770124569082,"font_typekit":null,"font_google":null,"time_limit":null,"navigation_mode":"default","upsizing_enabled":true,"language":"fr","source_deck_id":null,"notes":{}}};
+
+
+			// Use local fonts
+			SLConfig.fonts_url = 'lib/fonts/';
+		</script>
+
+		<script src="lib/reveal.js"></script>
+		<script src="lib/reveal-plugins.js"></script>
+		<script src="lib/offline.js"></script>
+
+		<!-- Initialize the presentation -->
+		<script>
+			Reveal.initialize({
+				width: 960,
+				height: 700,
+				margin: 0.05,
+				
+
+				hash: true,
+				controls: true,
+				progress: true,
+				mouseWheel: false,
+				showNotes: false,
+				slideNumber: false,
+				fragmentInURL: true,
+
+				autoSlide: 0,
+				autoSlideStoppable: true,
+
+				autoAnimateMatcher: SL.deck.AutoAnimate.matcher,
+
+				scrollActivationWidth: null,
+
+				center: false,
+				shuffle: false,
+				loop: false,
+				rtl: false,
+				navigationMode: "default",
+
+				transition: "slide",
+				backgroundTransition: "slide",
+
+				highlight: {
+					escapeHTML: false
+				},
+
+				plugins: [ RevealZoom, RevealNotes, RevealMarkdown, RevealHighlight ]
+			});
+		</script>
+
+		
+
+
+	</body>
+</html>

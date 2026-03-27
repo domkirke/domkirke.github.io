@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta http-equiv="Content-Type" 
+      content="text/html; charset=utf-8">
+      <link rel="stylesheet" href="../p8.css">
+</head>
+
+
+<nav>
+    <div id="previous"><a href="../seance_4/resume.html">← Cours n°3</a></div>
+    <div id="next"><a href="../seance_6/resume.html">Cours n°5 →</a></div>
+</nav>
+
+<div id="title">
+    Séance n°5 - Numérisation II : Retour sur l'échantillonnage & la quantification. Formats numériques
+    <br/>
+    <div id="slides">
+        <a href="slides/index.html">
+            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-presentation"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M21 3a1 1 0 0 1 0 2v9a3 3 0 0 1 -3 3h-5v2h2a1 1 0 0 1 0 2h-6a1 1 0 0 1 0 -2h2v-2h-5a3 3 0 0 1 -3 -3v-9a1 1 0 1 1 0 -2zm-4.293 4.293a1 1 0 0 0 -1.414 0l-2.293 2.292l-1.293 -1.292a1 1 0 0 0 -1.414 0l-3 3a1 1 0 0 0 0 1.414l.094 .083a1 1 0 0 0 1.32 -.083l2.293 -2.292l1.293 1.292a1 1 0 0 0 1.414 0l3 -3a1 1 0 0 0 0 -1.414" /></svg>
+            Voir les slides
+        </a>
+    </div> 
+</div>
+
+
+<div id="corps">
+    <h4><strong><br></strong></h4>
+    <h4><strong>1. Retour sur le spectre &amp; l'échantillonnage</strong></h4>
+    <p></p>
+    <ul>
+        <li>Période, fréquences, amplitude : <a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_5/training.html"><strong><u>exercice interactif</u></strong></a></li>
+        <li>Spectre &amp; forme d'onde : <u><strong><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_5/training_2.html">exercice interactif</a></strong></u></li>
+        <li><span><span style="">Dans le monde continu, il y a une identité entre une onde dans le domaine temporel \( x(t) \), et une onde dans le domaine fréquentiel \( X(f) \). C'est à dire : pour un signal \( x(t) \), il y a un seul spectre \( X(f) \), et inversement. On peut passer de&nbsp;\( x(t) \) à&nbsp;\( X(f) \) par <strong>transformée de Fourier</strong>, et de&nbsp;\( X(f) \) à&nbsp;\( x(t) \) par <strong>transformée de Fourier inverse.</strong></span></span>
+            <ul>
+                <li><span><span style=""><span>Le spectre \( X(f) \) est entièrement dans le domaine fréquentiel : toute évolution temporelle du spectre est "moyennée", "intégrée", dans un seul spectre.&nbsp;</span></span></span></li>
+            </ul>
+            <ul>
+                <li><span><span style=""><span>Il existe une alternative, la <strong>transformée de Fourier court-terme</strong>&nbsp;(STFT pour short-term Fourier transform en anglais), qui fait un compromis entre analyse fréquentielle et analyse temporel. Elle consiste à prélever régulièrement des parties du signal (en le multipliant par une fenêtre), et calculer son spectre. On peut ainsi décrire "localement temporellement" le contenu fréquentiel d'un signal, au prix d'une moins bonne résolution fréquentielle (<u><strong><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_5/dft.html">démo</a></strong></u>). On a alors un spectre en deux dimensions : \( X[n, f]) \), \( n \) étant la position de la fenêtre, et \( f \) la fréquence. On la représente donc généralement comme une image, la couleur étant la magnitude du spectre correspondant.</span></span></span></li>
+                <li><span><span style=""><span>On a alors un compromis à faire : plus cette fenêtre est grande, plus la précision fréquentielle est élevée, mais plus la précision temporelle est faible. Inversement, plus cette fenêtre est petite, plus la précision temporelle est élevée, mais plus la précision fréquentielle est faible.</span></span></span></li>
+                <li><span><span style=""><span>Cette transformée de Fourier court-terme, sous certaines contraintes (fenêtres croisées, <em>overlapped</em>, d'une demi-fenêtre), <strong>est inversible. </strong>La STFT est donc ce qu'on appelle une représentation <strong>analyse-synthèse</strong>: elle permet d'analyser, mais aussi de re-synthétiser, un signal (comme la transformée de Fourier "normale" d'ailleurs).</span></span></span></li>
+            </ul>
+        </li>
+        <li>Retour sur la notion de <strong>repliement</strong> : pourquoi et d'où ?&nbsp;<ul>
+                <li>Dans le monde continu, une onde est une onde : elle est définie en tout point du temps \( t \), et n'importe quelle onde, représentée par son amplitude en fonction du temps \( x(t) \), et entièrement caractérisable par cette détermination.</li>
+                <li>Le fait de discrétiser temporellement cette onde, c'est-à-dire l'<strong>é</strong><strong>chantillonner</strong>, à une certaine fréquence d'échantillonnage \( f_e \), rend cette détermination <strong>ambigüe.</strong>&nbsp;En effet, pour <strong>le même relevé d'onde </strong>(c'est à dire la séquence de points \( x[n] \) prélevé, mesuré, de l'onde sous-jacente), <strong>il peut correspondre plusieurs ondes (<span><u style=""><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_5/aliasing.html">demo</a></u></span>). </strong>Ce phénomène s'appelle <strong>repliement, </strong>ou <em>aliasing</em>&nbsp;en anglais<strong>.</strong></li>
+                <li><span>C'est extrêmement fâcheux, surtout lors de la restitution : lors de la re-conversion de cette suite numérique dans le domaine analogique (électrique, acoustique, etc.), comment choisir l'onde sous-jacente?&nbsp;</span>
+                    <ul>
+                        <li><span>C'est ici qu'intervient le <strong>théorème de Nyquist : si une onde est de bande limitée, </strong>c'est à dire que son contenu fréquentiel est entre 0Hz et une certaine valeur \( f_N \), alors son <strong>échantillonnage est parfaitement déterminé</strong> si celui-ci est échantillonné à \( f_e = 2 \cdot f_N \). Alors, les ambiguïtés sont levées.</span></li>
+                    </ul>
+                    <ul>
+                        <li><span>Pour cette raison, lors de la restitution, les fréquences restituées sont celles appartenant dans l'intervalle \( [0, F_N] \). Par contre, il faut être sûr que le signal avant échantillonnage est bien de bande limitée \(f_n\) : sinon, toute onde de fréquence supérieure à \( f_N \) sera <strong>repliée </strong>dans l'intervalle&nbsp;\( [0, f_N] \).</span></li>
+                        <li>Ce comportement est parfaitement déterminé : donnée une fréquence d'échantillonnage \( F_e \), donc une fréquence de Nyquist \( f_N = \frac{f_e}{2} \), une onde de fréquence \( f_N + \Delta f \) correspond au même tracé qu'une onde de fréquence \( f_N - \Delta f \).&nbsp;</li>
+                        <li>Par exemple, si \( f_e = 44,1kHz \), la fréquence de Nyquist est de \( f_N = 22,05 Khz). Donné une onde de fréquence \( f = 30kHz \) , ce décalage fréquentiel vaut \( \Delta f = f - f_N = 30 - 22,05 = 7,95 \) kHz, et cette onde correspond aussi à une onde \( F_N - \Delta f = F_N - (f - F_N) = 22,05 - 7,95 = 14,1 Khz \). Ainsi, une onde de fréquence \( f = 30 kHz \) sera restituée comme une onde \( f = 14,1 kHz \).</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li><span style="font-size: 0.9375rem;"><strong>Pour s'assurer de l'identité entre le signal continu et son échantillonnage, il faut donc qu'il soit de bande limitée </strong>et qu'il ne comporte pas de contenu fréquentiel supérieur à la moitié de la fréquence d'échantillonnage. <strong>Il faut donc appliquer, avant échantillonnage, un filtre anti-repliement. </strong>Ce filtre, idéalement, coupe tout contenu fréquentiel au dessus de la fréquence de Nyquist.&nbsp;</span></li>
+        <ul>
+            <li>Comme ce filtrage doit être fait avant échantillonnage, le choix logique de ce filtre est un filtre analogique. Néanmoins, la conception d'un filtre aussi sélectif est très complexe, et peut se révéler aussi être couteux.<span style="font-size: 0.9375rem;"></span></li>
+            <li>À l'inverse, un filtre digital très sélectif est plus facile à réaliser ; néanmoins, pour être appliqué, le signal doit être déjà échantillonné. Cependant, les filtres digitaux contrairement aux filtres analogiques imposent une certaine <strong>latence, </strong>et ne sont donc pas non plus idéaux.</li>
+            <li><span style="font-size: 0.9375rem;">Une autre solution, moins efficace mais plus facile à réaliser, consiste ainsi à utiliser un filtre analogique moins efficace, à pente plus faible, et à </span><strong style="font-size: 0.9375rem;">sur-échantillonner </strong><span style="font-size: 0.9375rem;">le signal dans un premier temps ; ensuite, un filtre numérique est appliqué pour filtrer efficacement le signal, puis </span><strong style="font-size: 0.9375rem;">sous-échantillonner</strong><span style="font-size: 0.9375rem;">&nbsp;ensuite pour redescendre à la fréquence d'échantillonnage cible.&nbsp;</span></li>
+            <li>Un autre inconvénient des filtres digitaux est l'ajout de bruit de quantification, qui se repliera après sous-échantillonnage dans la bande de fréquence souhaités. Il est possible d'obtenir le ratio signal / bruit (qu'on veut le plus haut possible dans ce cas) avec l'équation suivante : \( SNR = 6.02 \cdot N + 1.76 \cdot \log_{10}\frac{f_e}{2 * BW } \), ou \( BW \) est la bande passante du filtre (<strong><span><u><a href="https://www.analog.com/en/resources/analog-dialogue/articles/practical-filter-design-precision-adcs.html">plus d'info</a>).</u></span></strong></li>
+            <li>Toutes ces caractéristiques rentrent en compte dans la qualité d'un convertisseur analogique-digital, et sont donc présents sur les fiches techniques des cartes son.</li>
+        </ul>
+    </ul>
+    <p><br></p>
+    <h4><strong>2. Retour sur la quantification</strong></h4>
+    <p><span>N'oublions pas que la numérisation d'un signal consiste à transcrire un signal continu <strong>temporellement</strong>&nbsp;(il a une valeur à n'importe quel temps \( t \) mais aussi <strong>en amplitude </strong>(il existe une infinité de valeurs possibles dans un intervalle donné, typiquement \( [-1 ; 1] \). Il faut donc le discrétiser temporellement (échantillonnage), <strong>mais aussi en amplitude</strong>, afin d'obtenir une suite de nombres enregistrables sur un disque dur.&nbsp;</span></p>
+    <p></p>
+    <ul>
+        <li>Pour écrire une suite de chiffres, il faut les convertir en format <strong>binaire</strong>, la mémoire d'un disque dur étant magnétique ou optique.&nbsp;</li>
+        <li>N'importe quel nombre, usuellement écrit en base <strong>décimale</strong>&nbsp;(1, 2 , ..., 10, 11 ..., 99, 100 ...) peut être écrit de manière différente dans une autre base. Typiquement, en informatique on utilise la base <strong>binaire</strong>&nbsp;: (0, 1, 10, 11, 100, 101, 110, 111, ...)</li>
+        <ul>
+            <li>Ces bases sont strictement équivalentes, on passe de l'une à l'autre sans soucis : 0 ➝ 0, 1 ➝ 1, 2&nbsp;➝ 10, 3&nbsp;➝ 11, 4&nbsp;➝ 100, 5&nbsp;➝ 101, 6 ➝ 110, 7&nbsp;➝ 111, 8&nbsp;➝ 1000, etc.</li>
+            <li>Ce qui change, par contre, c'est le nombre de valeurs qu'on peut encoder avec un nombre de chiffres donné (oui, c'est un peu tord cerveau).&nbsp;<ul>
+                    <li>En système décimal:<ul>
+                            <li>avec <strong>un</strong> chiffre, on peut exprimer 10 valeurs : 0, 1, 2, 3, 4, 5, 6, 7, 8, 9</li>
+                            <li>avec <strong>deux </strong>chiffres, on peut exprimer 100 valeurs : 0, 1, .., 9, 10, ..., 99</li>
+                            <li>etc. De manière générale, avec \( n \) chiffres, on peut exprimer \( 10^n \) valeurs.&nbsp;</li>
+                        </ul>
+                    </li>
+                    <li>Par conséquent, en système binaire :&nbsp;<ul>
+                            <li>avec&nbsp;<strong style="font-size: 0.9375rem;">un</strong><span style="font-size: 0.9375rem;">&nbsp;chiffre (aussi appelé <strong>bit</strong>), on peut exprimer 2 valeurs : 0, 1</span></li>
+                            <li><span style="font-size: 0.9375rem;">avec <strong>deux</strong></span><span style="font-size: 0.9375rem;">&nbsp;chiffres, on peut exprimer 4 valeurs : 0, 1, 10, 11</span></li>
+                            <li><span style="font-size: 0.9375rem;">avec <strong>trois </strong>chiffres, on peut exprimer 8 valeurs : 0, 1, 10, 11, 100, 101, 110, 111</span></li>
+                            <li><span style="font-size: 0.9375rem;">etc. De manière générale, avec \( n \) chiffres, on peut exprim</span><span style="font-size: 0.9375rem;">er \( 2^n \) valeurs.</span></li>
+                        </ul>
+                    </li>
+                    <li><span style="font-size: 0.9375rem;">Une séquence de 8 bits s'appelle un <strong>octet </strong>(ou b<strong>y</strong>te en anglais, attention à la confusion).&nbsp; &nbsp;</span></li>
+                </ul>
+            </li>
+        </ul>
+        <li>Comme, dans le domaine <strong>continu</strong>, il y une infinité de valeurs entre -1 et 1 (par exemple, si on considère que notre signal a des valeurs -dans cet intervalle), pour pouvoir le numériser il faut aussi <strong>choisir un ensemble de valeurs possibles&nbsp; pour l'encodage, et "transcrire" chaque échantillon dans cet ensemble. </strong>Ce procédé s'appelle <strong>quantification.&nbsp;&nbsp;</strong>
+            <ul>
+                <li>Par exemple, en binaire, si on encode un signal avec 3 chiffres, on peut donc décrire \( 2^3 = 8 \) valeurs possibles. On peut choisir 8 valeurs linéairement (à intervalles réguliers) entre [-1 et 1] : on parle alors de <strong>quantification linéaire</strong>. Ainsi, notre signal est décrit comme 3 bits pour chaque échantillon.</li>
+                <li>Un signal échantillonné et quantifié consiste donc en une séquence de N bits pour chaque échantillon,&nbsp;<strong>et donc enregistrable sur un support numérique.</strong></li>
+                <li>Cette correspondance entre une valeur et un identifiant en bits s'appelle <strong>quantification en bits </strong>entiers. Il existe d'autres systèmes d'encodage: par exemple, encoder le <strong>signe</strong>&nbsp;(+ ou -) avec un bit supplémentaire, ou le système <strong>mantissa </strong>permettant d'encoder des nombres à virgules flottantes (<strong><span><a href="https://en.wikipedia.org/wiki/Floating-point_arithmetic" style="text-decoration-line: underline;">plus d'info</a>).</span></strong></li>
+            </ul>
+        </li>
+        <li>À l'instar du repliement pour l'échantillonnage, la quantification vient aussi avec son inconvéniant : <strong>le bruit de quantification</strong>.<ul>
+                <li>Effectivement, le fait de ramener toute "capture" d'un signal d'une infinité de valeurs sur un nombre de choix limité crée des <strong>erreurs</strong>&nbsp;dans cette captation, un peu comme arrondir un nombre à virgules. On peut penser à son équivalent en image : alors que l'échantillonnage est la résolution "en pixels" de l'image, la&nbsp;<strong>quantification est le nombre de couleurs disponibles </strong>(8 couleurs, 256 couleurs, millions de couleurs, etc.)</li>
+                <li>Heureusement, ce bruit est parfaitement quantifiable mathématiquement.&nbsp;<ul>
+                        <li>Prenons une quantification linéaire, où chaque valeur possible de la grille de quantification est espacée de \( Q \). Par example, si nous avons 8 valeurs entre -1 et 1, chaque valeur est espaceée de \( Q = 1 - (-1) / 8 = 0.25 \)</li>
+                        <li>Chaque valeur analogique sera donc ramenée à la valeur la plus proche (sauf si on veut vraiment mettre le bazar dans le signal). Cette erreur de quantification sera donc égale, au maximum, de \( \frac{Q}{2} \).</li>
+                        <li>Si on veut mesurer ce bruit indépendamment du signal quantifié, on peut le considérer donc le comme un rajout de bruit d'amplitude \( [ - \frac{Q}{2} ; \frac{Q}{2} ]\).&nbsp;</li>
+                        <li>On peut donc calculer le <strong>rapport signal sur bruit</strong>&nbsp;(S<span><em>ignal-to-Noise Ratio</em>, or SNR)</span><strong>&nbsp;</strong>apporté par la quantification en calculant l'amplitude de l'onde (ici 1) et le bruit ramené \frac{Q}{2}. Typiquement, on veut le maximiser : ça veut dire qu'on a plus de signal que de bruit.&nbsp;</li>
+                        <li>Cette relation, en échelle logarithmique (<strong>dB)</strong>, se calcule : \( SNR = 6.02 \cdot N + 1.76 dB \).</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li>La quantification apporte un autre problème : si jamais le signal qu'on encode est d'amplitude inférieure à \( Q \), celui-ci disparaît, et celà peut être dommageable, surtout à basse résolution (comme en streaming par exemple). Pour cela, on rajoute un bruit de distribution rectangulaire (moins audible, mais moins efficace), ou triangulaire (plus audible, mais plus efficace), afin de pouvoir "sauver" ces composantes de très basse amplitude, en échange d'un petit bruit de fond. Ce procédé s'appelle <strong>dithering&nbsp;</strong>(vibrage, dépolissage en français)<strong> , </strong>et doit-être appliqué avant quantification (typiquement avec du bruit analogique).<ul>
+                <li><strong>Ce dithering peut être aussi appliqué lors d'un export</strong> avec un logiciel de traitement audio-numérique, <strong>si on exporte des fichiers audio dans une résolution inférieure</strong> (typiquement, passer de 24bits à 16bits), pour les mêmes raisons.&nbsp;</li>
+            </ul>
+        </li>
+        <li>La quantification linéaire n'est pas forcément une bonne idée pour l'audio : en effet, dans la majorité des enregistrements réalisés, les signaux captés sont de faible amplitude. Avoir la même résolution pour les niveaux forts et les niveaux faibles n'est donc pas idéal.&nbsp;</li>
+        <ul>
+            <li>Heureusement, dans la quantification, la répartition des valeurs sur laquelle on ramène l'onde analogique est arbitraire. On peut donc avoir une grille beaucoup plus fine dans les basses amplitudes que dans les fortes ; on parle alors de <strong>quantification non-linéaire</strong>.&nbsp;</li>
+            <li>Il existe plusieurs quantifications non-linéaires : la <strong><u>µ</u></strong><a href="https://en.wikipedia.org/wiki/Mu-law_algorithm"><strong><u>-law</u>,</strong></a>&nbsp;historiquement utilisée en Europe, et la <a href="https://en.wikipedia.org/wiki/A-law_algorithm"><strong><u>A-law</u></strong></a>, historiquement utilisée en Amérique et au Japon.</li>
+            <li><strong>L'utilisation d'une quantification non-lineaire est standard en audio.&nbsp;</strong></li>
+        </ul>
+    </ul><strong><br></strong>
+    <ul>
+        <li><span>Cet encodage, décrit précédemment,</span><strong> s'appelle PCM, ou Pulse Code Modulation. </strong>C'est le standard d'encodage numérique audio utilisé dans 99.9% des cas, même s'il en existe d'autres (comme le <span><span style=""><a href="https://en.wikipedia.org/wiki/Direct_Stream_Digital" style="text-decoration-line: underline; font-weight: bold;">DSD</a>&nbsp;par exemple).</span></span></li>
+    </ul><strong><br></strong>
+    <p><strong></strong></p>
+    <h4><strong><strong>3. Formats numériques</strong></strong></h4>
+    <p>Une fois échantillonnées, et quantifiés, ces suites de données binaires doivent être enregistrés dans un certain format sur un ordinateur. Il est important de stocker, avec ces suites, un minimum de méta-données afin de savoir comment les décoder : nombre de canaux, durée, technique de quantification (bit entier, mantissa, etc.), etc.</p>
+    <ul>
+        <li>L'algorithme étant en charge d'encoder / décoder ces données s'appelle un&nbsp;<strong style="font-size: 0.9375rem;">codec</strong><span style="font-size: 0.9375rem;">. Il peut être PCM, ou d'un autre format, &nbsp;Les codecs, aussi peuvent prendre en charge plusieurs formats.&nbsp; Certains codecs sont open-source, d'autres propriétaires.</span>
+            <ul>
+                <li>les codecs&nbsp;<strong style="font-size: 0.9375rem;">non-compressés</strong><span style="font-size: 0.9375rem;">, ou </span><strong style="font-size: 0.9375rem;">lossless</strong><span style="font-size: 0.9375rem;">, où l'information est encodées&nbsp;</span><strong style="font-size: 0.9375rem;">sans perte de qualité audio </strong><span style="font-size: 0.9375rem;">(compressée ou pas).&nbsp;</span></li>
+                <li>les codecs&nbsp;<span style="font-size: 0.9375rem;"><strong>compressés</strong><span><strong style="font-style: italic;">, </strong>où <span>l'information est encodée avec une compression <strong>altérant leur qualité </strong>souvent en échange d'un réduction drastique de poids.&nbsp;</span></span></span></li>
+            </ul>
+        </li>
+        <li><span style="font-size: 0.9375rem;">Le&nbsp;</span><strong style="font-size: 0.9375rem;">format conteneur</strong><span style="font-size: 0.9375rem;">&nbsp;est une norme indiquant de quelle manière un certain type de données doit être stocké, éventuellement des méta-données (artiste, titre, numéro de piste, heure d'enregistrement, timestamps, etc). On parle aussi de format conteneur. Un format peut accepter plusieurs codecs, notamment dans le cas de formats&nbsp;</span><strong style="font-size: 0.9375rem;">multi-médias&nbsp;</strong><span style="font-size: 0.9375rem;">(vidéo typiquement).&nbsp;</span></li>
+    </ul>
+    <p>Parmi les codecs sans-perte les plus connus, nous avons :&nbsp;</p>
+    <p></p>
+    <ul>
+        <li><span style="font-size: 0.9375rem;">PCM :&nbsp;sortie du processus de quantification décrites ci-dessus, multi-canal. Formats compatibles: </span><strong style="font-size: 0.9375rem;">.wav, .aiff, .bwf</strong></li>
+        <li><span style="font-size: 0.9375rem;">FLAC : compression audio sans perte, multi-canal. Format compatibles : </span><strong style="font-size: 0.9375rem;">.flac</strong></li>
+        <li><span style="font-size: 0.9375rem;">ALAC : (Apple Lossless Audio Codec) compression audio sans perte, multi-canal.&nbsp;Formats compatibles:&nbsp;</span><strong style="font-size: 0.9375rem;">.m4a</strong></li>
+        <li><span style="font-size: 0.9375rem;">MPEG-4 Audio Lossless Coding.&nbsp;Formats compatibles: </span><strong style="font-size: 0.9375rem;">.mp4</strong><span style="font-size: 0.9375rem;">&nbsp;</span></li>
+    </ul>Pour les codes avec perte, on peut citer :&nbsp;<p></p>
+    <ul>
+        <li><span style="font-size: 0.9375rem;">MP3 : </span><span style="font-size: 0.9375rem;">MPEG-2 Audio Layer III. Formats compatibles :&nbsp;<strong>.mp3</strong></span></li>
+        <li><span style="font-size: 0.9375rem;">AAC : Advanced Audio Codec. Formats compatibles : </span><strong style="font-size: 0.9375rem;">.m4a, .mp4</strong></li>
+        <ul>
+            <li><span><span><strong></strong></span></span></li>
+        </ul>
+        <li><span style="font-size: 0.9375rem;">OPUS : utilisés souvent pour le streaming car très rapide. Amélioration de Vorbis, format </span><strong style="font-size: 0.9375rem;">.ogg</strong><span style="font-size: 0.9375rem;">. Formats compatibles: </span><strong style="font-size: 0.9375rem;">.opus</strong></li>
+    </ul>
+    <p>Tous ces codecs ont une manière différente de compresser les données, à la fois en espace sur le disque dur, ou en vitesse d'encodage / décodage (très utile pour le temps réel, et surtout le <strong>streaming</strong>).&nbsp;</p>
+    <p></p>
+    <ul>
+        <li>Pour calculer la taille d'une séquence du bits sur un ordinateur en PCM <strong>en octets</strong>, il suffit d'utiliser la formule \( \frac{F_e \cdot n \cdot N \cdot t}{8} \), où \( F_e \) est une fréquence d'échantillonnage, \( n \) le nombre canaux, \( N \) le nombre de bits utilisés pour la quantification, \( t \) la durée en secondes. On mesure souvent en méga-octets (Mo), on divise alors ce nombre par \( 10^6 = 1,000,000 \), ou en giga-octets (Go), mesuré par \( 10^9 = 1,000,000,000 \).</li>
+        <li>Pour calculer le <strong>flux de données,</strong>&nbsp;c'est à dire le nombre de bits envoyés <strong>par secondes</strong>, on remplace le \( t \) ci-dessus par 1. Cependant, ce débit est généralement mesuré en kbit/s, il faut donc diviser par 1000 et non par 8. On obtient donc la formule :&nbsp;&nbsp;\( \frac{F_e \cdot n \cdot N}{1000} \).</li>
+        <li>Cette mesure en flux de données est fondamentale pour la communication, avec câble ou sans-fil : dans les deux cas, chaque mode de transmission a un débit de flux de données limitées, et il faut donc choisir le bon codec pour rester en-dessous de cette limite. Cependant, les algorithmes de compression complexes peuvent aussi introduire de la latence, il y a donc un compromis à faire avec toutes ces contraintes matérielles, et l'application concrète de pourquoi on envoie ces données (stockage, streaming, temps-réel, etc. ).</li>
+    </ul>
+</div>
+
+</html>

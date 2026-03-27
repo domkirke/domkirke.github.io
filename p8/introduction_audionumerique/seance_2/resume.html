@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta http-equiv="Content-Type" 
+      content="text/html; charset=utf-8">
+      <link rel="stylesheet" href="../p8.css">
+</head>
+
+
+<nav>
+    <div id="previous"><a href="../seance_1/resume.html">← Cours n°1</a></div>
+    <div id="next"><a href="../seance_3/resume.html">Cours n°3 →</a></div>
+</nav>
+
+<div id="title">
+    Séance n°2 - Numérisation I : Echantillonnage & quantification
+    <br/>
+    <div id="slides">
+        <a href="slides/index.html">
+            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-presentation"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M21 3a1 1 0 0 1 0 2v9a3 3 0 0 1 -3 3h-5v2h2a1 1 0 0 1 0 2h-6a1 1 0 0 1 0 -2h2v-2h-5a3 3 0 0 1 -3 -3v-9a1 1 0 1 1 0 -2zm-4.293 4.293a1 1 0 0 0 -1.414 0l-2.293 2.292l-1.293 -1.292a1 1 0 0 0 -1.414 0l-3 3a1 1 0 0 0 0 1.414l.094 .083a1 1 0 0 0 1.32 -.083l2.293 -2.292l1.293 1.292a1 1 0 0 0 1.414 0l3 -3a1 1 0 0 0 0 -1.414" /></svg>
+            Voir les slides
+        </a>
+    </div> 
+</div>
+
+
+<div id="corps">
+    <p dir="ltr" style="text-align: left;"></p>
+    <h4></h4>
+    <h4>1. Approfondissement des bases trigonométriques</h4>
+    <p></p>
+    <ul>
+        <li><span>Un cercle est défini par son rayon \( R \) (ou son diamètre \( D = 2R \) ) . Le <strong>périmètre </strong>de ce cercle (sa longueur) est égale à \( P = 2 \pi R \).</span></li>
+        <li>En trigonométrie, il est usuel de définir un point du cercle unitaire par l'angle qu'il fait avec l'axe des abscisses dans le sens <strong>trigonométrique</strong>&nbsp;(dans le sens inverse des aiguilles d'une montre).</li>
+        <li><span>Explication des différentes</span><strong> unités d'angles.</strong>
+            <ul>
+                <li><span><strong>degrés</strong> (0°: angle zéro, 90°: angle droit, 180°: angle "plat", 270°: angle plat + angle droit, 360°: tour complet)</span></li>
+                <li><span><strong>radians</strong>&nbsp;(0<em>rad</em>: angle zéro, \( \pi/2 \): angle droit, \( \pi \): angle "plat", \( 3 \pi/2 \): angle plat + angle droit, \( \pi \): tour complet)</span></li>
+                <li><span>un angle négatif correspond à parcourir le cercle dans l'autre sens, le sens <strong>anti-trigonométrique </strong>(dans le sens des aiguilles d'une montre).&nbsp;</span></li>
+                <li>si un angle peut-être négatif ou positif (et non pas seulement positif, comme avec un rapporteur), on parle alors d'<strong>angle orienté</strong>.</li>
+            </ul>
+        </li>
+        <li>Ces unités sont <strong>équivalentes</strong>. Un angle en radian \( \theta \) correspond en fait à la longueur de l'arc de cercle parcouru sur le cercle unitaire entre le point d'angle 0 (son intersection avec l'axe des abscisses) et le point de ce même cercle d'angle \( theta \).&nbsp;(<a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/angle"><u>demo</u></a>)</li>
+        <li>De manière similaire, il existe différentes <strong>unités de fréquence</strong>.<ul>
+                <li>la fréquence est l'unité <strong>réciproque / inverse</strong>&nbsp;de la période de l'onde.&nbsp;<br></li>
+                <li><span style="font-size: 0.9375rem;">L'inverse de la période de l'onde en secondes \( f = 1 / T \) est appelé <strong>hertz</strong>.</span></li>
+                <li>Cette fréquence peut être aussi comptées en <strong>rad/s, </strong>en multipliant simplement cette fréquence par \( 2 \pi \) : \( \omega = 2 \pi f \)<strong>.</strong>&nbsp;Dans ce cas là, on parle de <strong>pulsation</strong>.</li>
+                <li>Ainsi, une onde dépendante du temps \( t \) (en secondes) peut être écrite \( x(t) = \sin{(2 \pi f t)} = \sin{(\omega t)} \)</li>
+            </ul>
+        </li>
+        <li><span>Importance des</span><strong> identités trigonométriques.</strong>
+            <ul>
+                <li>les fonctions trigonométriques sont reliées par nombre de relations, qu'on appelle <a href="http://fr.wikiversity.org/wiki/Trigonom%C3%A9trie/Relations_trigonom%C3%A9triques"><u>identités trigonométriques</u></a>.<strong></strong></li>
+                <li>ces identités sont fondamentales en traitement du signal, notamment:&nbsp;<ul>
+                        <li>relations de déphasage entre les fonctions \( \cos \) et \( \sin \), qu'on peut se représenter comme des ondes déphasées de \( \pi / 4 \).</li>
+                        <li>expression d'une somme d'ondes comme produits d'ondes de fréquences différentes.&nbsp;</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li>Une conséquence importante de ces identités trigonométriques : les <strong>battements.</strong>
+            <ul>
+                <li><span>La somme des deux ondes de fréquences très rapprochées, \( \f_1 \f_2 \), d'un décalage fréquentiel \( \Delta f = f_2 - f_1 \), peut être re-écrit comme le produit de deux ondes :&nbsp;<br></span>
+                    <ul>
+                        <li>une de fréquence \( (f_1 + f_2) / 2 \), la moyenne des deux fréquences</li>
+                        <li>une de fréquence \( f_1 - f_2) /2 = \Delta f / 2 \), soit la moitié du décalage fréquentiel \( \Delta f / 2 \).</li>
+                    </ul>
+                </li>
+                <li><span style="font-size: 0.9375rem;">&nbsp;Si ces fréquences ont une différence de moins de 20Hz, cette deuxième onde passe en dessous du domaine timbral, et module donc perceptivement l'amplitude de la première (<u><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/cos_prod">démo</a></u>)&nbsp;</span></li>
+                <li><span style="font-size: 0.9375rem;">Ce phénomène s'appelle <span><strong>battement&nbsp;(</strong><u style=""><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/cos_prod_audio" style="">démo</a></u><strong>)</strong></span>, et se retrouve régulièrement dans le travail acoustique analogique ou numérique (accordage de pianos, synthèse sonore, sonorisation, compression, etc.).</span></li>
+            </ul>
+        </li>
+    </ul>
+    <p></p>
+    <h4>2. Notion de phase&nbsp;</h4>
+    <p></p>
+    <ul>
+        <li>La notion de <strong>phase</strong>&nbsp;est fondamentale en traitement du signal audio.&nbsp;</li>
+        <li>La <strong>phase </strong>représente le "décalage" d'un onde par rapport à une référence. Cette phase, usuellement notée \( \varphi \), est équivalente à un angle et peut être comptée en degrés ou en radian. Cette référence est généralement la phase nulle \( \varphi = 0 \) ; ainsi, on peut donc écrire :&nbsp;<ul>
+                <li>\( \cos{(2 \pi f t)} \) : onde de phase nulle, référence</li>
+                <li>\( \cos{(2 \pi f t) + \varphi} \) : onde de phase \( \varphi \).<br></li>
+            </ul>
+        </li>
+        <li>Augmenter la phase "décale" l'onde vers la gauche, tandis que décroître la phase décale l'onde vers la droite (<u><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/phase">démo</a></u>).</li>
+        <li>Cette phase est extrêmement importante, et a de nombreuses implications techniques et perceptives.&nbsp;<ul>
+                <li>sommer deux ondes de même fréquence peut, selon la différence de phase entre ces deux ondes, <strong>doubler</strong> cette onde (si les phases sont les mêmes) ou <strong>annuler</strong> cette onde (si la différence de phase est égale à \( \pi / 2 \) ) (<u><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/phase_sum">démo</a></u>).</li>
+                <li>dans la mesure ou cette phase peut représenter le décalage temporel entre des sources sonores (haut-parleurs, instruments...), cette propriété sommative explique les annulations de phase qui se produisent lors la diffusion sonore dans un espace acoustique (<u><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/space">démo</a></u>).</li>
+                <li>c'est d'ailleurs pour cette raison que les ingénieurs du son, lors de la sonorisation d'espace profonds, déphasent les différentes strates de leur sono.</li>
+            </ul>
+        </li>
+        <li>Le <strong>spectre </strong>d'un son, obtenu soit par transformée de Fourier soit par transformée de Fourier court-terme, est en réalité la combinaison de deux composantes :&nbsp;<ul>
+                <li>la <strong>magnitude</strong>&nbsp;du spectre, représentant l'amplitude des ondes pures composant ce son&nbsp;</li>
+                <li>la <strong>phase </strong>du spectre, représentant le décalage de ces ondes pures.&nbsp;</li>
+                <li>dans le cas de la transformée de Fourier court-terme, cette phase peut avoir des implications importantes, notamment lors de manipulations technique ou créative (vocoder de phase, pitch shifting, AutoTune...).</li>
+            </ul>
+        </li>
+    </ul>
+    <p></p>
+    <p><span style="font-size: 1.40625rem; font-weight: 700;">3. </span><strong style="font-size: 1.40625rem;">Numérisation : Définition et principes de base</strong></p>
+    <ul>
+        <li><span>La </span><strong>numérisation</strong>&nbsp;consiste en la transformation d’un signal <strong>analogique</strong> (continu) en une suite de valeurs <strong>numériques</strong>&nbsp;(discrète en temps et en amplitude).</li>
+        <li><span>Signal <strong>c</strong></span><strong>ontinu</strong>
+            <ul>
+                <li>Un signal dont le passage d'une valeur \(&nbsp;<span>a</span><em>&nbsp;\)&nbsp;</em>à une valeur \( b \) passe par toutes les valeurs entre ces deux extrémités.&nbsp;</li>
+                <li>Autrement dit, l'ensemble est <strong>indénombrable</strong>: toute section finie de cette ensemble possède un nombre d'éléments possible (aussi appelé <em>cardinalité</em>)&nbsp;<strong>inifini.</strong></li>
+                <li><span>Dans le domaine discret, un objet mathématique est appelé une <strong>fonction.</strong><br></span></li>
+            </ul>
+        </li>
+        <li>Signal <strong>discret</strong></li>
+        <li>
+            <ul>
+                <li><span style="font-size: 0.9375rem;">Un signal dont le nombre de valeurs possibles est </span><strong style="font-size: 0.9375rem;">limité</strong><span style="font-size: 0.9375rem;">.&nbsp;</span></li>
+                <li>Autrement dit, l'ensemble est&nbsp;<strong style="font-size: 0.9375rem;">dénombrable</strong><span style="font-size: 0.9375rem;">: toute section finie de cette ensemble possède seulement un nombre donné d'éléments possible.</span></li>
+                <li>Attention, un ensemble discret peut être infini mais quand même dénombrable (ensemble des entiers naturels \( \mathbb{N} \) ou relatifs \( \mathbb{Z} \) ).</li>
+                <li>Dans le domaine discret, un objet mathématique est appelé une&nbsp;<strong>série</strong>, ou une&nbsp;<strong>suite.</strong><br></li>
+            </ul>
+        </li>
+        <li><span>Une <strong>onde</strong>&nbsp;peut être ainsi représentée comme :&nbsp;</span>
+            <ul>
+                <li><span>une fonction du temps \( t \) dans le domaine temporel continu : \( x(t) = \cos{(2 \pi f t)} \)</span></li>
+                <li><span>une série dans le domaine temporel discret : \( x[n] = \cos{( 2 \pi f / f_s n \) (nous introduirons \( f_s \) plus tard).</span></li>
+            </ul>
+        </li>
+        <li>L'opération d'<strong>intégration</strong>&nbsp;dans le domaine continu peut-être représenté comme l'équivalent de la <strong>moyenne</strong>&nbsp;dans le domaine discret : somme pondérée de tous les éléments de la série / fonction (<u><a href="https://domkirke.github.io/p8/introduction_audionumerique/seance_2/integration">démo</a></u>). L'intégration est cependant plus délicate, et nécéssite le recours au calcul <strong>infinitésimal</strong>.&nbsp;</li>
+        <li><span>Le&nbsp;<strong>p</strong></span><strong>rocessus de numérisation</strong>&nbsp;<span>d'un signal consiste en&nbsp;</span>:<ul>
+                <li><strong>Transduction</strong> via un <strong>microphone</strong> : transforme la pression acoustique en variation de tension électrique.</li>
+                <li>Amplification, filtrage, puis conversion en numérique via un <strong>CAN (Convertisseur Analogique-Numérique)</strong>.</li>
+                <li>L’opération inverse est réalisée par un <strong>CNA (Convertisseur Numérique-Analogique)</strong>.</li>
+            </ul>
+        </li>
+        <li>La numérisation d'un signal consiste donc en une double discrétisation :&nbsp;<ul>
+                <li>la discrétisation temporelle, appelé processus d'<strong>échantillonnage</strong></li>
+                <li><span>la discrétisation en amplitude, appelé processus de <strong>quantification</strong>.</span></li>
+            </ul>
+        </li>
+    </ul>
+    <h4>4. <strong>Échantillonnage : Définition et rôle</strong></h4>
+    <ul>
+        <li><strong>Échantillonnage</strong> : capture de valeurs du signal à des <strong>intervalles temporels réguliers, </strong>aussi appelée fréquence d’échantillonnage. Nous la noterons par la suite \( f_s \).<ul>
+                <li><span style="font-size: 0.9375rem;">Analogie : prendre une série d</span><span style="font-size: 0.9375rem;">e&nbsp;</span><span style="font-size: 0.9375rem;">photographies</span><span style="font-size: 0.9375rem;">&nbsp;pour en capturer l'évolution... ce qui s'appelle aussi la&nbsp;</span><span style="font-size: 0.9375rem;">vidéo</span><span style="font-size: 0.9375rem;">.</span></li>
+            </ul>
+            <ul>
+                <li>Cette fréquence d'échantillonnage est mesurée comme les fréquences définies ci-dessus : une fréquence d'échantillonnage de 4Hz correspond à capturer le signal toutes les 250ms.</li>
+                <li>En anglais, l'échantillonnage se dit <span><em style="">sampling</em><strong>. </strong>La fréquence d'échantillonnage se dit donc <em>sampling rate</em>.</span></li>
+            </ul>
+        </li>
+        <li>L'échantillonnage d'un signal a une conséquence extrêmement importante : le <strong>phénomène de repliement</strong>.<ul>
+                <li>Le <a href="https://fr.wikipedia.org/wiki/Repliement_de_spectre"><u>phénomène de repliement</u></a> est basé sur une <strong>incertitude</strong>&nbsp;lors de la regénération d'un signal echantillonné.</li>
+                <li>Par exemple, si on prend une fréquence d'échantillonnage de 1Hz, une onde de période \( f_1 = 0.1 \) a strictement la même numérisation qu'une onde de période \( f_2 = 1 - f_1 = 0.9 \). Ainsi, a la restitution, une onde de période 0.9Hz sera restituée comme une onde de 0.1 Hz&nbsp; : on dit que l'onde se <strong>replie</strong>.&nbsp;</li>
+                <li>On peut donc logiquement se représenter que : tout onde de fréquence \( f &gt; f_e / 2 \) supérieure à la moitié de la fréquence de l'échantillonnage se repliera sur une fréquence inférieure à cette fréquence d'échantillonnage.&nbsp;</li>
+                <li>En prenant des lunettes spectrales, on peut se représenter la conséquence suivante : discrétiser un signal entraîne la duplication en miroir de ce spectre tous les \( f_e \).</li>
+            </ul>
+        </li>
+        <li>Le <strong>théorème de Shannon-Nyquist</strong>
+            <ul>
+                <li>&nbsp;nous dit qu’un signal continu peut être intégralement décrit en prélevant des échantillons à intervalles réguliers à une fréquence au moins deux fois supérieure à la fréquence de la composante la plus élevée du signal.</li>
+            </ul>
+        </li>
+        <li>
+            <ul>
+                <li>Limite maximale des fréquences encodables = Fe/2 (Fe : fréquence d’échantillonnage).</li>
+                <li>Exemple : pour \( f_e \) = 44,1 kHz → Fréquence de Nyquist = 22,05 kHz (spectre audible : 20 Hz - 20 kHz).</li>
+            </ul>
+        </li>
+        <li>Fréquences usuelles en audio:&nbsp;<ul>
+                <li>44100 Hz : norme audio (format CD)</li>
+                <li>48000 Hz : norme audio / vidéo, ou format US</li>
+                <li>96000Hz, ou plus : norme "audiophile", ou pour captations de matières sonores (pour déformation)</li>
+            </ul>
+        </li>
+        <li>La conséquence de ce phénomène de repliement est donc que, lors de l'echantilonnage d'un signal, les contenus de fréquences supérieures à la fréquence de Nyquist doivent être filtrés ; autrement, ces contenus se <strong>replieront</strong>&nbsp;dans le bas du spectre, et vont corrompre l'enregistrement.</li>
+        <li>C'est pour cette raison que les convertisseurs analogique-numérique filtrent le signal au-dessus de la fréquence de Nyquist. Ce filtre est appelé <strong>filtre anti-repliement</strong>.</li>
+        <li><span><strong>Sur-échantillonnage</strong></span><span><strong> (</strong><em>o</em><em style="">versampling</em><strong>)</strong></span> :</li>
+        <ul>
+            <li>Fréquence d’échantillonnage très élevée (ex. 1 MHz avec convertisseurs Delta-Sigma).</li>
+            <li>Large marge pour filtrer efficacement les hautes fréquences avant la conversion.</li>
+            <li>Réduction de la fréquence d’échantillonnage au niveau souhaité après filtrage numérique.</li>
+            <li>Le sur-échantillonnage peut-être nécéssaire pour certains types de synthèse sonore.</li>
+        </ul>
+    </ul>
+    <p></p>
+    <h4><strong>5. Quantification : Définition et rôle</strong></h4>
+    <div class="editor-indent" style="margin-left: 30px;">
+        <p><strong></strong></p>
+    </div>
+    <ul>
+        <li>Le processus de <strong>quantification</strong>&nbsp;décrit la manière dont les valeurs du signal sont discrétisées.</li>
+        <li>En numérique, les valeurs sont encodées en <strong>système binaire.</strong>&nbsp;Plusieurs types de chiffrements sont possible, selon que les valeurs chiffrées soit des nombres entiers, relatifs, à virgule flottante, etc.</li>
+        <li>La taille de ces données sont comptées en <em>bits</em>: 1 bit = 0 ou 1. 8 bits représentent un octet (o), ou un Byte (B). Ainsi 1Gb = 1.000.000.000 bits.</li>
+        <li>La quantification en bits entiers consiste à l'encodage "direct" de l'ensemble de valeurs possibles avec des bits possibles. Ainsi, avec \( n \) bits, on peut encoder \( 2^n \) valeurs.&nbsp;<ul>
+                <li></li>
+                <li><span style="font-size: 0.9375rem;">Cet encodage n'est cependant pas toujours le plus adapté si le nombre de valeurs possibles est trop grand. La quantification en bit flottant améliore ce problème.</span></li>
+            </ul>
+        </li>
+        <li>On peut facilement se représenter que le nombre de valeurs possibles avec lequel on encode l'amplitude de signal numérisé, originellement continue, a un impact direct sur la <strong>qualité</strong>&nbsp;de la numérisation.<ul>
+                <li>L'erreur de la <strong>quantification</strong>&nbsp;d'un signal peut-être représentée comme du rajout de bruit : effectivement, le fait que chaque valeur continue soit "rabattue" sur une autre valeur de la grille de quantification rajoute un "bruit" non présent dans la forme d'onde de base.&nbsp;</li>
+                <li>Cette erreur est numériquement évaluable par le <strong>rapport signal sur bruit</strong>, ou <em>signal-to-noise ratio </em>(SNR), compté en décibel (echelle logarithmique). Plus il est élevé, plus cela veut dire que l'amplitude du signal est beaucoup plus élévé que l'amplitude du bruit amené par la quantification.&nbsp;</li>
+            </ul>
+        </li>
+        <li>Une quantification est dite <strong>linéaire</strong> quand la grille de quantification est régulièrement espacée.&nbsp;<ul>
+                <li>Néanmoins, cette grille de quantification n'est pas très adaptée aux signaux audio, car souvent l'information est plus densifiée dans les énergies faibles (sons maintenus vs. transitoires, etc.).&nbsp;</li>
+                <li>Ainsi, les amplitudes sonores sont le plus souvent quantifiées en utilisant une <strong>quantification</strong> <strong>non-lineaire</strong>, où la résolution dans les amplitudes faibles est plus grande que dans les amplitudes élevées. C'est ce qu'on appelle la quantification \( \mu \)-law, ou A-law (légèrement différentes mais équivalentes).</li>
+            </ul>
+        </li>
+    </ul>
+    <p></p>
+</div>
+
+</html>
