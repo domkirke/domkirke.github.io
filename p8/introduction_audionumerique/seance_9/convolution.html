@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Convolution expliquée visuellement</title>
+  <style>
+    :root{
+      --bg:#0f172a;
+      --panel:#111827;
+      --panel2:#1f2937;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --blue:#60a5fa;
+      --orange:#f59e0b;
+      --green:#34d399;
+      --red:#f87171;
+      --grid:#334155;
+      --accent:#a78bfa;
+    }
+
+    * { box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: Inter, system-ui, Arial, sans-serif;
+      background: linear-gradient(180deg, #0b1020, #111827);
+      color:var(--text);
+    }
+
+    .container{
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1{
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .subtitle{
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .card{
+      background: rgba(17,24,39,.88);
+      border: 1px solid #253043;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+
+    .controls{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:12px;
+      align-items:end;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .field label{
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    select, button, input[type="range"]{
+      width:100%;
+    }
+
+    select, button{
+      background: var(--panel2);
+      color: var(--text);
+      border:1px solid #334155;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+
+    button{
+      cursor:pointer;
+      transition:.15s ease;
+    }
+
+    button:hover{
+      transform: translateY(-1px);
+      border-color:#475569;
+    }
+
+    .btn-primary{
+      background:#312e81;
+      border-color:#4f46e5;
+    }
+
+    .btn-secondary{
+      background:#1e293b;
+    }
+
+    .controls .span-3{ grid-column: span 3; }
+    .controls .span-2{ grid-column: span 2; }
+    .controls .span-4{ grid-column: span 4; }
+    .controls .span-12{ grid-column: span 12; }
+
+    .canvas-grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:16px;
+    }
+
+    .canvas-box{
+      background:#0b1220;
+      border:1px solid #223047;
+      border-radius:14px;
+      padding:12px;
+    }
+
+    .canvas-title{
+      margin-bottom:8px;
+      font-weight:600;
+      color:#dbeafe;
+    }
+
+    canvas{
+      width:100%;
+      height:220px;
+      display:block;
+      background:#0b1220;
+      border-radius:10px;
+    }
+
+    #kernelCanvas{ height:180px; }
+    #outputCanvas{ height:220px; }
+    #inputCanvas{ height:180px; }
+    #slideCanvas{ height:240px; }
+
+    .info-grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:16px;
+    }
+
+    .formula{
+      background:#0b1220;
+      border:1px solid #223047;
+      border-radius:12px;
+      padding:14px;
+      line-height:1.5;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      white-space: pre-wrap;
+      color:#e2e8f0;
+      min-height: 160px;
+    }
+
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:8px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .legend span{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .dot{
+      width:12px;
+      height:12px;
+      border-radius:999px;
+      display:inline-block;
+    }
+
+    .explain{
+      color:#cbd5e1;
+      line-height:1.55;
+      font-size:15px;
+    }
+
+    .pill{
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:12px;
+      background:#172554;
+      color:#bfdbfe;
+      border:1px solid #1d4ed8;
+      margin-bottom:8px;
+    }
+
+    .step-line{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-top:8px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .step-value{
+      min-width:54px;
+      text-align:center;
+      padding:4px 8px;
+      background:#0b1220;
+      border:1px solid #223047;
+      border-radius:8px;
+      color:#fff;
+    }
+
+    .foot{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:8px;
+    }
+
+    @media (max-width: 900px){
+      .controls{
+        grid-template-columns: 1fr 1fr;
+      }
+      .controls .span-3,
+      .controls .span-2,
+      .controls .span-4,
+      .controls .span-12{
+        grid-column: span 2;
+      }
+      .info-grid{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Comprendre la convolution, sans être musicien</h1>
+  <div class="subtitle">
+    Une version visuelle : on fait glisser un petit motif sur un signal, on multiplie ce qui se recouvre, puis on additionne.
+  </div>
+
+  <div class="card">
+    <div class="controls">
+      <div class="field span-3">
+        <label>Signal d'entrée x[k]</label>
+        <select id="inputPreset"></select>
+      </div>
+
+      <div class="field span-3">
+        <label>Filtre / motif h[m]</label>
+        <select id="kernelPreset"></select>
+      </div>
+
+      <div class="field span-2">
+        <label>&nbsp;</label>
+        <button id="prevBtn" class="btn-secondary">◀ Étape précédente</button>
+      </div>
+
+      <div class="field span-2">
+        <label>&nbsp;</label>
+        <button id="nextBtn" class="btn-secondary">Étape suivante ▶</button>
+      </div>
+
+      <div class="field span-2">
+        <label>&nbsp;</label>
+        <button id="playBtn" class="btn-primary">▶ Lecture auto</button>
+      </div>
+
+      <div class="field span-12">
+        <label>Position de calcul n</label>
+        <input type="range" id="stepSlider" min="0" max="10" value="0" />
+        <div class="step-line">
+          <span>Étape courante :</span>
+          <span class="step-value" id="stepValue">n = 0</span>
+          <span id="stepMeaning"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-grid">
+    <div class="canvas-box">
+      <div class="canvas-title">1) Signal d'entrée x[k]</div>
+      <canvas id="inputCanvas" width="1100" height="180"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--blue)"></i> entrée</span>
+      </div>
+    </div>
+
+    <div class="canvas-box">
+      <div class="canvas-title">2) Filtre / motif h[m]</div>
+      <canvas id="kernelCanvas" width="1100" height="180"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--orange)"></i> filtre original</span>
+      </div>
+    </div>
+
+    <div class="canvas-box">
+      <div class="canvas-title">3) Convolution en action : on retourne le filtre puis on le glisse</div>
+      <canvas id="slideCanvas" width="1100" height="240"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--blue)"></i> entrée x[k]</span>
+        <span><i class="dot" style="background:var(--orange)"></i> filtre glissé h[n-k]</span>
+        <span><i class="dot" style="background:var(--accent)"></i> zone qui se recouvre</span>
+      </div>
+    </div>
+
+    <div class="canvas-box">
+      <div class="canvas-title">4) Résultat y[n] = x * h</div>
+      <canvas id="outputCanvas" width="1100" height="220"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--green)"></i> sortie déjà calculée</span>
+        <span><i class="dot" style="background:var(--red)"></i> point courant y[n]</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-grid" style="margin-top:16px;">
+    <div class="card">
+      <div class="pill">Calcul de l'étape courante</div>
+      <div id="formula" class="formula"></div>
+      <div class="foot">
+        Astuce : si l'entrée est un seul pic ("impulsion"), la sortie reproduit le filtre. C'est une idée clé pour comprendre la convolution.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="pill">Explication simple</div>
+      <div id="explain" class="explain"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const inputPresets = {
+    impulse: {
+      label: "Un seul pic (impulsion)",
+      data: [0,0,0,1,0,0,0,0,0],
+      text: "Imagine un seul claquement ou un seul flash. C'est le cas le plus utile pour comprendre la convolution : la sortie révèle directement la forme du filtre."
+    },
+    twoPulses: {
+      label: "Deux événements séparés",
+      data: [0,1,0,0,0,0.7,0,0,0],
+      text: "Deux petits événements arrivent à des moments différents. La sortie est la somme de deux réponses du filtre, décalées dans le temps."
+    },
+    plateau: {
+      label: "Un palier (ça reste allumé)",
+      data: [0,0,0,1,1,1,1,1,1],
+      text: "Le signal passe de 0 à 1 et reste là. C'est utile pour voir comment le filtre lisse, retarde ou détecte les changements."
+    },
+    bosse: {
+      label: "Une bosse",
+      data: [0,0,0.4,0.8,1,0.8,0.4,0,0],
+      text: "Une forme douce et courte. On voit bien comment le filtre modifie sa largeur, son retard ou son relief."
+    },
+    alternance: {
+      label: "Alternance simple",
+      data: [0,1,0,-1,0,1,0,-1,0],
+      text: "Une alternance permet de voir ce qui se passe quand il y a des valeurs positives et négatives."
+    }
+  };
+
+  const kernelPresets = {
+    average3: {
+      label: "Moyenne glissante (lissage)",
+      data: [1/3, 1/3, 1/3],
+      text: "Ce filtre remplace chaque point par une petite moyenne locale. Il lisse les variations brusques."
+    },
+    echo: {
+      label: "Écho simple",
+      data: [1, 0, 0, 0.6],
+      text: "Ce filtre ajoute une copie retardée du signal. Visuellement, c'est comme voir un original puis une réplique plus faible un peu plus loin."
+    },
+    difference: {
+      label: "Détecteur de changement",
+      data: [1, -1],
+      text: "Ce filtre compare le présent au passé immédiat. Il met surtout en valeur les changements."
+    },
+    decay: {
+      label: "Traînée / réverbération simple",
+      data: [0.7, 0.35, 0.18, 0.09],
+      text: "Ce filtre prolonge un événement avec une traîne qui s'affaiblit. Pas besoin d'être musicien : pense à une trace qui s'estompe."
+    },
+    edgeSoft: {
+      label: "Renforcement local doux",
+      data: [-0.25, 1, -0.25],
+      text: "Ce filtre retire un peu les voisins et garde le centre. Il fait ressortir ce qui change localement."
+    }
+  };
+
+  const inputSelect = document.getElementById("inputPreset");
+  const kernelSelect = document.getElementById("kernelPreset");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const playBtn = document.getElementById("playBtn");
+  const stepSlider = document.getElementById("stepSlider");
+  const stepValue = document.getElementById("stepValue");
+  const stepMeaning = document.getElementById("stepMeaning");
+  const formulaEl = document.getElementById("formula");
+  const explainEl = document.getElementById("explain");
+
+  const inputCanvas = document.getElementById("inputCanvas");
+  const kernelCanvas = document.getElementById("kernelCanvas");
+  const slideCanvas = document.getElementById("slideCanvas");
+  const outputCanvas = document.getElementById("outputCanvas");
+
+  let x = [];
+  let h = [];
+  let y = [];
+  let n = 0;
+  let playTimer = null;
+
+  function fillSelect(select, source) {
+    Object.entries(source).forEach(([key, obj]) => {
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = obj.label;
+      select.appendChild(opt);
+    });
+  }
+
+  fillSelect(inputSelect, inputPresets);
+  fillSelect(kernelSelect, kernelPresets);
+
+  inputSelect.value = "impulse";
+  kernelSelect.value = "echo";
+
+  function convolve(a, b) {
+    const out = Array(a.length + b.length - 1).fill(0);
+    for (let i = 0; i < a.length; i++) {
+      for (let j = 0; j < b.length; j++) {
+        out[i + j] += a[i] * b[j];
+      }
+    }
+    return out;
+  }
+
+  function fmt(num) {
+    const rounded = Math.round(num * 100) / 100;
+    if (Object.is(rounded, -0)) return "0";
+    return String(rounded);
+  }
+
+  function resizeForDPR(canvas) {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const targetW = Math.round(rect.width * dpr);
+    const targetH = Math.round(rect.height * dpr);
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
+    }
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return ctx;
+  }
+
+  function clear(ctx, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    ctx.clearRect(0, 0, rect.width, rect.height);
+  }
+
+  function getScale(dataSets, height, top = 18, bottom = 30) {
+    let maxAbs = 1;
+    dataSets.forEach(arr => {
+      arr.forEach(v => maxAbs = Math.max(maxAbs, Math.abs(v)));
+    });
+    const usable = (height - top - bottom) / 2;
+    return { maxAbs, usable, zeroY: top + usable };
+  }
+
+  function drawAxes(ctx, width, height, count, top = 18, bottom = 30) {
+    const { zeroY } = getScale([[0]], height, top, bottom);
+    ctx.strokeStyle = "rgba(148,163,184,.18)";
+    ctx.lineWidth = 1;
+
+    // horizontal center line
+    ctx.beginPath();
+    ctx.moveTo(40, height / 2);
+    ctx.lineTo(width - 14, height / 2);
+    ctx.stroke();
+
+    // outer frame
+    ctx.strokeStyle = "rgba(148,163,184,.10)";
+    ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
+
+    // x ticks
+    const plotW = width - 60;
+    const step = plotW / count;
+    ctx.strokeStyle = "rgba(148,163,184,.12)";
+    for (let i = 0; i < count; i++) {
+      const x = 40 + i * step + step/2;
+      ctx.beginPath();
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, height - bottom);
+      ctx.stroke();
+    }
+  }
+
+  function drawBarSeries(ctx, canvas, data, color, options = {}) {
+    const rect = canvas.getBoundingClientRect();
+    const W = rect.width;
+    const H = rect.height;
+    const top = 18;
+    const bottom = 28;
+    const left = 40;
+    const right = 14;
+    const plotW = W - left - right;
+    const count = data.length;
+    const slot = plotW / count;
+    const barW = slot * (options.barWidthRatio || 0.5);
+    const offset = options.offset || 0;
+    const alpha = options.alpha ?? 1;
+    const labels = options.labels ?? true;
+    const highlightIndex = options.highlightIndex;
+    const greyAfter = options.greyAfter;
+    const outline = options.outline ?? false;
+    const showValue = options.showValue ?? true;
+
+    const { maxAbs, usable, zeroY } = getScale([data], H, top, bottom);
+
+    // frame & axis
+    ctx.strokeStyle = "rgba(148,163,184,.10)";
+    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+
+    ctx.strokeStyle = "rgba(148,163,184,.22)";
+    ctx.beginPath();
+    ctx.moveTo(left, zeroY);
+    ctx.lineTo(W - right, zeroY);
+    ctx.stroke();
+
+    // grid
+    ctx.strokeStyle = "rgba(148,163,184,.10)";
+    for (let i = 0; i < count; i++) {
+      const x = left + i * slot + slot / 2;
+      ctx.beginPath();
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, H - bottom);
+      ctx.stroke();
+    }
+
+    data.forEach((v, i) => {
+      const cx = left + i * slot + slot / 2 + offset;
+      const y = zeroY - (v / maxAbs) * usable;
+      const isFuture = (greyAfter !== undefined && i > greyAfter);
+      const fill = isFuture ? "rgba(148,163,184,.25)" : color;
+      const line = isFuture ? "rgba(148,163,184,.35)" : color;
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+
+      ctx.strokeStyle = line;
+      ctx.lineWidth = (i === highlightIndex ? 4 : 2);
+
+      ctx.beginPath();
+      ctx.moveTo(cx, zeroY);
+      ctx.lineTo(cx, y);
+      ctx.stroke();
+
+      if (outline) {
+        ctx.strokeStyle = line;
+        ctx.strokeRect(cx - barW/2, Math.min(zeroY, y), barW, Math.abs(zeroY - y));
+      } else {
+        ctx.fillStyle = fill;
+        ctx.fillRect(cx - barW/2, Math.min(zeroY, y), barW, Math.abs(zeroY - y));
+      }
+
+      if (i === highlightIndex) {
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(cx - barW/2 - 3, Math.min(zeroY, y) - 3, barW + 6, Math.abs(zeroY - y) + 6);
+      }
+
+      if (showValue && Math.abs(v) > 0.001) {
+        ctx.fillStyle = "#e5e7eb";
+        ctx.font = "12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(fmt(v), cx, v >= 0 ? y - 8 : y + 16);
+      }
+
+      if (labels) {
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(i, cx, H - 10);
+      }
+
+      ctx.restore();
+    });
+  }
+
+  function drawInput() {
+    const ctx = resizeForDPR(inputCanvas);
+    clear(ctx, inputCanvas);
+    drawBarSeries(ctx, inputCanvas, x, getCss("--blue"), {
+      barWidthRatio: 0.45
+    });
+  }
+
+  function drawKernel() {
+    const ctx = resizeForDPR(kernelCanvas);
+    clear(ctx, kernelCanvas);
+    drawBarSeries(ctx, kernelCanvas, h, getCss("--orange"), {
+      barWidthRatio: 0.45
+    });
+  }
+
+  function drawSlide() {
+    const ctx = resizeForDPR(slideCanvas);
+    clear(ctx, slideCanvas);
+
+    const rect = slideCanvas.getBoundingClientRect();
+    const W = rect.width;
+    const H = rect.height;
+    const top = 20;
+    const bottom = 34;
+    const left = 40;
+    const right = 14;
+
+    const count = x.length;
+    const plotW = W - left - right;
+    const slot = plotW / count;
+    const barW = slot * 0.32;
+
+    const shifted = Array(x.length).fill(null);
+    const overlapIndices = [];
+
+    for (let k = 0; k < x.length; k++) {
+      const j = n - k; // h[n-k]
+      if (j >= 0 && j < h.length) {
+        shifted[k] = h[j];
+        overlapIndices.push(k);
+      }
+    }
+
+    const dataSets = [x, h];
+    const { maxAbs, usable, zeroY } = getScale(dataSets, H, top, bottom);
+
+    // frame
+    ctx.strokeStyle = "rgba(148,163,184,.10)";
+    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+
+    // grid + labels
+    ctx.strokeStyle = "rgba(148,163,184,.10)";
+    for (let i = 0; i < count; i++) {
+      const cx = left + i * slot + slot / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, top);
+      ctx.lineTo(cx, H - bottom);
+      ctx.stroke();
+
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(i, cx, H - 12);
+    }
+
+    // axis
+    ctx.strokeStyle = "rgba(148,163,184,.22)";
+    ctx.beginPath();
+    ctx.moveTo(left, zeroY);
+    ctx.lineTo(W - right, zeroY);
+    ctx.stroke();
+
+    // overlap shading
+    overlapIndices.forEach(k => {
+      const x0 = left + k * slot;
+      ctx.fillStyle = "rgba(167,139,250,.12)";
+      ctx.fillRect(x0, top, slot, H - top - bottom);
+    });
+
+    // input x[k]
+    x.forEach((v, k) => {
+      const cx = left + k * slot + slot / 2 - barW * 0.55;
+      const yVal = zeroY - (v / maxAbs) * usable;
+
+      ctx.strokeStyle = getCss("--blue");
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, zeroY);
+      ctx.lineTo(cx, yVal);
+      ctx.stroke();
+
+      ctx.fillStyle = getCss("--blue");
+      ctx.fillRect(cx - barW/2, Math.min(zeroY, yVal), barW, Math.abs(zeroY - yVal));
+
+      if (Math.abs(v) > 0.001) {
+        ctx.fillStyle = "#dbeafe";
+        ctx.font = "12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(fmt(v), cx, v >= 0 ? yVal - 8 : yVal + 16);
+      }
+    });
+
+    // shifted flipped kernel h[n-k]
+    shifted.forEach((v, k) => {
+      if (v === null) return;
+
+      const cx = left + k * slot + slot / 2 + barW * 0.55;
+      const yVal = zeroY - (v / maxAbs) * usable;
+
+      ctx.strokeStyle = getCss("--orange");
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, zeroY);
+      ctx.lineTo(cx, yVal);
+      ctx.stroke();
+
+      ctx.strokeStyle = getCss("--orange");
+      ctx.strokeRect(cx - barW/2, Math.min(zeroY, yVal), barW, Math.abs(zeroY - yVal));
+
+      if (Math.abs(v) > 0.001) {
+        ctx.fillStyle = "#ffedd5";
+        ctx.font = "12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(fmt(v), cx, v >= 0 ? yVal - 8 : yVal + 16);
+      }
+    });
+
+    // title/help
+    ctx.fillStyle = "#cbd5e1";
+    ctx.font = "13px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("Orange = h[n-k] : le filtre a été retourné puis déplacé jusqu'à la position n.", left, 16);
+
+    // current n marker
+    const outCount = y.length;
+    const markerX = left + Math.min(Math.max(n, 0), x.length - 1) * slot + slot / 2;
+    ctx.strokeStyle = "rgba(248,113,113,.35)";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5,4]);
+    ctx.beginPath();
+    ctx.moveTo(markerX, top);
+    ctx.lineTo(markerX, H - bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = getCss("--red");
+    ctx.font = "bold 13px sans-serif";
+    ctx.fillText("étape n = " + n, W - 120, 18);
+  }
+
+  function drawOutput() {
+    const ctx = resizeForDPR(outputCanvas);
+    clear(ctx, outputCanvas);
+    drawBarSeries(ctx, outputCanvas, y, getCss("--green"), {
+      barWidthRatio: 0.5,
+      greyAfter: n,
+      highlightIndex: n
+    });
+
+    const rect = outputCanvas.getBoundingClientRect();
+    const W = rect.width;
+    const H = rect.height;
+
+    // current output marker text
+    ctx.fillStyle = getCss("--red");
+    ctx.font = "bold 14px sans-serif";
+    ctx.fillText(`y[${n}] = ${fmt(y[n])}`, W - 130, 20);
+  }
+
+  function buildFormula() {
+    const terms = [];
+    let sum = 0;
+
+    for (let k = 0; k < x.length; k++) {
+      const j = n - k;
+      if (j >= 0 && j < h.length) {
+        const val = x[k] * h[j];
+        sum += val;
+        terms.push({ k, j, x: x[k], h: h[j], v: val });
+      }
+    }
+
+    const line1 = `Étape n = ${n}`;
+    const line2 = `Formule : y[n] = Σ x[k] · h[n-k]`;
+    let line3 = `Donc : y[${n}] = `;
+
+    if (terms.length === 0) {
+      line3 += "0";
+      formulaEl.textContent = [line1, line2, "", line3].join("\n");
+      return;
+    }
+
+    line3 += terms.map(t => `x[${t.k}]·h[${t.j}]`).join(" + ");
+    const line4 = "        = " + terms.map(t => `${fmt(t.x)}×${fmt(t.h)}`).join(" + ");
+    const line5 = "        = " + terms.map(t => fmt(t.v)).join(" + ");
+    const line6 = `        = ${fmt(sum)}`;
+
+    const details = terms.map(t =>
+      `- recouvrement : x[${t.k}] = ${fmt(t.x)} et h[${t.j}] = ${fmt(t.h)}  →  produit = ${fmt(t.v)}`
+    ).join("\n");
+
+    formulaEl.textContent = [line1, line2, "", line3, line4, line5, line6, "", details].join("\n");
+  }
+
+  function buildExplanation() {
+    const inputInfo = inputPresets[inputSelect.value];
+    const kernelInfo = kernelPresets[kernelSelect.value];
+
+    const overlapCount = countOverlap(n, x.length, h.length);
+    const impulseSpecial = inputSelect.value === "impulse"
+      ? "Comme l'entrée est une impulsion, la sortie est une copie du filtre, simplement décalée. C'est l'idée centrale de la convolution."
+      : "";
+
+    explainEl.innerHTML = `
+      <p><strong>Entrée :</strong> ${inputInfo.text}</p>
+      <p><strong>Filtre :</strong> ${kernelInfo.text}</p>
+      <p><strong>À cette étape (n = ${n}) :</strong> il y a <strong>${overlapCount}</strong> position(s) qui se recouvrent entre le signal et le filtre glissé.</p>
+      <p>On ne garde que ces positions-là, on <strong>multiplie</strong> les valeurs qui se touchent, puis on <strong>additionne</strong> tous les produits. Le nombre obtenu devient <strong>y[${n}]</strong>.</p>
+      <p>${impulseSpecial}</p>
+      <p><strong>Intuition :</strong> le filtre agit comme une petite règle locale : il dit comment combiner les voisins pour produire chaque point de sortie.</p>
+    `;
+  }
+
+  function countOverlap(step, xLen, hLen) {
+    let c = 0;
+    for (let k = 0; k < xLen; k++) {
+      const j = step - k;
+      if (j >= 0 && j < hLen) c++;
+    }
+    return c;
+  }
+
+  function getCss(name){
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function updateStepMeta() {
+    stepValue.textContent = `n = ${n}`;
+    if (n === 0) {
+      stepMeaning.textContent = "Début : le filtre commence juste à toucher le signal.";
+    } else if (n === y.length - 1) {
+      stepMeaning.textContent = "Fin : le filtre quitte complètement le signal.";
+    } else {
+      stepMeaning.textContent = "On calcule un point de sortie en regardant seulement la zone qui se recouvre.";
+    }
+  }
+
+  function refreshAll() {
+    x = [...inputPresets[inputSelect.value].data];
+    h = [...kernelPresets[kernelSelect.value].data];
+    y = convolve(x, h);
+
+    stepSlider.max = y.length - 1;
+    if (n > y.length - 1) n = y.length - 1;
+    stepSlider.value = n;
+
+    updateStepMeta();
+    drawInput();
+    drawKernel();
+    drawSlide();
+    drawOutput();
+    buildFormula();
+    buildExplanation();
+  }
+
+  function setStep(value) {
+    n = Math.max(0, Math.min(y.length - 1, value));
+    stepSlider.value = n;
+    updateStepMeta();
+    drawSlide();
+    drawOutput();
+    buildFormula();
+    buildExplanation();
+  }
+
+  function togglePlay() {
+    if (playTimer) {
+      clearInterval(playTimer);
+      playTimer = null;
+      playBtn.textContent = "▶ Lecture auto";
+      return;
+    }
+
+    playBtn.textContent = "⏸ Pause";
+    playTimer = setInterval(() => {
+      if (n >= y.length - 1) {
+        setStep(0);
+      } else {
+        setStep(n + 1);
+      }
+    }, 900);
+  }
+
+  inputSelect.addEventListener("change", () => {
+    setStep(0);
+    refreshAll();
+  });
+
+  kernelSelect.addEventListener("change", () => {
+    setStep(0);
+    refreshAll();
+  });
+
+  stepSlider.addEventListener("input", e => {
+    setStep(Number(e.target.value));
+  });
+
+  prevBtn.addEventListener("click", () => setStep(n - 1));
+  nextBtn.addEventListener("click", () => setStep(n + 1));
+  playBtn.addEventListener("click", togglePlay);
+
+  window.addEventListener("resize", refreshAll);
+
+  refreshAll();
+})();
+</script>
+</body>
+</html>
