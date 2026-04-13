@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Synthèse par table d'ondes</title>
+  <style>
+    :root {
+      --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0;
+      --text: #0f172a; --muted: #64748b; --canvas-bg: #f1f5f9; --accent: #2563eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 28px 32px; max-width: 1200px; margin: 0 auto; min-height: 100vh; }
+
+    header { margin-bottom: 24px; }
+    h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { color: var(--muted); font-size: 0.92rem; line-height: 1.7; max-width: 820px; }
+    .subtitle strong { color: var(--text); }
+
+    .section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; }
+    .section-title { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+
+    /* Wavetable editor */
+    .editor-wrap {
+      background: var(--canvas-bg); border: 1px solid var(--border); border-radius: 10px;
+      overflow: hidden; margin-bottom: 18px;
+    }
+    .editor-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 14px; border-bottom: 1px solid var(--border);
+    }
+    .editor-label { font-size: 0.72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .editor-hint  { font-size: 0.72rem; color: var(--muted); font-style: italic; }
+    #editorCanvas { display: block; width: 100%; height: 180px; cursor: crosshair; touch-action: none; }
+
+    /* Morph bar */
+    .morph-bar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-top: 1px solid var(--border); background: #f8fafc; }
+    .morph-label { font-size: 0.78rem; color: var(--muted); min-width: 90px; }
+    .morph-name  { font-size: 0.78rem; font-weight: 600; min-width: 80px; text-align: center; }
+    #morphSl { flex: 1; accent-color: #8b5cf6; color: #8b5cf6; }
+
+    .canvases { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+    .canvas-wrap { background: var(--canvas-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .canvas-label { padding: 7px 14px; font-size: 0.72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); }
+    canvas { display: block; width: 100%; height: 200px; }
+
+    .btn-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    button { padding: 7px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.88rem; cursor: pointer; transition: background 0.12s; }
+    button:hover { background: #f1f5f9; }
+    button.active { background: #eff6ff; border-color: #2563eb; color: #2563eb; }
+
+    .ctrl { display: flex; align-items: center; gap: 10px; }
+    .ctrl label { font-size: 0.87rem; min-width: 160px; }
+    input[type=range] { flex: 1; height: 4px; cursor: pointer; -webkit-appearance: none; appearance: none; background: var(--border); border-radius: 2px; outline: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: currentColor; cursor: pointer; }
+    input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: currentColor; border: none; cursor: pointer; }
+    .val { font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 72px; text-align: right; }
+
+    .bottom-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    #playBtn { padding: 10px 28px; font-size: 0.95rem; font-weight: 700; background: #dcfce7; border-color: #16a34a; color: #14532d; }
+    #playBtn:hover { background: #bbf7d0; }
+    #playBtn.playing { background: #fee2e2; border-color: #dc2626; color: #7f1d1d; }
+    .kbd-hint { margin-left: auto; font-size: 0.75rem; color: var(--muted); }
+    kbd { background: #e2e8f0; border: 1px solid #cbd5e1; border-radius: 3px; padding: 1px 5px; font-size: 0.72rem; }
+
+    @media (max-width: 720px) { .canvases { grid-template-columns: 1fr; } body { padding: 16px; } }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Synthèse par table d'ondes</h1>
+  <p class="subtitle">
+    Une <strong>table d'ondes</strong> est un tableau de N échantillons représentant exactement une période d'un signal.
+    Pour jouer une note à la fréquence f avec un taux d'échantillonnage SR,
+    on avance dans la table à la vitesse N·f/SR échantillons par pas.
+    Le <strong>timbre</strong> (contenu harmonique) est entièrement défini par la forme de la table ;
+    la <strong>hauteur</strong> change sans altérer le timbre.
+    On peut aussi <strong>interpoler</strong> entre deux tables pour faire évoluer le timbre.
+  </p>
+</header>
+
+<!-- Wavetable editor -->
+<div class="editor-wrap">
+  <div class="editor-header">
+    <span class="editor-label">Éditeur de table d'ondes — une période</span>
+    <span class="editor-hint">cliquez-glissez pour dessiner</span>
+  </div>
+  <canvas id="editorCanvas"></canvas>
+  <div class="morph-bar">
+    <span class="morph-name" id="morphNameA" style="color:#2563eb">—</span>
+    <span class="morph-label" style="text-align:center">Morphing A → B</span>
+    <input type="range" id="morphSl" min="0" max="1" step="0.01" value="0">
+    <span class="morph-name" id="morphNameB" style="color:#9333ea">—</span>
+  </div>
+</div>
+
+<!-- Output canvases -->
+<div class="canvases">
+  <div class="canvas-wrap">
+    <div class="canvas-label">Forme d'onde à la hauteur choisie</div>
+    <canvas id="waveCanvas"></canvas>
+  </div>
+  <div class="canvas-wrap">
+    <div class="canvas-label">Spectre harmonique</div>
+    <canvas id="specCanvas"></canvas>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="section">
+  <div class="section-title">Préréglages table A (dessinée)</div>
+  <div class="btn-group" id="presetGroup">
+    <button data-preset="sine"     class="active">Sinusoïde</button>
+    <button data-preset="square">Carrée</button>
+    <button data-preset="sawtooth">Dent de scie</button>
+    <button data-preset="triangle">Triangle</button>
+    <button data-preset="organ">Orgue</button>
+    <button data-preset="bell">Cloche</button>
+    <button data-preset="custom" id="customBtn" style="display:none">Personnalisé</button>
+  </div>
+  <div class="section-title" style="margin-top:14px">Préréglage table B (cible du morphing)</div>
+  <div class="btn-group" id="presetBGroup">
+    <button data-presetb="sine">Sinusoïde</button>
+    <button data-presetb="square">Carrée</button>
+    <button data-presetb="sawtooth" class="active">Dent de scie</button>
+    <button data-presetb="triangle">Triangle</button>
+    <button data-presetb="organ">Orgue</button>
+    <button data-presetb="bell">Cloche</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Hauteur</div>
+  <div class="ctrl">
+    <label>Fréquence</label>
+    <input type="range" id="pitchSl" min="0" max="1" step="0.001" value="0.35" style="color:#2563eb;accent-color:#2563eb">
+    <span class="val" id="pitchVal" style="color:#2563eb">220 Hz</span>
+  </div>
+</div>
+
+<div class="section">
+  <div class="bottom-bar">
+    <button id="playBtn">▶ Jouer</button>
+    <span class="kbd-hint">raccourci : <kbd>Espace</kbd></span>
+  </div>
+</div>
+
+<script>
+const N_TABLE = 512;
+const SR      = 44100;
+const dpr     = window.devicePixelRatio || 1;
+
+// Pitch: log scale C2 (65 Hz) → C6 (1047 Hz)
+const P_MIN = 65, P_MAX = 1047;
+function sliderToPitch(v) { return P_MIN * Math.pow(P_MAX / P_MIN, v); }
+
+// ── Preset wavetable generators ───────────────────────────────────────────────
+function makeSine()     { return Float32Array.from({length:N_TABLE}, (_,i) => Math.sin(2*Math.PI*i/N_TABLE)); }
+function makeSquare()   { return Float32Array.from({length:N_TABLE}, (_,i) => { let y=0; for(let k=1;k<=60;k+=2) y+=Math.sin(2*Math.PI*k*i/N_TABLE)/k; return y*(4/Math.PI)*0.9; }); }
+function makeSawtooth() { return Float32Array.from({length:N_TABLE}, (_,i) => { let y=0; for(let k=1;k<=60;k++) y+=(k%2===0?-1:1)*Math.sin(2*Math.PI*k*i/N_TABLE)/k; return y*(2/Math.PI)*0.9; }); }
+function makeTriangle() { return Float32Array.from({length:N_TABLE}, (_,i) => { let y=0; for(let k=0;k<=30;k++) { const n=2*k+1; y+=(k%2===0?1:-1)*Math.sin(2*Math.PI*n*i/N_TABLE)/(n*n); } return y*(8/(Math.PI*Math.PI))*0.9; }); }
+function makeOrgan()    { return Float32Array.from({length:N_TABLE}, (_,i) => { const t=2*Math.PI*i/N_TABLE; return 0.6*Math.sin(t)+0.3*Math.sin(2*t)+0.08*Math.sin(3*t)+0.02*Math.sin(4*t); }); }
+function makeBell()     { return Float32Array.from({length:N_TABLE}, (_,i) => { const t=2*Math.PI*i/N_TABLE; return 0.5*Math.sin(t)+0.25*Math.sin(2.756*t)+0.15*Math.sin(5.404*t)+0.07*Math.sin(9.04*t)+0.03*Math.sin(11.45*t); }); }
+
+const PRESETS = { sine: makeSine, square: makeSquare, sawtooth: makeSawtooth, triangle: makeTriangle, organ: makeOrgan, bell: makeBell };
+const PRESET_NAMES = { sine:'Sinusoïde', square:'Carrée', sawtooth:'Dent de scie', triangle:'Triangle', organ:'Orgue', bell:'Cloche' };
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let tableA   = makeSine();
+let tableB   = makeSawtooth();
+let morphVal = 0;
+let pitch    = 220;
+let playing  = false;
+let audioCtx = null, oscNode = null, masterGain = null;
+let presetA  = 'sine', presetB = 'sawtooth';
+
+function currentTable() {
+  // Linear morph between A and B
+  const m = morphVal;
+  return Float32Array.from({length:N_TABLE}, (_, i) => tableA[i]*(1-m) + tableB[i]*m);
+}
+
+// ── DFT (table → Fourier coefficients for PeriodicWave) ───────────────────────
+function tableToPeriodicWave(ctx, table) {
+  const N = table.length;
+  const M = N / 2 + 1;
+  const real = new Float32Array(M);
+  const imag = new Float32Array(M);
+  for (let k = 0; k < M; k++) {
+    let re = 0, im = 0;
+    for (let n = 0; n < N; n++) {
+      const ang = 2 * Math.PI * k * n / N;
+      re += table[n] * Math.cos(ang);
+      im -= table[n] * Math.sin(ang);
+    }
+    real[k] =  2 * re / N;
+    imag[k] = -2 * im / N;   // PeriodicWave uses +sine convention
+  }
+  real[0] = 0; imag[0] = 0;  // no DC
+  return ctx.createPeriodicWave(real, imag, { disableNormalization: false });
+}
+
+// Harmonic amplitudes for spectrum display (fast DFT magnitudes, up to 32 harmonics)
+function tableHarmonics(table) {
+  const N = table.length;
+  const out = [];
+  for (let k = 1; k <= Math.min(32, N/2); k++) {
+    let re = 0, im = 0;
+    for (let n = 0; n < N; n++) {
+      const ang = 2 * Math.PI * k * n / N;
+      re += table[n] * Math.cos(ang);
+      im -= table[n] * Math.sin(ang);
+    }
+    out.push(2 * Math.sqrt(re*re + im*im) / N);
+  }
+  return out;
+}
+
+// ── Editor canvas ──────────────────────────────────────────────────────────────
+const editorCanvas = document.getElementById('editorCanvas');
+let isDrawing = false;
+
+function resizeEditor() {
+  editorCanvas.width  = editorCanvas.clientWidth  * dpr;
+  editorCanvas.height = editorCanvas.clientHeight * dpr;
+}
+
+function editorXY(e) {
+  const r = editorCanvas.getBoundingClientRect();
+  const cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  const cy = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  return { x: cx / r.width, y: cy / r.height };
+}
+
+function applyDraw(x, y) {
+  // x in [0,1] → table index; y in [0,1] → amplitude [-1, 1]
+  const idx = Math.round(x * (N_TABLE - 1));
+  const amp = 1 - 2 * y;  // 0 = top (+1), 1 = bottom (-1)
+  // Smooth: also set neighbours
+  for (let d = -2; d <= 2; d++) {
+    const i = (idx + d + N_TABLE) % N_TABLE;
+    const w = 1 - Math.abs(d) * 0.3;
+    tableA[i] = tableA[i] * (1 - w) + amp * w;
+  }
+  // Activate "custom" preset button
+  setActivePreset('custom');
+  if (playing) refreshOscillator();
+}
+
+editorCanvas.addEventListener('mousedown',  e => { isDrawing = true; applyDraw(...Object.values(editorXY(e))); });
+editorCanvas.addEventListener('mousemove',  e => { if (isDrawing) applyDraw(...Object.values(editorXY(e))); });
+editorCanvas.addEventListener('mouseup',    () => { isDrawing = false; });
+editorCanvas.addEventListener('mouseleave', () => { isDrawing = false; });
+editorCanvas.addEventListener('touchstart', e => { e.preventDefault(); isDrawing = true; applyDraw(...Object.values(editorXY(e))); }, { passive:false });
+editorCanvas.addEventListener('touchmove',  e => { e.preventDefault(); if(isDrawing) applyDraw(...Object.values(editorXY(e))); }, { passive:false });
+editorCanvas.addEventListener('touchend',   () => { isDrawing = false; });
+
+function drawEditor() {
+  const c  = editorCanvas.getContext('2d');
+  const W  = editorCanvas.width, H = editorCanvas.height;
+  const tb = currentTable();
+
+  c.fillStyle = '#f1f5f9'; c.fillRect(0,0,W,H);
+
+  // Grid
+  c.strokeStyle = '#e2e8f0'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(0, H/2); c.lineTo(W, H/2); c.stroke();
+  for (const x of [W/4, W/2, 3*W/4]) {
+    c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke();
+  }
+
+  // Table A (light blue)
+  if (morphVal < 0.99) {
+    c.beginPath(); c.strokeStyle = '#93c5fd'; c.lineWidth = 1.5*dpr; c.globalAlpha = 1-morphVal;
+    for (let i = 0; i <= N_TABLE; i++) {
+      const x  = (i % N_TABLE) / N_TABLE * W;
+      const py = H/2 - tableA[i % N_TABLE] * H * 0.44;
+      i === 0 ? c.moveTo(x, py) : c.lineTo(x, py);
+    }
+    c.stroke(); c.globalAlpha = 1;
+  }
+  // Table B (purple)
+  if (morphVal > 0.01) {
+    c.beginPath(); c.strokeStyle = '#c084fc'; c.lineWidth = 1.5*dpr; c.globalAlpha = morphVal;
+    for (let i = 0; i <= N_TABLE; i++) {
+      const x  = (i % N_TABLE) / N_TABLE * W;
+      const py = H/2 - tableB[i % N_TABLE] * H * 0.44;
+      i === 0 ? c.moveTo(x, py) : c.lineTo(x, py);
+    }
+    c.stroke(); c.globalAlpha = 1;
+  }
+  // Morphed result (dark)
+  c.beginPath(); c.strokeStyle = '#1d4ed8'; c.lineWidth = 2.5*dpr;
+  for (let i = 0; i <= N_TABLE; i++) {
+    const x  = (i % N_TABLE) / N_TABLE * W;
+    const py = H/2 - tb[i % N_TABLE] * H * 0.44;
+    i === 0 ? c.moveTo(x, py) : c.lineTo(x, py);
+  }
+  c.stroke();
+}
+
+// ── Preset buttons ─────────────────────────────────────────────────────────────
+function setActivePreset(name) {
+  presetA = name;
+  document.getElementById('presetGroup').querySelectorAll('button').forEach(b =>
+    b.classList.toggle('active', b.dataset.preset === name));
+  document.getElementById('customBtn').style.display = name === 'custom' ? '' : 'none';
+  document.getElementById('morphNameA').textContent = name === 'custom' ? 'Perso.' : PRESET_NAMES[name] || '';
+}
+
+document.getElementById('presetGroup').addEventListener('click', e => {
+  const p = e.target.dataset.preset; if (!p || p === 'custom') return;
+  tableA = PRESETS[p]();
+  setActivePreset(p);
+  if (playing) refreshOscillator();
+});
+
+document.getElementById('presetBGroup').addEventListener('click', e => {
+  const p = e.target.dataset.presetb; if (!p) return;
+  presetB = p;
+  tableB  = PRESETS[p]();
+  document.getElementById('presetBGroup').querySelectorAll('button').forEach(b =>
+    b.classList.toggle('active', b.dataset.presetb === p));
+  document.getElementById('morphNameB').textContent = PRESET_NAMES[p];
+  if (playing) refreshOscillator();
+});
+
+// Init B name
+document.getElementById('morphNameA').textContent = PRESET_NAMES.sine;
+document.getElementById('morphNameB').textContent = PRESET_NAMES.sawtooth;
+
+// ── Morph slider ───────────────────────────────────────────────────────────────
+document.getElementById('morphSl').addEventListener('input', function() {
+  morphVal = parseFloat(this.value);
+  if (playing) refreshOscillator();
+});
+
+// ── Pitch slider ───────────────────────────────────────────────────────────────
+document.getElementById('pitchSl').addEventListener('input', function() {
+  pitch = sliderToPitch(parseFloat(this.value));
+  const lbl = pitch < 1000 ? Math.round(pitch) + ' Hz' : (pitch/1000).toFixed(2) + ' kHz';
+  document.getElementById('pitchVal').textContent = lbl;
+  if (playing && oscNode) oscNode.frequency.setTargetAtTime(pitch, audioCtx.currentTime, 0.01);
+});
+// Init pitch display
+pitch = sliderToPitch(parseFloat(document.getElementById('pitchSl').value));
+document.getElementById('pitchVal').textContent = Math.round(pitch) + ' Hz';
+
+// ── Web Audio ──────────────────────────────────────────────────────────────────
+function refreshOscillator() {
+  if (!audioCtx || !oscNode) return;
+  const wave = tableToPeriodicWave(audioCtx, currentTable());
+  oscNode.setPeriodicWave(wave);
+}
+
+function startAudio() {
+  audioCtx   = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain(); masterGain.gain.value = 0.22; masterGain.connect(audioCtx.destination);
+  oscNode    = audioCtx.createOscillator();
+  oscNode.frequency.value = pitch;
+  const wave = tableToPeriodicWave(audioCtx, currentTable());
+  oscNode.setPeriodicWave(wave);
+  oscNode.connect(masterGain);
+  oscNode.start();
+}
+function stopAudio() {
+  try { oscNode.stop(); } catch(_){}
+  try { audioCtx.close(); } catch(_){}
+  oscNode = masterGain = audioCtx = null;
+}
+
+const playBtn = document.getElementById('playBtn');
+function togglePlay() {
+  if (!playing) { startAudio(); playing = true; playBtn.textContent = '■ Arrêter'; playBtn.classList.add('playing'); }
+  else { stopAudio(); playing = false; playBtn.textContent = '▶ Jouer'; playBtn.classList.remove('playing'); }
+}
+playBtn.addEventListener('click', togglePlay);
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && e.target.tagName !== 'INPUT') { e.preventDefault(); togglePlay(); }
+});
+
+// ── Output canvases ────────────────────────────────────────────────────────────
+const waveCanvas = document.getElementById('waveCanvas');
+const specCanvas = document.getElementById('specCanvas');
+
+function resizeAll() {
+  resizeEditor();
+  [waveCanvas, specCanvas].forEach(c => { c.width = c.clientWidth*dpr; c.height = c.clientHeight*dpr; });
+}
+window.addEventListener('resize', resizeAll);
+
+function drawOutputWave() {
+  const c  = waveCanvas.getContext('2d');
+  const W  = waveCanvas.width, H = waveCanvas.height;
+  c.fillStyle = '#f1f5f9'; c.fillRect(0,0,W,H);
+  c.strokeStyle = '#e2e8f0'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(0, H/2); c.lineTo(W, H/2); c.stroke();
+
+  const tb = currentTable();
+  const N_PERIODS = 4;
+  c.beginPath(); c.strokeStyle = '#2563eb'; c.lineWidth = 2*dpr;
+  for (let px = 0; px <= W; px++) {
+    // Phase position in table: advance N_TABLE steps per period, N_PERIODS periods total
+    const phase = (px / W) * N_PERIODS * N_TABLE;
+    const idx   = Math.floor(phase) % N_TABLE;
+    const frac  = phase - Math.floor(phase);
+    // Linear interpolation between table samples
+    const y = tb[idx] * (1-frac) + tb[(idx+1) % N_TABLE] * frac;
+    const py = H/2 - y * H * 0.42;
+    px === 0 ? c.moveTo(px, py) : c.lineTo(px, py);
+  }
+  c.stroke();
+}
+
+function drawSpectrum() {
+  const c = specCanvas.getContext('2d');
+  const W = specCanvas.width, H = specCanvas.height;
+  const pL=10*dpr, pR=10*dpr, pT=14*dpr, pB=28*dpr;
+  const pW=W-pL-pR, pH=H-pT-pB;
+
+  c.fillStyle = '#f1f5f9'; c.fillRect(0,0,W,H);
+
+  const amps = tableHarmonics(currentTable());
+  const peak = Math.max(...amps, 1e-6);
+  const N_SHOW = Math.min(amps.length, 24);
+
+  // Axes
+  c.strokeStyle = '#94a3b8'; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(pL, pT+pH); c.lineTo(pL+pW, pT+pH); c.stroke();
+  c.beginPath(); c.moveTo(pL, pT); c.lineTo(pL, pT+pH); c.stroke();
+  // dB grid
+  for (const db of [0, -20, -40]) {
+    const y = pT + pH * (1 - (db + 60)/60);
+    c.strokeStyle = '#e2e8f0'; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(pL, y); c.lineTo(pL+pW, y); c.stroke();
+    c.fillStyle = '#94a3b8'; c.font = `${7.5*dpr}px system-ui`; c.textAlign = 'right';
+    c.fillText(db+' dB', pL-2*dpr, y+3*dpr);
+  }
+
+  const gap  = pW / N_SHOW;
+  const barW = gap * 0.6;
+
+  for (let h = 0; h < N_SHOW; h++) {
+    const amp  = amps[h];
+    const db   = amp > 1e-6 ? 20*Math.log10(amp/peak) : -60;
+    const dbCl = Math.max(-60, Math.min(0, db));
+    const barH = (dbCl + 60) / 60 * pH;
+    const x    = pL + h * gap + (gap - barW) / 2;
+    const y    = pT + pH - barH;
+
+    // Color by harmonic rank
+    const hue = (h * 25) % 360;
+    const col = `hsl(${hue}, 65%, 48%)`;
+    const grad = c.createLinearGradient(x, y, x, y+barH);
+    grad.addColorStop(0, col); grad.addColorStop(1, col.replace('48%', '75%'));
+    c.fillStyle = grad; c.fillRect(x, y, barW, barH);
+    c.fillStyle = col;  c.fillRect(x, y, barW, 3*dpr);
+
+    // Label
+    if (barW > 10*dpr) {
+      c.fillStyle = '#64748b'; c.font = `${7.5*dpr}px system-ui`; c.textAlign = 'center';
+      c.fillText(h+1, x + barW/2, pT+pH+15*dpr);
+    }
+  }
+}
+
+function loop() {
+  drawEditor();
+  drawOutputWave();
+  drawSpectrum();
+  requestAnimationFrame(loop);
+}
+
+resizeAll();
+loop();
+</script>
+</body>
+</html>

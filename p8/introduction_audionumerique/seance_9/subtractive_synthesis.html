@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Synthèse soustractive</title>
+  <style>
+    :root {
+      --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0;
+      --text: #0f172a; --muted: #64748b; --canvas-bg: #f1f5f9; --accent: #2563eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 28px 32px; max-width: 1200px; margin: 0 auto; min-height: 100vh; }
+
+    header { margin-bottom: 24px; }
+    h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { color: var(--muted); font-size: 0.92rem; line-height: 1.7; max-width: 820px; }
+    .subtitle strong { color: var(--text); }
+    .formula { margin-top: 10px; font-family: Georgia, serif; font-size: 0.97rem; color: #2563eb; }
+
+    .canvases { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 18px; }
+    .canvas-wrap { background: var(--canvas-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .canvas-label { padding: 7px 14px; font-size: 0.72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); }
+    canvas { display: block; width: 100%; height: 240px; }
+
+    .section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; }
+    .section-title { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+
+    .btn-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    button { padding: 7px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.88rem; cursor: pointer; transition: background 0.12s; }
+    button:hover { background: #f1f5f9; }
+    button.active { background: #eff6ff; border-color: #2563eb; color: #2563eb; }
+
+    .controls-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+    .ctrl { display: flex; align-items: center; gap: 10px; }
+    .ctrl label { font-size: 0.87rem; min-width: 150px; }
+    input[type=range] { flex: 1; height: 4px; cursor: pointer; -webkit-appearance: none; appearance: none; background: var(--border); border-radius: 2px; outline: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: currentColor; cursor: pointer; }
+    input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: currentColor; border: none; cursor: pointer; }
+    .val { font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 72px; text-align: right; }
+
+    .bottom-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    #playBtn { padding: 10px 28px; font-size: 0.95rem; font-weight: 700; background: #dcfce7; border-color: #16a34a; color: #14532d; }
+    #playBtn:hover { background: #bbf7d0; }
+    #playBtn.playing { background: #fee2e2; border-color: #dc2626; color: #7f1d1d; }
+    .legend { display: flex; gap: 16px; font-size: 0.78rem; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-swatch { width: 22px; height: 3px; border-radius: 2px; }
+    .kbd-hint { margin-left: auto; font-size: 0.75rem; color: var(--muted); }
+    kbd { background: #e2e8f0; border: 1px solid #cbd5e1; border-radius: 3px; padding: 1px 5px; font-size: 0.72rem; }
+
+    .f0-row { margin-top: 10px; }
+    @media (max-width: 720px) { .canvases { grid-template-columns: 1fr; } body { padding: 16px; } }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Synthèse soustractive</h1>
+  <p class="subtitle">
+    La synthèse soustractive part d'une source <strong>riche en harmoniques</strong>
+    (oscillateur complexe ou bruit) et y applique un <strong>filtre</strong> pour sculpter le timbre
+    en atténuant certaines fréquences. C'est le principe fondateur du synthétiseur analogique.
+  </p>
+  <p class="formula" id="formulaEl">Dent de scie → Passe-bas  |  fc = 1000 Hz  Q = 1.0</p>
+</header>
+
+<div class="canvases">
+  <div class="canvas-wrap">
+    <div class="canvas-label">Spectre — échelle logarithmique</div>
+    <canvas id="specCanvas"></canvas>
+  </div>
+  <div class="canvas-wrap">
+    <div class="canvas-label">Forme d'onde filtrée</div>
+    <canvas id="waveCanvas"></canvas>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Source</div>
+  <div class="btn-group" id="srcGroup">
+    <button data-src="sawtooth" class="active">Dent de scie</button>
+    <button data-src="square">Onde carrée</button>
+    <button data-src="white">Bruit blanc</button>
+    <button data-src="pink">Bruit rose</button>
+  </div>
+  <div class="ctrl f0-row" id="f0Row">
+    <label>Fondamentale f₀</label>
+    <input type="range" id="f0Sl" min="50" max="500" step="1" value="110" style="color:#64748b;accent-color:#64748b">
+    <span class="val" id="f0Val" style="color:#64748b">110 Hz</span>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Filtre</div>
+  <div class="btn-group" id="fltGroup">
+    <button data-flt="lowpass"  class="active">Passe-bas</button>
+    <button data-flt="highpass">Passe-haut</button>
+    <button data-flt="bandpass">Passe-bande</button>
+    <button data-flt="notch">Coupe-bande</button>
+  </div>
+  <div class="controls-grid">
+    <div class="ctrl">
+      <label>Fréquence de coupure</label>
+      <input type="range" id="fcSl" min="0" max="1" step="0.001" value="0.38" style="color:#2563eb;accent-color:#2563eb">
+      <span class="val" id="fcVal" style="color:#2563eb">1000 Hz</span>
+    </div>
+    <div class="ctrl">
+      <label>Résonance (Q)</label>
+      <input type="range" id="qSl" min="0.1" max="18" step="0.1" value="1" style="color:#9333ea;accent-color:#9333ea">
+      <span class="val" id="qVal" style="color:#9333ea">Q = 1.0</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="bottom-bar">
+    <button id="playBtn">▶ Jouer</button>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#cbd5e1"></div><span style="color:#94a3b8">Source</span></div>
+      <div class="legend-item">
+        <svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="#2563eb" stroke-width="2" stroke-dasharray="5,3"/></svg>
+        <span style="color:#2563eb">Réponse filtre</span>
+      </div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#16a34a"></div><span style="color:#16a34a">Signal filtré</span></div>
+    </div>
+    <span class="kbd-hint">raccourci : <kbd>Espace</kbd></span>
+  </div>
+</div>
+
+<script>
+const SR = 44100;
+const F_MIN = 20, F_MAX = 20000;
+const LOG_RANGE = Math.log10(F_MAX / F_MIN);
+const N_RESP = 512;  // points for filter curve
+const dpr = window.devicePixelRatio || 1;
+
+// Log-spaced frequencies for filter response curve
+const respFreqs = Float32Array.from({length: N_RESP}, (_, i) =>
+  F_MIN * Math.pow(F_MAX / F_MIN, i / (N_RESP - 1)));
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let srcType    = 'sawtooth';
+let fltType    = 'lowpass';
+let f0         = 110;
+let cutoff     = 1000;
+let Q          = 1.0;
+let playing    = false;
+let audioCtx   = null, srcNode = null, fltNode = null, masterGain = null;
+
+// ── Biquad magnitude response ──────────────────────────────────────────────────
+function biquadMag(type, fc, Qv, freqs) {
+  const w0  = 2 * Math.PI * Math.min(fc, SR * 0.499) / SR;
+  const cw  = Math.cos(w0), sw = Math.sin(w0);
+  const al  = sw / (2 * Qv);
+  let b0, b1, b2, a0, a1, a2;
+  if (type === 'lowpass')  { b0=(1-cw)/2; b1=1-cw;  b2=(1-cw)/2; a0=1+al; a1=-2*cw; a2=1-al; }
+  else if (type === 'highpass') { b0=(1+cw)/2; b1=-(1+cw); b2=(1+cw)/2; a0=1+al; a1=-2*cw; a2=1-al; }
+  else if (type === 'bandpass') { b0=sw/2; b1=0; b2=-sw/2; a0=1+al; a1=-2*cw; a2=1-al; }
+  else /* notch */              { b0=1;    b1=-2*cw; b2=1;   a0=1+al; a1=-2*cw; a2=1-al; }
+  b0/=a0; b1/=a0; b2/=a0; a1/=a0; a2/=a0;
+  return Array.from(freqs, f => {
+    const w  = 2 * Math.PI * f / SR;
+    const c  = Math.cos(w), s = Math.sin(w);
+    const c2 = Math.cos(2*w), s2 = Math.sin(2*w);
+    const nr = b0 + b1*c + b2*c2,  ni = -b1*s - b2*s2;
+    const dr = 1  + a1*c + a2*c2,  di = -a1*s - a2*s2;
+    return Math.sqrt((nr*nr + ni*ni) / (dr*dr + di*di));
+  });
+}
+
+// ── Source harmonics {f, amp} ──────────────────────────────────────────────────
+function harmonics() {
+  if (srcType === 'white' || srcType === 'pink') return null;
+  const out = [];
+  for (let k = 1; k <= 80; k++) {
+    const freq = k * f0;
+    if (freq > SR / 2) break;
+    if (srcType === 'square' && k % 2 === 0) continue;
+    out.push({ f: freq, amp: 1 / k, k });
+  }
+  return out;
+}
+
+function noiseAmpAt(f) {
+  return srcType === 'pink' ? 1 / Math.sqrt(Math.max(f, 1) / F_MIN) : 1.0;
+}
+
+// ── Axis helpers ───────────────────────────────────────────────────────────────
+function fToX(f, W) { return W * Math.log10(f / F_MIN) / LOG_RANGE; }
+function dbToY(db, pT, pH) {
+  db = Math.max(-80, Math.min(0, db));
+  return pT + pH * (1 - (db + 80) / 80);
+}
+
+// ── UI ─────────────────────────────────────────────────────────────────────────
+function setActive(groupId, key, attr) {
+  document.getElementById(groupId).querySelectorAll('button').forEach(b =>
+    b.classList.toggle('active', b.dataset[attr] === key));
+}
+
+document.getElementById('srcGroup').addEventListener('click', e => {
+  const s = e.target.dataset.src; if (!s) return;
+  srcType = s;
+  setActive('srcGroup', s, 'src');
+  document.getElementById('f0Row').style.opacity = (s === 'white' || s === 'pink') ? '0.4' : '1';
+  updateFormula();
+  if (playing) restartAudio();
+});
+
+document.getElementById('fltGroup').addEventListener('click', e => {
+  const f = e.target.dataset.flt; if (!f) return;
+  fltType = f;
+  setActive('fltGroup', f, 'flt');
+  updateFormula();
+  if (playing && fltNode) fltNode.type = fltType;
+});
+
+document.getElementById('f0Sl').addEventListener('input', function() {
+  f0 = parseInt(this.value);
+  document.getElementById('f0Val').textContent = f0 + ' Hz';
+  updateFormula();
+  if (playing && srcNode && srcNode.frequency) srcNode.frequency.setTargetAtTime(f0, audioCtx.currentTime, 0.01);
+});
+
+document.getElementById('fcSl').addEventListener('input', function() {
+  cutoff = F_MIN * Math.pow(F_MAX / F_MIN, parseFloat(this.value));
+  const lbl = cutoff < 1000 ? Math.round(cutoff) + ' Hz' : (cutoff / 1000).toFixed(1) + ' kHz';
+  document.getElementById('fcVal').textContent = lbl;
+  updateFormula();
+  if (playing && fltNode) fltNode.frequency.setTargetAtTime(cutoff, audioCtx.currentTime, 0.01);
+});
+
+document.getElementById('qSl').addEventListener('input', function() {
+  Q = parseFloat(this.value);
+  document.getElementById('qVal').textContent = 'Q = ' + Q.toFixed(1);
+  updateFormula();
+  if (playing && fltNode) fltNode.Q.setTargetAtTime(Q, audioCtx.currentTime, 0.01);
+});
+
+// Init cutoff display
+cutoff = F_MIN * Math.pow(F_MAX / F_MIN, parseFloat(document.getElementById('fcSl').value));
+document.getElementById('fcVal').textContent = Math.round(cutoff) + ' Hz';
+
+function updateFormula() {
+  const sn = { sawtooth: 'Dent de scie', square: 'Onde carrée', white: 'Bruit blanc', pink: 'Bruit rose' };
+  const fn = { lowpass: 'Passe-bas', highpass: 'Passe-haut', bandpass: 'Passe-bande', notch: 'Coupe-bande' };
+  const fc = cutoff < 1000 ? Math.round(cutoff) + ' Hz' : (cutoff/1000).toFixed(1) + ' kHz';
+  document.getElementById('formulaEl').textContent =
+    `${sn[srcType]} → ${fn[fltType]}  |  fc = ${fc}  Q = ${Q.toFixed(1)}`;
+}
+updateFormula();
+
+// ── Web Audio ──────────────────────────────────────────────────────────────────
+function makePinkBuffer(ctx) {
+  const len = ctx.sampleRate * 2;
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+  for (let i = 0; i < len; i++) {
+    const w = Math.random()*2-1;
+    b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
+    b2=0.96900*b2+w*0.1538520; b3=0.86650*b3+w*0.3104856;
+    b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980;
+    d[i] = (b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11; b6=w*0.115926;
+  }
+  return buf;
+}
+function makeWhiteBuffer(ctx) {
+  const len = ctx.sampleRate * 2;
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random()*2-1;
+  return buf;
+}
+
+function startAudio() {
+  audioCtx   = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain(); masterGain.gain.value = 0.18; masterGain.connect(audioCtx.destination);
+  fltNode    = audioCtx.createBiquadFilter();
+  fltNode.type = fltType; fltNode.frequency.value = cutoff; fltNode.Q.value = Q;
+  fltNode.connect(masterGain);
+  if (srcType === 'sawtooth' || srcType === 'square') {
+    srcNode = audioCtx.createOscillator();
+    srcNode.type = srcType; srcNode.frequency.value = f0;
+    srcNode.connect(fltNode); srcNode.start();
+  } else {
+    const buf = srcType === 'pink' ? makePinkBuffer(audioCtx) : makeWhiteBuffer(audioCtx);
+    srcNode = audioCtx.createBufferSource();
+    srcNode.buffer = buf; srcNode.loop = true;
+    srcNode.connect(fltNode); srcNode.start();
+  }
+}
+function stopAudio() {
+  try { srcNode.stop(); } catch(_){}
+  try { audioCtx.close(); } catch(_){}
+  srcNode = fltNode = masterGain = audioCtx = null;
+}
+function restartAudio() { stopAudio(); startAudio(); }
+
+const playBtn = document.getElementById('playBtn');
+function togglePlay() {
+  if (!playing) { startAudio(); playing = true; playBtn.textContent = '■ Arrêter'; playBtn.classList.add('playing'); }
+  else { stopAudio(); playing = false; playBtn.textContent = '▶ Jouer'; playBtn.classList.remove('playing'); }
+}
+playBtn.addEventListener('click', togglePlay);
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && e.target.tagName !== 'INPUT') { e.preventDefault(); togglePlay(); }
+});
+
+// ── Drawing ────────────────────────────────────────────────────────────────────
+const specCanvas = document.getElementById('specCanvas');
+const waveCanvas = document.getElementById('waveCanvas');
+
+function resize() {
+  [specCanvas, waveCanvas].forEach(c => {
+    c.width  = c.clientWidth  * dpr;
+    c.height = c.clientHeight * dpr;
+  });
+}
+window.addEventListener('resize', resize);
+
+function drawSpectrum() {
+  const c = specCanvas.getContext('2d');
+  const W = specCanvas.width, H = specCanvas.height;
+  const pL=44*dpr, pR=10*dpr, pT=14*dpr, pB=28*dpr;
+  const pW=W-pL-pR, pH=H-pT-pB;
+
+  c.fillStyle = '#f1f5f9'; c.fillRect(0,0,W,H);
+
+  // dB grid + labels
+  c.font = `${8.5*dpr}px system-ui`; c.textAlign = 'right';
+  for (const db of [0, -20, -40, -60, -80]) {
+    const y = dbToY(db, pT, pH);
+    c.strokeStyle = db === 0 ? '#94a3b8' : '#e2e8f0';
+    c.lineWidth = db === 0 ? 1.5 : 1;
+    c.beginPath(); c.moveTo(pL, y); c.lineTo(pL+pW, y); c.stroke();
+    c.fillStyle = '#94a3b8';
+    c.fillText(db + ' dB', pL-4*dpr, y + 3*dpr);
+  }
+  // Y axis
+  c.strokeStyle = '#94a3b8'; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(pL, pT); c.lineTo(pL, pT+pH); c.stroke();
+
+  // X axis freq labels
+  c.textAlign = 'center'; c.fillStyle = '#94a3b8'; c.font = `${8*dpr}px system-ui`;
+  for (const f of [50,100,200,500,1000,2000,5000,10000,20000]) {
+    if (f < F_MIN || f > F_MAX) continue;
+    const x = pL + fToX(f, pW);
+    c.strokeStyle = '#e2e8f0'; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(x, pT); c.lineTo(x, pT+pH); c.stroke();
+    c.fillStyle = '#94a3b8';
+    c.fillText(f < 1000 ? f : (f/1000)+'k', x, pT+pH+16*dpr);
+  }
+
+  // Filter response (dashed blue)
+  const respMag = biquadMag(fltType, cutoff, Q, respFreqs);
+  c.beginPath(); c.strokeStyle = '#2563eb'; c.lineWidth = 2*dpr;
+  c.setLineDash([6*dpr, 4*dpr]);
+  respFreqs.forEach((f, i) => {
+    const x  = pL + fToX(f, pW);
+    const db = 20 * Math.log10(Math.max(respMag[i], 1e-5));
+    const y  = dbToY(db, pT, pH);
+    i === 0 ? c.moveTo(x, y) : c.lineTo(x, y);
+  });
+  c.stroke(); c.setLineDash([]);
+
+  const harms = harmonics();
+  if (harms) {
+    // Source bars (gray)
+    harms.forEach(({f, amp}) => {
+      if (f < F_MIN || f > F_MAX) return;
+      const x  = pL + fToX(f, pW);
+      const y  = dbToY(20*Math.log10(amp), pT, pH);
+      c.fillStyle = '#cbd5e1';
+      c.fillRect(x-1.5*dpr, y, 3*dpr, pT+pH-y);
+    });
+    // Filtered bars (green) — compute filter response at each harmonic freq
+    const hFreqs = Float32Array.from(harms, h => h.f);
+    const hMag   = biquadMag(fltType, cutoff, Q, hFreqs);
+    harms.forEach(({f, amp}, i) => {
+      if (f < F_MIN || f > F_MAX) return;
+      const a  = amp * hMag[i];
+      const x  = pL + fToX(f, pW);
+      const y  = dbToY(20*Math.log10(Math.max(a, 1e-5)), pT, pH);
+      c.fillStyle = '#16a34a'; c.globalAlpha = 0.9;
+      c.fillRect(x-1.5*dpr, y, 3*dpr, pT+pH-y);
+      c.globalAlpha = 1;
+    });
+  } else {
+    // Noise: draw source line + filtered line
+    c.beginPath(); c.strokeStyle = '#cbd5e1'; c.lineWidth = 1.5*dpr;
+    respFreqs.forEach((f, i) => {
+      const db = 20 * Math.log10(Math.max(noiseAmpAt(f), 1e-5));
+      const x  = pL + fToX(f, pW);
+      const y  = dbToY(db, pT, pH);
+      i === 0 ? c.moveTo(x,y) : c.lineTo(x,y);
+    });
+    c.stroke();
+    c.beginPath(); c.strokeStyle = '#16a34a'; c.lineWidth = 2*dpr;
+    respFreqs.forEach((f, i) => {
+      const a  = noiseAmpAt(f) * respMag[i];
+      const db = 20 * Math.log10(Math.max(a, 1e-5));
+      const x  = pL + fToX(f, pW);
+      const y  = dbToY(db, pT, pH);
+      i === 0 ? c.moveTo(x,y) : c.lineTo(x,y);
+    });
+    c.stroke();
+  }
+}
+
+function drawWaveform() {
+  const c = waveCanvas.getContext('2d');
+  const W = waveCanvas.width, H = waveCanvas.height;
+  c.fillStyle = '#f1f5f9'; c.fillRect(0,0,W,H);
+  // Zero axis
+  c.strokeStyle = '#e2e8f0'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(0, H/2); c.lineTo(W, H/2); c.stroke();
+
+  const harms = harmonics();
+  if (!harms) {
+    c.fillStyle = '#94a3b8'; c.font = `${10*dpr}px system-ui`; c.textAlign = 'center';
+    c.fillText('Signal aléatoire', W/2, H/2 - 12*dpr);
+    c.fillText('(voir le spectre)', W/2, H/2 + 14*dpr);
+    return;
+  }
+  // Filter at each harmonic freq
+  const hFreqs = Float32Array.from(harms, h => h.f);
+  const hMag   = biquadMag(fltType, cutoff, Q, hFreqs);
+  const maxAmp = harms.reduce((s, h, i) => s + h.amp * hMag[i], 0) || 1;
+  const scale  = (H * 0.42) / maxAmp;
+
+  c.beginPath(); c.strokeStyle = '#16a34a'; c.lineWidth = 2*dpr;
+  for (let px = 0; px <= W; px++) {
+    const phi = (px / W) * 3 * 2 * Math.PI; // 3 periods of fundamental
+    let y = 0;
+    harms.forEach((h, i) => { y += h.amp * hMag[i] * Math.sin(h.k * phi); });
+    px === 0 ? c.moveTo(px, H/2 - y*scale) : c.lineTo(px, H/2 - y*scale);
+  }
+  c.stroke();
+}
+
+function loop() { drawSpectrum(); drawWaveform(); requestAnimationFrame(loop); }
+resize(); loop();
+</script>
+</body>
+</html>

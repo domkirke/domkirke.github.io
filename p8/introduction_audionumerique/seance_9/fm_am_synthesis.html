@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Synthèse FM / AM</title>
+  <style>
+    :root {
+      --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0;
+      --text: #0f172a; --muted: #64748b; --canvas-bg: #f1f5f9; --accent: #2563eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 28px 32px; max-width: 1200px; margin: 0 auto; min-height: 100vh; }
+
+    header { margin-bottom: 24px; }
+    h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { color: var(--muted); font-size: 0.92rem; line-height: 1.7; max-width: 820px; }
+    .subtitle strong { color: var(--text); }
+
+    /* Mode tabs */
+    .mode-tabs { display: flex; gap: 0; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; width: fit-content; }
+    .mode-tab { padding: 9px 28px; font-size: 0.95rem; font-weight: 600; cursor: pointer; background: var(--surface); color: var(--muted); border: none; transition: background 0.12s, color 0.12s; }
+    .mode-tab:first-child { border-right: 1px solid var(--border); }
+    .mode-tab.active { background: #eff6ff; color: #2563eb; }
+
+    .formula-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 18px; margin-bottom: 18px; }
+    .formula-main { font-family: Georgia, serif; font-size: 1.05rem; color: #1d4ed8; margin-bottom: 4px; }
+    .formula-note { font-size: 0.8rem; color: #64748b; line-height: 1.5; }
+
+    .canvases { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+    .canvas-wrap { background: var(--canvas-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .canvas-label { padding: 7px 14px; font-size: 0.72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); }
+    canvas { display: block; width: 100%; height: 220px; }
+
+    .section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; }
+    .section-title { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+    .controls-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+    .ctrl { display: flex; align-items: center; gap: 10px; }
+    .ctrl label { font-size: 0.87rem; min-width: 180px; }
+    input[type=range] { flex: 1; height: 4px; cursor: pointer; -webkit-appearance: none; appearance: none; background: var(--border); border-radius: 2px; outline: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: currentColor; cursor: pointer; }
+    input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: currentColor; border: none; cursor: pointer; }
+    .val { font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 72px; text-align: right; }
+
+    button { padding: 7px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.88rem; cursor: pointer; transition: background 0.12s; }
+    button:hover { background: #f1f5f9; }
+    .bottom-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    #playBtn { padding: 10px 28px; font-size: 0.95rem; font-weight: 700; background: #dcfce7; border-color: #16a34a; color: #14532d; }
+    #playBtn:hover { background: #bbf7d0; }
+    #playBtn.playing { background: #fee2e2; border-color: #dc2626; color: #7f1d1d; }
+    .kbd-hint { margin-left: auto; font-size: 0.75rem; color: var(--muted); }
+    kbd { background: #e2e8f0; border: 1px solid #cbd5e1; border-radius: 3px; padding: 1px 5px; font-size: 0.72rem; }
+
+    @media (max-width: 720px) { .canvases { grid-template-columns: 1fr; } body { padding: 16px; } }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Synthèse FM / AM</h1>
+  <p class="subtitle">
+    La <strong>modulation de fréquence (FM)</strong> fait varier la fréquence instantanée d'un oscillateur porteur
+    selon un oscillateur modulant — elle génère des bandes latérales riches.
+    La <strong>modulation d'amplitude (AM)</strong> fait varier l'amplitude du porteur,
+    créant deux bandes latérales symétriques.
+  </p>
+</header>
+
+<div class="mode-tabs">
+  <button class="mode-tab active" id="tabFM">Synthèse FM</button>
+  <button class="mode-tab"        id="tabAM">Synthèse AM</button>
+</div>
+
+<div class="formula-box">
+  <div class="formula-main" id="formulaMain">x(t) = sin(2π fc t + I · sin(2π fm t))</div>
+  <div class="formula-note" id="formulaNote">
+    fc = porteur · fm = modulant · I = indice de modulation · Bandes latérales : fc ± n·fm, amplitude ≈ Jₙ(I)
+  </div>
+</div>
+
+<div class="canvases">
+  <div class="canvas-wrap">
+    <div class="canvas-label">Forme d'onde</div>
+    <canvas id="waveCanvas"></canvas>
+  </div>
+  <div class="canvas-wrap">
+    <div class="canvas-label">Spectre — bandes latérales</div>
+    <canvas id="specCanvas"></canvas>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Paramètres</div>
+  <div class="controls-grid">
+    <div class="ctrl">
+      <label>Porteur fc</label>
+      <input type="range" id="fcSl" min="50" max="1000" step="1" value="440" style="color:#2563eb;accent-color:#2563eb">
+      <span class="val" id="fcVal" style="color:#2563eb">440 Hz</span>
+    </div>
+    <div class="ctrl">
+      <label>Modulant fm</label>
+      <input type="range" id="fmSl" min="1" max="500" step="1" value="110" style="color:#ea580c;accent-color:#ea580c">
+      <span class="val" id="fmVal" style="color:#ea580c">110 Hz</span>
+    </div>
+    <div class="ctrl" id="idxRow">
+      <label id="idxLabel">Indice I</label>
+      <input type="range" id="idxSl" min="0" max="10" step="0.05" value="2" style="color:#9333ea;accent-color:#9333ea">
+      <span class="val" id="idxVal" style="color:#9333ea">I = 2.00</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="bottom-bar">
+    <button id="playBtn">▶ Jouer</button>
+    <span class="kbd-hint">raccourci : <kbd>Espace</kbd></span>
+  </div>
+</div>
+
+<script>
+const SR  = 44100;
+const dpr = window.devicePixelRatio || 1;
+const N_SIDE = 10;  // sidebands each side
+
+// ── Bessel J_n(x) via log-factorial ───────────────────────────────────────────
+const _lf = [0];
+function logFact(n) {
+  while (_lf.length <= n) _lf.push(_lf[_lf.length-1] + Math.log(_lf.length));
+  return _lf[n];
+}
+function besselJ(n, x) {
+  if (x === 0) return n === 0 ? 1 : 0;
+  const h = Math.abs(x) / 2;
+  let sum = 0;
+  for (let k = 0; k < 35; k++) {
+    const logT = -logFact(k) - logFact(n + k) + (n + 2*k) * Math.log(h);
+    const term = (k % 2 === 0 ? 1 : -1) * Math.exp(logT);
+    sum += term;
+    if (Math.abs(term) < 1e-14) break;
+  }
+  return sum;
+}
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let mode    = 'FM';
+let fc      = 440;
+let fm      = 110;
+let idx     = 2.0;   // FM: modulation index I ; AM: depth m
+let playing = false;
+let audioCtx = null, carrier = null, modulator = null, modGain = null;
+let dcSrc = null, carrGain = null, masterGain = null;
+
+// ── Mode switch ────────────────────────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  document.getElementById('tabFM').classList.toggle('active', m === 'FM');
+  document.getElementById('tabAM').classList.toggle('active', m === 'AM');
+  if (m === 'FM') {
+    document.getElementById('idxLabel').textContent = 'Indice I';
+    document.getElementById('idxSl').max  = 10;
+    document.getElementById('idxSl').step = 0.05;
+    document.getElementById('formulaMain').textContent = 'x(t) = sin(2π fc t + I · sin(2π fm t))';
+    document.getElementById('formulaNote').textContent =
+      'fc = porteur · fm = modulant · I = indice de modulation · Bandes latérales : fc ± n·fm, amplitude ≈ Jₙ(I)';
+  } else {
+    document.getElementById('idxLabel').textContent = 'Profondeur m';
+    document.getElementById('idxSl').max  = 1;
+    document.getElementById('idxSl').step = 0.01;
+    document.getElementById('formulaMain').textContent = 'x(t) = (1 + m · sin(2π fm t)) · sin(2π fc t)';
+    document.getElementById('formulaNote').textContent =
+      'fc = porteur · fm = modulant · m = profondeur (0–1) · Bandes latérales : fc ± fm, amplitude = m/2';
+  }
+  idx = parseFloat(document.getElementById('idxSl').value);
+  updateIdxDisplay();
+  if (playing) restartAudio();
+}
+document.getElementById('tabFM').addEventListener('click', () => setMode('FM'));
+document.getElementById('tabAM').addEventListener('click', () => setMode('AM'));
+
+// ── Sliders ────────────────────────────────────────────────────────────────────
+document.getElementById('fcSl').addEventListener('input', function() {
+  fc = parseInt(this.value);
+  document.getElementById('fcVal').textContent = fc + ' Hz';
+  if (playing) { carrier.frequency.setTargetAtTime(fc, audioCtx.currentTime, 0.01); syncMod(); }
+});
+document.getElementById('fmSl').addEventListener('input', function() {
+  fm = parseInt(this.value);
+  document.getElementById('fmVal').textContent = fm + ' Hz';
+  if (playing) { modulator.frequency.setTargetAtTime(fm, audioCtx.currentTime, 0.01); syncMod(); }
+});
+document.getElementById('idxSl').addEventListener('input', function() {
+  idx = parseFloat(this.value);
+  updateIdxDisplay();
+  if (playing) syncMod();
+});
+function updateIdxDisplay() {
+  const lbl = mode === 'FM' ? 'I = ' + idx.toFixed(2) : 'm = ' + idx.toFixed(2);
+  document.getElementById('idxVal').textContent = lbl;
+}
+
+// ── Web Audio ──────────────────────────────────────────────────────────────────
+function syncMod() {
+  const t = audioCtx.currentTime;
+  if (mode === 'FM') {
+    modGain.gain.setTargetAtTime(idx * fm, t, 0.015);
+  } else {
+    modGain.gain.setTargetAtTime(idx * 0.5, t, 0.015);
+  }
+}
+
+function startAudio() {
+  audioCtx   = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain(); masterGain.gain.value = 0.22; masterGain.connect(audioCtx.destination);
+
+  carrier  = audioCtx.createOscillator(); carrier.type  = 'sine'; carrier.frequency.value  = fc;
+  modulator= audioCtx.createOscillator(); modulator.type= 'sine'; modulator.frequency.value = fm;
+  modGain  = audioCtx.createGain();
+
+  if (mode === 'FM') {
+    modGain.gain.value = idx * fm;
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);   // FM routing
+    carrier.connect(masterGain);
+  } else {
+    // AM: x(t) = (1 + m·sin) · sin_carrier
+    // = sin_carrier + m · sin_carrier · sin_mod
+    // Implement as: carrier → carrGain, gain = 1 + m·mod
+    carrGain = audioCtx.createGain(); carrGain.gain.value = 0;
+    dcSrc    = audioCtx.createConstantSource(); dcSrc.offset.value = 1;
+    modGain.gain.value = idx * 0.5;
+    dcSrc.connect(carrGain.gain);
+    modulator.connect(modGain);
+    modGain.connect(carrGain.gain);
+    carrier.connect(carrGain);
+    carrGain.connect(masterGain);
+    dcSrc.start();
+  }
+  modulator.start(); carrier.start();
+}
+
+function stopAudio() {
+  [carrier, modulator, dcSrc].forEach(n => { try { n.stop(); } catch(_){} });
+  try { audioCtx.close(); } catch(_){}
+  carrier = modulator = modGain = dcSrc = carrGain = masterGain = audioCtx = null;
+}
+function restartAudio() { stopAudio(); startAudio(); }
+
+const playBtn = document.getElementById('playBtn');
+function togglePlay() {
+  if (!playing) { startAudio(); playing = true; playBtn.textContent = '■ Arrêter'; playBtn.classList.add('playing'); }
+  else { stopAudio(); playing = false; playBtn.textContent = '▶ Jouer'; playBtn.classList.remove('playing'); }
+}
+playBtn.addEventListener('click', togglePlay);
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && e.target.tagName !== 'INPUT') { e.preventDefault(); togglePlay(); }
+});
+
+// ── Spectrum data ──────────────────────────────────────────────────────────────
+function spectrumLines() {
+  // Returns [{f, amp}] — freq and linear amplitude
+  const lines = [];
+  if (mode === 'FM') {
+    for (let n = -N_SIDE; n <= N_SIDE; n++) {
+      const f   = fc + n * fm;
+      if (f < 0) continue;
+      const amp = Math.abs(besselJ(Math.abs(n), idx));
+      if (amp < 1e-4) continue;
+      lines.push({ f, amp, n });
+    }
+  } else {
+    lines.push({ f: fc, amp: 1.0, n: 0 });
+    if (fm > 0) {
+      lines.push({ f: Math.abs(fc - fm), amp: idx * 0.5, n: -1 });
+      lines.push({ f: fc + fm,           amp: idx * 0.5, n:  1 });
+    }
+  }
+  return lines;
+}
+
+// ── Canvas ─────────────────────────────────────────────────────────────────────
+const waveCanvas = document.getElementById('waveCanvas');
+const specCanvas = document.getElementById('specCanvas');
+function resize() {
+  [waveCanvas, specCanvas].forEach(c => { c.width = c.clientWidth*dpr; c.height = c.clientHeight*dpr; });
+}
+window.addEventListener('resize', resize);
+
+// Color by sideband order
+function bandColor(n) {
+  if (n === 0)  return '#2563eb';
+  if (n ===  1 || n === -1) return '#16a34a';
+  if (n ===  2 || n === -2) return '#ea580c';
+  if (n ===  3 || n === -3) return '#9333ea';
+  return '#94a3b8';
+}
+
+function drawWaveform() {
+  const c = waveCanvas.getContext('2d');
+  const W = waveCanvas.width, H = waveCanvas.height;
+  c.fillStyle = '#f1f5f9'; c.fillRect(0,0,W,H);
+  c.strokeStyle = '#e2e8f0'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(0, H/2); c.lineTo(W, H/2); c.stroke();
+
+  // Show 4 periods of the carrier
+  const N_PERIODS = 4;
+  const T = 1 / fc;
+
+  c.beginPath(); c.strokeStyle = '#2563eb'; c.lineWidth = 2*dpr;
+  for (let px = 0; px <= W; px++) {
+    const t = (px / W) * N_PERIODS * T;
+    let y;
+    if (mode === 'FM') {
+      y = Math.sin(2*Math.PI*fc*t + idx * Math.sin(2*Math.PI*fm*t));
+    } else {
+      y = (1 + idx * Math.sin(2*Math.PI*fm*t)) * Math.sin(2*Math.PI*fc*t);
+    }
+    const py = H/2 - y * H * 0.42;
+    px === 0 ? c.moveTo(px, py) : c.lineTo(px, py);
+  }
+  c.stroke();
+}
+
+function drawSpectrum() {
+  const c = specCanvas.getContext('2d');
+  const W = specCanvas.width, H = specCanvas.height;
+  const pL=10*dpr, pR=10*dpr, pT=14*dpr, pB=28*dpr;
+  const pW=W-pL-pR, pH=H-pT-pB;
+
+  c.fillStyle = '#f1f5f9'; c.fillRect(0,0,W,H);
+
+  const lines = spectrumLines();
+  if (!lines.length) return;
+
+  // Determine x range
+  const freqs = lines.map(l => l.f);
+  let fLo = Math.max(0, Math.min(...freqs) - 1.5*fm);
+  let fHi = Math.max(...freqs) + 1.5*fm;
+  if (fHi <= fLo) fHi = fLo + 100;
+  const fRange = fHi - fLo;
+  function fX(f) { return pL + (f - fLo) / fRange * pW; }
+
+  // Baseline + 0 dB line
+  c.strokeStyle = '#94a3b8'; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(pL, pT+pH); c.lineTo(pL+pW, pT+pH); c.stroke();
+  c.strokeStyle = '#e2e8f0'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(pL, pT); c.lineTo(pL+pW, pT); c.stroke();
+
+  // dB grid
+  for (const db of [-20, -40]) {
+    const y = pT + pH * (1 - (db + 60) / 60); // range: 0 to -60 dB mapped to pT..pT+pH
+    c.strokeStyle = '#e2e8f0'; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(pL, y); c.lineTo(pL+pW, y); c.stroke();
+    c.fillStyle = '#94a3b8'; c.font = `${7.5*dpr}px system-ui`; c.textAlign = 'right';
+    c.fillText(db+' dB', pL-2*dpr, y+3*dpr);
+  }
+
+  // Bars
+  const barW = Math.max(4*dpr, pW / (lines.length * 3));
+  lines.forEach(({f, amp, n}) => {
+    const db    = 20 * Math.log10(Math.max(amp, 1e-6));
+    const dbCl  = Math.max(-60, Math.min(0, db));
+    const barH  = (dbCl + 60) / 60 * pH;
+    const x     = fX(f);
+    const y     = pT + pH - barH;
+    const col   = bandColor(n);
+
+    const grad = c.createLinearGradient(x, y, x, y+barH);
+    grad.addColorStop(0, col); grad.addColorStop(1, col+'44');
+    c.fillStyle = grad;
+    c.fillRect(x - barW/2, y, barW, barH);
+    c.fillStyle = col; c.fillRect(x - barW/2, y, barW, 3*dpr);
+
+    // Label
+    c.fillStyle = col; c.font = `${8*dpr}px system-ui`; c.textAlign = 'center';
+    const label = n === 0 ? 'fc' : (n > 0 ? `fc+${n}fm` : `fc${n}fm`);
+    c.fillText(label, x, pT+pH+16*dpr);
+    if (amp > 0.02) {
+      c.fillStyle = '#475569'; c.font = `${7.5*dpr}px monospace`;
+      c.fillText(amp.toFixed(2), x, y - 4*dpr);
+    }
+  });
+}
+
+function loop() { drawWaveform(); drawSpectrum(); requestAnimationFrame(loop); }
+resize(); loop();
+</script>
+</body>
+</html>
