@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Ambisonics Cylindriques — Explorateur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #f4f4f8;
+      color: #1a1a2e;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 15px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    header {
+      padding: 10px 20px;
+      background: #ffffff;
+      border-bottom: 1px solid #d0d0e0;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    header h1 { font-size: 16px; font-weight: 600; color: #3333aa; letter-spacing: 3px; font-family: 'EB Garamond', serif; font-style: italic; }
+    .order-select {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .order-select label { color: #444466; font-weight: 600; }
+    select {
+      background: #eeeef8; color: #22226a;
+      border: 1px solid #8888bb; padding: 3px 8px;
+      font-family: 'EB Garamond', serif; font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    /* ---- LEFT: weights panel ---- */
+    #weights-panel {
+      width: 320px;
+      background: #ffffff;
+      border-right: 1px solid #d0d0e0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .panel-title {
+      padding: 10px 14px 7px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #5555aa;
+      text-transform: uppercase;
+      border-bottom: 2px solid #d0d0e4;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    #harmonics-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+    .harmonic-row {
+      display: flex;
+      align-items: center;
+      padding: 6px 14px;
+      gap: 10px;
+      border-bottom: none;
+    }
+    .harmonic-row:hover { background: #ececf8; }
+    .harm-label {
+      min-width: 52px;
+      color: #333366;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+    }
+    .harm-label .sym { color: #5533bb; }
+    .harm-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 5px;
+      background: #c8c8e0;
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+    }
+    .harm-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--color, #4444bb);
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+    .harm-value {
+      width: 48px;
+      text-align: right;
+      color: #333366;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      border: none;
+      border-bottom: 1px solid transparent;
+      background: transparent;
+      outline: none;
+      padding: 0;
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    .harm-value::-webkit-inner-spin-button,
+    .harm-value::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .harm-value:hover  { border-bottom-color: #c8c8e0; }
+    .harm-value:focus  { border-bottom-color: #7777bb; color: #111133; }
+    .harm-phase-row {
+      display: flex;
+      align-items: center;
+      padding: 2px 14px 8px 62px;
+      gap: 10px;
+      border-bottom: 1px solid #e0e0ee;
+    }
+    .phase-label { font-size: 13px; font-style: italic; color: #aa7744; font-weight: 600; font-family: 'EB Garamond', serif; min-width: 28px; }
+    .phase-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 3px;
+      background: #e8d8c8;
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    .phase-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 11px; height: 11px;
+      border-radius: 50%;
+      background: #cc8855;
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .phase-value {
+      width: 52px;
+      text-align: right;
+      color: #885533;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      border: none;
+      border-bottom: 1px solid transparent;
+      background: transparent;
+      outline: none;
+      padding: 0;
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    .phase-value::-webkit-inner-spin-button,
+    .phase-value::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .phase-value:hover { border-bottom-color: #ddc8a8; }
+    .phase-value:focus { border-bottom-color: #cc8855; color: #663300; }
+
+    /* ---- CENTER: polar plot ---- */
+    #plot-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: #f9f9fc;
+    }
+    #polar-canvas {
+      display: block;
+    }
+    .formula-box {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ffffff;
+      border: 1px solid #c0c0d8;
+      padding: 9px 18px;
+      font-size: 15px;
+      font-weight: 400;
+      font-style: italic;
+      color: #444466;
+      white-space: nowrap;
+      letter-spacing: 0.3px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      font-family: 'EB Garamond', serif;
+    }
+    .formula-box .math { color: #3333aa; font-weight: 600; }
+
+    /* ---- RIGHT: operations panel ---- */
+    #ops-panel {
+      width: 220px;
+      background: #ffffff;
+      border-left: 1px solid #d0d0e0;
+      display: flex;
+      flex-direction: column;
+    }
+    #ops-content {
+      flex: 1;
+      padding: 12px 14px;
+      color: #777799;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .op-btn {
+      display: block;
+      width: 100%;
+      padding: 7px 10px;
+      background: #f0f0fa;
+      border: 1px solid #b0b0d0;
+      color: #333366;
+      font-family: 'EB Garamond', serif;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      border-radius: 2px;
+      letter-spacing: 0.3px;
+    }
+    .op-btn:hover { background: #e0e0f4; border-color: #7777bb; color: #111144; }
+    .op-btn:active { background: #d4d4ee; }
+    .op-section {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #7777aa;
+      text-transform: uppercase;
+      padding-top: 10px;
+      margin-bottom: 4px;
+      border-top: 1px solid #d0d0e8;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .op-section:first-child { border-top: none; padding-top: 0; }
+    .op-input-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .op-input-label {
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      font-size: 14px;
+      color: #555577;
+      white-space: nowrap;
+    }
+    .op-input {
+      flex: 1;
+      min-width: 0;
+      padding: 4px 7px;
+      background: #f8f8ff;
+      border: 1px solid #b0b0d0;
+      color: #222244;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      border-radius: 2px;
+    }
+    .op-input:focus { outline: none; border-color: #7777bb; background: #fff; }
+    .op-apply-btn {
+      padding: 4px 9px;
+      background: #e8e8f8;
+      border: 1px solid #9999cc;
+      color: #333366;
+      font-family: 'EB Garamond', serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 2px;
+      white-space: nowrap;
+    }
+    .op-apply-btn:hover { background: #d8d8f0; border-color: #5555bb; }
+    .op-apply-btn:active { background: #ccccee; }
+
+    /* ---- Audio ---- */
+    .audio-section {
+      border-bottom: 1px solid #d0d0e8;
+      padding-bottom: 10px;
+      margin-bottom: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .audio-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .audio-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: #7777aa;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+      min-width: 38px;
+    }
+    .audio-btn {
+      flex: 1;
+      padding: 5px 8px;
+      background: #eeeeff;
+      border: 1px solid #9999cc;
+      color: #333388;
+      font-family: 'EB Garamond', serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+    .audio-btn.active { background: #fff0ee; border-color: #cc4422; color: #aa2200; }
+    .audio-btn:hover { filter: brightness(0.95); }
+    .audio-select {
+      flex: 1;
+      background: #f0f0fa; color: #22226a;
+      border: 1px solid #aaaacc; padding: 3px 6px;
+      font-family: 'EB Garamond', serif; font-size: 14px; cursor: pointer;
+    }
+    .audio-input {
+      width: 58px;
+      padding: 3px 5px;
+      background: #f8f8ff;
+      border: 1px solid #b0b0d0;
+      color: #222244;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      border-radius: 2px;
+    }
+    .audio-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      background: #c8c8e0;
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    .audio-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #5555bb;
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .audio-note {
+      font-size: 10px;
+      color: #aaaacc;
+      font-style: italic;
+      font-family: 'EB Garamond', serif;
+      line-height: 1.4;
+    }
+
+    /* ---- Monitors ---- */
+    #monitors-panel {
+      flex-shrink: 0;
+    }
+    #monitors-list {
+      padding: 6px 0 10px;
+    }
+    .monitor-row {
+      display: flex;
+      align-items: center;
+      padding: 4px 14px;
+      gap: 8px;
+    }
+    .monitor-label {
+      min-width: 36px;
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      font-size: 13px;
+      font-weight: 600;
+      color: #555577;
+    }
+    .monitor-scope {
+      flex: 1;
+      height: 28px;
+      border-radius: 3px;
+      border: 1px solid #d8d8ee;
+      display: block;
+    }
+    .monitor-value {
+      width: 52px;
+      text-align: right;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: #444466;
+    }
+
+    /* ---- LFO ---- */
+    .lfo-toggle-btn {
+      padding: 1px 5px;
+      background: transparent;
+      border: 1px solid #c8c8e0;
+      color: #aaaacc;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 2px;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .lfo-toggle-btn.active {
+      background: #ece0ff;
+      border-color: #9955cc;
+      color: #6622aa;
+    }
+    .lfo-sub-row {
+      display: none;
+      padding: 3px 10px 6px 62px;
+      gap: 5px;
+      align-items: center;
+      flex-wrap: wrap;
+      background: #faf8ff;
+    }
+    .lfo-sub-row.visible { display: flex; }
+    .lfo-sub-label {
+      font-size: 10px;
+      color: #9966bb;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.5px;
+    }
+    .lfo-input {
+      width: 46px;
+      padding: 2px 4px;
+      background: #f0eeff;
+      border: 1px solid #c8b8e8;
+      color: #442266;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      border-radius: 2px;
+    }
+    .lfo-input:focus { outline: none; border-color: #9955cc; }
+
+    /* ---- Play button ---- */
+    .play-btn {
+      padding: 5px 16px;
+      background: #eeeeff;
+      border: 1px solid #9999cc;
+      color: #333388;
+      font-family: 'EB Garamond', serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 2px;
+      letter-spacing: 0.5px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .play-btn.playing {
+      background: #fff0ee;
+      border-color: #cc4422;
+      color: #aa2200;
+    }
+    .play-btn:hover { filter: brightness(0.95); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>CYLINDRICAL HARMONICS EXPLORER</h1>
+  <div class="order-select">
+    <label>order</label>
+    <select id="order-select">
+      <option value="1">N = 1</option>
+      <option value="2">N = 2</option>
+      <option value="3" selected>N = 3</option>
+      <option value="4">N = 4</option>
+      <option value="5">N = 5</option>
+      <option value="6">N = 6</option>
+      <option value="7">N = 7</option>
+      <option value="8">N = 8</option>
+    </select>
+  </div>
+  <label style="display:flex;align-items:center;gap:6px;color:#444466;font-weight:600;cursor:pointer;">
+    <input type="checkbox" id="normalize-check" checked
+           style="width:14px;height:14px;accent-color:#5533bb;cursor:pointer;">
+    normalize
+  </label>
+  <label style="display:flex;align-items:center;gap:6px;color:#444466;font-weight:600;cursor:pointer;">
+    <input type="checkbox" id="db-check"
+           style="width:14px;height:14px;accent-color:#cc5533;cursor:pointer;">
+    dB
+  </label>
+  <button class="play-btn" id="play-btn">▶ play</button>
+  <div style="margin-left:auto; color:#444477; font-size:13px; font-weight:600;">
+    f(φ) = Σ<sub>n</sub> [ a<sub>n</sub> cos(nφ + φ<sub>n</sub>) ]
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- LEFT: weight sliders -->
+  <div id="weights-panel">
+    <div class="panel-title">Weights &amp; Phases</div>
+    <div id="harmonics-list"></div>
+    <div id="monitors-panel" style="display:none;">
+      <div class="panel-title" style="border-top:2px solid #d0d0e4;">Monitors</div>
+      <div id="monitors-list"></div>
+    </div>
+  </div>
+
+  <!-- CENTER: polar plot -->
+  <div id="plot-area">
+    <canvas id="polar-canvas"></canvas>
+    <div class="formula-box">
+      <span class="math" id="formula-display"></span>
+    </div>
+  </div>
+
+  <!-- RIGHT: operations -->
+  <div id="ops-panel">
+    <div class="panel-title">Operations</div>
+    <div id="ops-content"></div>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  FORMULATION
+//  Cylindrical harmonics of order N (2D ambisonics):
+//
+//    Y_0(φ)   = 1/√2                          (n=0, omnidirectional)
+//    Y_n^c(φ) = cos(n·φ)   for n = 1…N        (even component)
+//    Y_n^s(φ) = sin(n·φ)   for n = 1…N        (odd component)
+//
+//  Truncated Fourier series expansion of f(φ) up to order N:
+//
+//    f(φ) = a_0 / √2
+//           + Σ_{n=1}^{N} [ a_n^c · cos(n·φ) + a_n^s · sin(n·φ) ]
+//
+//  Amplitude / phase parametrisation used in the UI:
+//
+//    Inputs : A_n ∈ [0, 5],  φ_n ∈ [−π, π]
+//    Output : { ac: a_n^c,  as: a_n^s }   via amplitudePhaseToAB()
+//
+//  Normalisation (display only — slider values are always raw):
+//    if max|f(φ)| > 1, the polar plot is scaled to fit the unit circle.
+//
+//  Orthogonality: ∫_0^{2π} Y_m(φ) Y_n(φ) dφ = π·δ_{mn}  (n=m=0 → π√2·δ)
+// ─────────────────────────────────────────────
+
+const canvas = document.getElementById('polar-canvas');
+const ctx = canvas.getContext('2d');
+const orderSel = document.getElementById('order-select');
+const list = document.getElementById('harmonics-list');
+const formulaDisplay = document.getElementById('formula-display');
+
+// ── Static state (always reflects slider positions)
+// state.a0        : float ∈ [−1, 1]   — DC coefficient
+// state.amp[n]    : float ∈ [0,  5]   — amplitude for order n  (n = 1…N)
+// state.phase[n]  : float ∈ [−π, π]   — phase for order n      (n = 1…N)
+const state = {
+  a0: 1.0,
+  amp: {},
+  phase: {},
+};
+
+function getAmp(n)   { return state.amp[n]   !== undefined ? state.amp[n]   : 0.0; }
+function getPhase(n) { return state.phase[n] !== undefined ? state.phase[n] : 0.0; }
+
+const PALETTE = [
+  '#7777ff','#55aaff','#44ccaa','#aacc55','#ffaa33','#ff6655','#cc55aa','#aa77ff','#55ccff'
+];
+function harmColor(n) { return PALETTE[(n - 1) % PALETTE.length]; }
+
+// ─────────────────────────────────────────────
+//  TO IMPLEMENT
+//
+//  Converts amplitude/phase parameters for order n
+//  into real Fourier coefficients (a_n^c, a_n^s).
+//
+//  Inputs:
+//    n   — harmonic order (integer ≥ 1)
+//    A   — amplitude  ∈ [0, 5]
+//    phi — phase      ∈ [−π, π]  (radians)
+//
+//  Expected output: { ac, as }
+//    ac = a_n^c   (coefficient of cos(n·φ))
+//    as = a_n^s   (coefficient of sin(n·φ))
+// ─────────────────────────────────────────────
+function amplitudePhaseToAB(n, A, phi) {
+  return { ac: A * Math.cos(phi), as: A * Math.sin(phi) };
+}
+
+// ── LFO system
+// lfo.amp[n] / lfo.phi[n]: { enabled, freq (Hz), depth, phase (rad) }
+// During playback, getLiveAmp/getLivePhase add LFO on top of slider values.
+// Slider values (state) are never modified by the LFO.
+const lfo = {
+  playing: false,
+  animId:  null,
+  startTime: 0,
+  amp: {},   // n → { enabled, freq, depth, phase }
+  phi: {},   // n → { enabled, freq, depth, phase }
+};
+
+function lfoDefault(depthDefault) {
+  return { enabled: false, freq: 1.0, depth: depthDefault, phase: 0 };
+}
+
+function getLiveAmp(n) {
+  const cfg = lfo.amp[n];
+  if (!lfo.playing || !cfg || !cfg.enabled) return getAmp(n);
+  const t = (performance.now() - lfo.startTime) / 1000;
+  return Math.max(0, Math.min(5, getAmp(n) + cfg.depth * Math.sin(2 * Math.PI * cfg.freq * t + cfg.phase)));
+}
+
+function getLivePhase(n) {
+  const cfg = lfo.phi[n];
+  if (!lfo.playing || !cfg || !cfg.enabled) return getPhase(n);
+  const t = (performance.now() - lfo.startTime) / 1000;
+  return getPhase(n) + cfg.depth * Math.sin(2 * Math.PI * cfg.freq * t + cfg.phase);
+}
+
+// ── Evaluate f(φ) — uses live (LFO-modulated) values when playing
+function evalF(phi, N) {
+  let sum = state.a0 / Math.SQRT2;
+  for (let n = 1; n <= N; n++) {
+    const { ac, as } = amplitudePhaseToAB(n, getLiveAmp(n), getLivePhase(n));
+    sum += ac * Math.cos(n * phi) + as * Math.sin(n * phi);
+  }
+  return sum;
+}
+
+// ── Monitors (oscilloscope)
+const monitorsPanel = document.getElementById('monitors-panel');
+const monitorsList  = document.getElementById('monitors-list');
+
+const SCOPE_LEN = 220;  // samples in the scrolling buffer
+
+function makeScopeRow(label, labelColor, type, n, color) {
+  const row = document.createElement('div');
+  row.className = 'monitor-row';
+
+  const lbl = document.createElement('span');
+  lbl.className = 'monitor-label';
+  lbl.style.color = labelColor;
+  lbl.innerHTML = label;
+
+  const scopeCanvas = document.createElement('canvas');
+  scopeCanvas.className = 'monitor-scope';
+  // pixel size set after DOM insertion via ResizeObserver
+  scopeCanvas.height = 36 * (window.devicePixelRatio || 1);
+
+  const valSpan = document.createElement('span');
+  valSpan.className = 'monitor-value';
+  valSpan.textContent = type === 'amp' ? '0.00' : '0.0°';
+
+  row.appendChild(lbl);
+  row.appendChild(scopeCanvas);
+  row.appendChild(valSpan);
+
+  row._type  = type;
+  row._n     = n;
+  row._color = color;
+  row._val   = valSpan;
+  row._scope = scopeCanvas;
+  row._buf   = new Float32Array(SCOPE_LEN);
+  row._head  = 0;
+
+  return row;
+}
+
+function drawScope(row) {
+  const c    = row._scope;
+  const W    = c.width, H = c.height;
+  const sctx = c.getContext('2d');
+  const dpr  = window.devicePixelRatio || 1;
+  const buf  = row._buf;
+  const head = row._head;
+
+  // autoscale: find min/max of current buffer
+  let vMin = Infinity, vMax = -Infinity;
+  for (let i = 0; i < SCOPE_LEN; i++) {
+    const v = buf[i];
+    if (v < vMin) vMin = v;
+    if (v > vMax) vMax = v;
+  }
+  // add margin so waveform never touches top/bottom edge
+  const span   = vMax - vMin || 1e-6;
+  const margin = span * 0.15;
+  vMin -= margin;
+  vMax += margin;
+
+  sctx.clearRect(0, 0, W, H);
+  sctx.fillStyle = '#f7f7fc';
+  sctx.fillRect(0, 0, W, H);
+
+  // zero line (only meaningful for phase)
+  if (row._type === 'phi') {
+    const zeroNorm = (0 - vMin) / (vMax - vMin);
+    const zeroY    = (1 - zeroNorm) * H;
+    sctx.strokeStyle = 'rgba(160,160,200,0.5)';
+    sctx.lineWidth = 1;
+    sctx.beginPath(); sctx.moveTo(0, zeroY); sctx.lineTo(W, zeroY); sctx.stroke();
+  }
+
+  // midline
+  sctx.strokeStyle = 'rgba(160,160,200,0.25)';
+  sctx.lineWidth = 1;
+  sctx.beginPath(); sctx.moveTo(0, H / 2); sctx.lineTo(W, H / 2); sctx.stroke();
+
+  // waveform
+  sctx.strokeStyle = row._color;
+  sctx.lineWidth = 1.5 * dpr;
+  sctx.lineJoin = 'round';
+  sctx.beginPath();
+  for (let i = 0; i < SCOPE_LEN; i++) {
+    const v    = buf[(head + i) % SCOPE_LEN];
+    const x    = (i / (SCOPE_LEN - 1)) * W;
+    const norm = (v - vMin) / (vMax - vMin);
+    const y    = (1 - norm) * H;
+    if (i === 0) sctx.moveTo(x, y); else sctx.lineTo(x, y);
+  }
+  sctx.stroke();
+}
+
+function rebuildMonitors(N) {
+  monitorsList.innerHTML = '';
+  const rows = [];
+
+  for (let n = 1; n <= N; n++) {
+    if (lfo.amp[n]?.enabled) {
+      const row = makeScopeRow(`A<sub>${n}</sub>`, harmColor(n), 'amp', n, harmColor(n));
+      monitorsList.appendChild(row);
+      rows.push(row);
+    }
+    if (lfo.phi[n]?.enabled) {
+      const row = makeScopeRow(`φ<sub>${n}</sub>`, '#aa7744', 'phi', n, '#cc8855');
+      monitorsList.appendChild(row);
+      rows.push(row);
+    }
+  }
+
+  monitorsPanel.style.display = rows.length ? '' : 'none';
+
+  // set canvas pixel widths after layout — subtract 2 for the 1px border each side
+  requestAnimationFrame(() => {
+    for (const row of monitorsList.children) {
+      const dpr = window.devicePixelRatio || 1;
+      row._scope.width  = (row._scope.offsetWidth  - 2) * dpr;
+      row._scope.height = (row._scope.offsetHeight - 2) * dpr;
+      drawScope(row);
+    }
+  });
+}
+
+function updateMonitors() {
+  for (const row of monitorsList.children) {
+    const n = row._n;
+    const v = row._type === 'amp' ? getLiveAmp(n) : getLivePhase(n);
+
+    // push sample into circular buffer
+    row._buf[row._head] = v;
+    row._head = (row._head + 1) % SCOPE_LEN;
+
+    // update numeric readout
+    row._val.textContent = row._type === 'amp'
+      ? v.toFixed(2)
+      : (v * 180 / Math.PI).toFixed(1) + '°';
+
+    drawScope(row);
+  }
+}
+
+// ── Animation loop
+function animLoop() {
+  redraw();
+  updateMonitors();
+  lfo.animId = requestAnimationFrame(animLoop);
+}
+
+function togglePlay() {
+  const btn = document.getElementById('play-btn');
+  if (lfo.playing) {
+    lfo.playing = false;
+    cancelAnimationFrame(lfo.animId);
+    btn.textContent = '▶ play';
+    btn.classList.remove('playing');
+    redraw();
+  } else {
+    lfo.playing = true;
+    lfo.startTime = performance.now();
+    btn.textContent = '■ stop';
+    btn.classList.add('playing');
+    animLoop();
+  }
+}
+
+// ── Helper: build one LFO sub-row for a parameter
+function makeLfoSubRow(key, depthMax, depthDefault, depthLabel) {
+  if (!lfo[key.type][key.n]) lfo[key.type][key.n] = lfoDefault(depthDefault);
+  const cfg = lfo[key.type][key.n];
+
+  const row = document.createElement('div');
+  row.className = 'lfo-sub-row';
+  if (cfg.enabled) row.classList.add('visible');
+
+  row.innerHTML = `
+    <span class="lfo-sub-label">freq</span>
+    <input class="lfo-input" type="number" min="0.01" max="20" step="0.1" value="${cfg.freq}" title="LFO frequency (Hz)">
+    <span class="lfo-sub-label">depth</span>
+    <input class="lfo-input" type="number" min="0" max="${depthMax}" step="0.01" value="${cfg.depth}" title="LFO depth (${depthLabel})">
+    <span class="lfo-sub-label">φ₀</span>
+    <input class="lfo-input" type="number" min="-180" max="180" step="1" value="${(cfg.phase * 180 / Math.PI).toFixed(0)}" title="LFO initial phase (°)">
+  `;
+
+  const [freqIn, depthIn, phaseIn] = row.querySelectorAll('.lfo-input');
+  freqIn.addEventListener('input',  () => { cfg.freq  = parseFloat(freqIn.value)  || 1;   });
+  depthIn.addEventListener('input', () => { cfg.depth = parseFloat(depthIn.value) || 0;   });
+  phaseIn.addEventListener('input', () => { cfg.phase = (parseFloat(phaseIn.value) || 0) * Math.PI / 180; });
+
+  return row;
+}
+
+// ── Build slider UI
+function renderList(N) {
+  list.innerHTML = '';
+
+  // a0 row
+  const a0Row = document.createElement('div');
+  a0Row.className = 'harmonic-row';
+  a0Row.innerHTML = `
+    <span class="harm-label" style="color:#5533bb;font-weight:700;">a₀</span>
+    <input type="range" class="harm-slider" min="-1" max="1" step="0.01"
+           value="${state.a0}" style="--color:#9999cc;">
+    <input type="number" class="harm-value" min="-1" max="1" step="0.01" value="${state.a0.toFixed(2)}">
+  `;
+  const a0Slider = a0Row.querySelector('.harm-slider');
+  const a0Val    = a0Row.querySelector('.harm-value');
+  a0Slider.addEventListener('input', () => {
+    state.a0 = parseFloat(a0Slider.value);
+    a0Val.value = state.a0.toFixed(2);
+    redraw(); updateFormula(N);
+  });
+  a0Val.addEventListener('change', () => {
+    state.a0 = Math.max(-1, Math.min(1, parseFloat(a0Val.value) || 0));
+    a0Val.value = state.a0.toFixed(2);
+    a0Slider.value = state.a0;
+    redraw(); updateFormula(N);
+  });
+  list.appendChild(a0Row);
+
+  const sep = document.createElement('div');
+  sep.style.cssText = 'height:1px;background:#c8c8e4;margin:6px 14px;';
+  list.appendChild(sep);
+
+  // one block per order n = 1…N
+  for (let n = 1; n <= N; n++) {
+    const color = harmColor(n);
+    const amp   = getAmp(n);
+    const phase = getPhase(n);
+
+    // amplitude row
+    const ampRow = document.createElement('div');
+    ampRow.className = 'harmonic-row';
+    ampRow.style.paddingBottom = '2px';
+    ampRow.innerHTML = `
+      <span class="harm-label" style="color:${color};font-weight:700;">A<sub>${n}</sub></span>
+      <input type="range" class="harm-slider" min="0" max="5" step="0.01"
+             value="${amp}" style="--color:${color};">
+      <input type="number" class="harm-value" min="0" max="5" step="0.01" value="${amp.toFixed(2)}">
+      <button class="lfo-toggle-btn${lfo.amp[n]?.enabled ? ' active' : ''}" title="LFO">∿</button>
+    `;
+    const ampSlider  = ampRow.querySelector('.harm-slider');
+    const ampVal     = ampRow.querySelector('.harm-value');
+    const ampLfoBtn  = ampRow.querySelector('.lfo-toggle-btn');
+    ampSlider.addEventListener('input', () => {
+      state.amp[n] = parseFloat(ampSlider.value);
+      ampVal.value = state.amp[n].toFixed(2);
+      redraw(); updateFormula(N);
+    });
+    ampVal.addEventListener('change', () => {
+      state.amp[n] = Math.max(0, Math.min(5, parseFloat(ampVal.value) || 0));
+      ampVal.value = state.amp[n].toFixed(2);
+      ampSlider.value = state.amp[n];
+      redraw(); updateFormula(N);
+    });
+
+    const ampLfoRow = makeLfoSubRow({ type: 'amp', n }, 5, 0.5, 'amplitude');
+    ampLfoBtn.addEventListener('click', () => {
+      if (!lfo.amp[n]) lfo.amp[n] = lfoDefault(0.5);
+      lfo.amp[n].enabled = !lfo.amp[n].enabled;
+      ampLfoBtn.classList.toggle('active', lfo.amp[n].enabled);
+      ampLfoRow.classList.toggle('visible', lfo.amp[n].enabled);
+      rebuildMonitors(N);
+    });
+
+    // phase row
+    const phiRow = document.createElement('div');
+    phiRow.className = 'harm-phase-row';
+    const phiDeg = (phase * 180 / Math.PI).toFixed(1);
+    phiRow.innerHTML = `
+      <span class="phase-label">φ<sub>${n}</sub></span>
+      <input type="range" class="phase-slider" min="${-Math.PI}" max="${Math.PI}" step="0.01"
+             value="${phase}">
+      <input type="number" class="phase-value" min="-180" max="180" step="0.1" value="${phiDeg}">
+      <button class="lfo-toggle-btn${lfo.phi[n]?.enabled ? ' active' : ''}" title="LFO">∿</button>
+    `;
+    const phiSlider = phiRow.querySelector('.phase-slider');
+    const phiVal    = phiRow.querySelector('.phase-value');
+    const phiLfoBtn = phiRow.querySelector('.lfo-toggle-btn');
+    phiSlider.addEventListener('input', () => {
+      state.phase[n] = parseFloat(phiSlider.value);
+      phiVal.value = (state.phase[n] * 180 / Math.PI).toFixed(1);
+      redraw(); updateFormula(N);
+    });
+    phiVal.addEventListener('change', () => {
+      const deg = Math.max(-180, Math.min(180, parseFloat(phiVal.value) || 0));
+      state.phase[n] = deg * Math.PI / 180;
+      phiVal.value = deg.toFixed(1);
+      phiSlider.value = state.phase[n];
+      redraw(); updateFormula(N);
+    });
+
+    const phiLfoRow = makeLfoSubRow({ type: 'phi', n }, 5, 0.3, 'rad');
+    phiLfoBtn.addEventListener('click', () => {
+      if (!lfo.phi[n]) lfo.phi[n] = lfoDefault(0.3);
+      lfo.phi[n].enabled = !lfo.phi[n].enabled;
+      phiLfoBtn.classList.toggle('active', lfo.phi[n].enabled);
+      phiLfoRow.classList.toggle('visible', lfo.phi[n].enabled);
+      rebuildMonitors(N);
+    });
+
+    list.appendChild(ampRow);
+    list.appendChild(ampLfoRow);
+    list.appendChild(phiRow);
+    list.appendChild(phiLfoRow);
+  }
+
+  updateFormula(N);
+  rebuildMonitors(N);
+}
+
+// ── Formula display
+function updateFormula(N) {
+  const parts = [];
+  if (Math.abs(state.a0) > 1e-4)
+    parts.push(`${state.a0 >= 0 ? '' : ''}${state.a0.toFixed(2)}·(1/√2)`);
+  for (let n = 1; n <= N; n++) {
+    const A   = getAmp(n);
+    const phi = getPhase(n);
+    if (A < 1e-4) continue;
+    const phiDeg = (phi * 180 / Math.PI).toFixed(1);
+    const sign = parts.length ? ' + ' : '';
+    parts.push(`${sign}${A.toFixed(2)}·cos(${n}φ − ${phiDeg}°)`);
+  }
+  formulaDisplay.textContent = parts.length ? 'f(φ) = ' + parts.join('') : 'f(φ) = 0';
+}
+
+// ── Polar drawing
+function redraw() {
+  const N = parseInt(orderSel.value);
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2;
+  const R  = Math.min(W, H) * 0.42;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const dbMode = document.getElementById('db-check').checked;
+  const DB_FLOOR = -40;  // dB floor for display
+
+  // compute raw max before any normalization/dB — used for circle labels
+  const STEPS = 720;
+  const vals = new Float32Array(STEPS);
+  for (let i = 0; i < STEPS; i++)
+    vals[i] = evalF((i / STEPS) * 2 * Math.PI, N);
+
+  let rawMax = 0;
+  for (let i = 0; i < STEPS; i++) if (Math.abs(vals[i]) > rawMax) rawMax = Math.abs(vals[i]);
+
+  const normalize = document.getElementById('normalize-check').checked;
+  // visual scale: when normalizing a function larger than 1, R maps to rawMax
+  const visualScale = (normalize && rawMax > 1) ? rawMax : 1;
+
+  // grid circles
+  const fmt = v => v < 10 ? v.toFixed(2) : v.toFixed(1);
+  const gridFracs = dbMode
+    ? [{ frac: 1.0, label: '0 dB'              },
+       { frac: 0.75, label: `${DB_FLOOR*0.25} dB` },
+       { frac: 0.5,  label: `${DB_FLOOR*0.5} dB`  },
+       { frac: 0.25, label: `${DB_FLOOR*0.75} dB`  }]
+    : [{ frac: 0.25, label: fmt(0.25 * visualScale) },
+       { frac: 0.5,  label: fmt(0.50 * visualScale) },
+       { frac: 0.75, label: fmt(0.75 * visualScale) },
+       { frac: 1.0,  label: fmt(1.00 * visualScale) }];
+
+  gridFracs.forEach(({ frac, label }) => {
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * frac, 0, 2 * Math.PI);
+    ctx.strokeStyle = `rgba(160,160,200,${frac === 1.0 ? 0.6 : 0.25})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = '#6666aa';
+    ctx.font = 'bold 11px JetBrains Mono, monospace';
+    ctx.fillText(label, cx + 4, cy - R * frac + 12);
+  });
+
+  // radial axes
+  for (let a = 0; a < 360; a += 30) {
+    const rad = a * Math.PI / 180;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + R * Math.cos(rad), cy - R * Math.sin(rad));
+    ctx.strokeStyle = 'rgba(170,170,210,0.5)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = '#444477';
+    ctx.font = 'bold 12px JetBrains Mono, monospace';
+    const lx = cx + (R + 16) * Math.cos(rad);
+    const ly = cy - (R + 16) * Math.sin(rad);
+    ctx.fillText(a + '°', lx - 11, ly + 5);
+  }
+
+  if (normalize) {
+    let maxAbs = 0;
+    for (let i = 0; i < STEPS; i++) if (Math.abs(vals[i]) > maxAbs) maxAbs = Math.abs(vals[i]);
+    if (maxAbs > 1) for (let i = 0; i < STEPS; i++) vals[i] /= maxAbs;
+  }
+
+  // dB mapping: preserve sign, map |v| → radius in [0,1] on a dB scale
+  // r = max(0, 1 + 20·log10(|v|) / |DB_FLOOR|)
+  if (dbMode) {
+    for (let i = 0; i < STEPS; i++) {
+      const sign = vals[i] >= 0 ? 1 : -1;
+      const absV = Math.abs(vals[i]);
+      const r = absV < 1e-10 ? 0 : Math.max(0, 1 + 20 * Math.log10(absV) / Math.abs(DB_FLOOR));
+      vals[i] = sign * r;
+    }
+  }
+
+  const drawLobe = (sign, color, alpha) => {
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i <= STEPS; i++) {
+      const idx = i % STEPS;
+      const v   = vals[idx];
+      const phi = (idx / STEPS) * 2 * Math.PI;
+      const r   = (sign * v > 0) ? Math.abs(v) : 0;
+      const x   = cx + R * r * Math.cos(phi);
+      const y   = cy - R * r * Math.sin(phi);
+      if (!started) { ctx.moveTo(x, y); started = true; }
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  };
+
+  drawLobe(+1, '#6688ff', 0.18);
+  drawLobe(-1, '#ff6655', 0.18);
+
+  ctx.beginPath();
+  for (let i = 0; i <= STEPS; i++) {
+    const idx = i % STEPS;
+    const phi = (idx / STEPS) * 2 * Math.PI;
+    const r   = Math.abs(vals[idx]);
+    const x   = cx + R * r * Math.cos(phi);
+    const y   = cy - R * r * Math.sin(phi);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.strokeStyle = 'rgba(80,80,180,0.55)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 3, 0, 2 * Math.PI);
+  ctx.fillStyle = '#7777bb';
+  ctx.fill();
+
+  ctx.fillStyle = '#3333aa';
+  ctx.font = 'bold 13px JetBrains Mono, monospace';
+  ctx.fillText(`N=${N}`, 10, 20);
+
+  updateSpeakerGains();
+}
+
+// ─────────────────────────────────────────────
+//  BINAURAL AUDIO
+//
+//  Virtual speaker ring: N_SPK speakers uniformly distributed around φ ∈ [0, 2π).
+//  Each speaker k at angle φ_k receives gain  g_k = f(φ_k)  from the current
+//  directivity pattern (live, including LFO modulation).
+//
+//  Binaural approximation (ILD only — no HRTF convolution):
+//    pan_k = -sin(φ_k)   →  φ_k=π/2 ("up" in plot = left ear) gives pan = -1
+//    Feeding a StereoPannerNode per speaker.
+//  For full HRTF binaural, replace StereoPanners with ConvolverNodes
+//  loaded with HOA binaural decoder IRs (e.g. SADIE, Eigenmike).
+// ─────────────────────────────────────────────
+
+const N_SPK = 36;
+
+const audio = {
+  ctx:         null,
+  sourceNode:  null,
+  masterGain:  null,
+  speakers:    [],    // { gainNode, pannerNode, phi }
+  playing:     false,
+  type:        'pink',
+  freq:        440,
+  volume:      0.4,
+  fileBuffer:  null,  // decoded AudioBuffer from user file
+};
+
+function buildPinkNoiseBuffer(actx) {
+  const len  = actx.sampleRate * 4;
+  const buf  = actx.createBuffer(1, len, actx.sampleRate);
+  const data = buf.getChannelData(0);
+  let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0, b6=0;
+  for (let i = 0; i < len; i++) {
+    const w = Math.random() * 2 - 1;
+    b0 = 0.99886*b0 + w*0.0555179; b1 = 0.99332*b1 + w*0.0750759;
+    b2 = 0.96900*b2 + w*0.1538520; b3 = 0.86650*b3 + w*0.3104856;
+    b4 = 0.55000*b4 + w*0.5329522; b5 = -0.7616*b5 - w*0.0168980;
+    data[i] = (b0+b1+b2+b3+b4+b5+b6 + w*0.5362) * 0.11;
+    b6 = w * 0.115926;
+  }
+  return buf;
+}
+
+function initAudioCtx() {
+  if (audio.ctx) return;
+  audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+  audio.masterGain = audio.ctx.createGain();
+  audio.masterGain.gain.value = audio.volume;
+  audio.masterGain.connect(audio.ctx.destination);
+
+  for (let k = 0; k < N_SPK; k++) {
+    const phi       = (k / N_SPK) * 2 * Math.PI;
+    const gainNode  = audio.ctx.createGain();
+    const panner    = audio.ctx.createStereoPanner();
+    // φ=π/2 → top of polar plot → left ear  (pan = -1)
+    // φ=3π/2 → bottom of polar plot → right ear (pan = +1)
+    panner.pan.value = -Math.sin(phi);
+    gainNode.connect(panner);
+    panner.connect(audio.masterGain);
+    audio.speakers.push({ gainNode, phi });
+  }
+}
+
+function connectSource() {
+  audio.speakers.forEach(({ gainNode }) => {
+    if (audio.type === 'sine') {
+      const osc = audio.ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = audio.freq;
+      osc.connect(gainNode);
+      osc.start();
+      audio.sourceNode = osc;          // store last (all share same osc)
+    }
+  });
+  if (audio.type !== 'sine') {
+    const src = audio.ctx.createBufferSource();
+    src.buffer = buildPinkNoiseBuffer(audio.ctx);
+    src.loop = true;
+    audio.speakers.forEach(({ gainNode }) => src.connect(gainNode));
+    src.start();
+    audio.sourceNode = src;
+  }
+}
+
+function startAudio() {
+  initAudioCtx();
+  if (audio.ctx.state === 'suspended') audio.ctx.resume();
+  if (audio.sourceNode) { try { audio.sourceNode.stop(); } catch(e){} audio.sourceNode.disconnect(); }
+  if (audio.type === 'sine') {
+    const osc = audio.ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = audio.freq;
+    audio.speakers.forEach(({ gainNode }) => osc.connect(gainNode));
+    osc.start();
+    audio.sourceNode = osc;
+  } else if (audio.type === 'file') {
+    if (!audio.fileBuffer) { return; }  // no file loaded yet
+    const src = audio.ctx.createBufferSource();
+    src.buffer = audio.fileBuffer;
+    src.loop = true;
+    audio.speakers.forEach(({ gainNode }) => src.connect(gainNode));
+    src.start();
+    audio.sourceNode = src;
+  } else {
+    const src = audio.ctx.createBufferSource();
+    src.buffer = buildPinkNoiseBuffer(audio.ctx);
+    src.loop = true;
+    audio.speakers.forEach(({ gainNode }) => src.connect(gainNode));
+    src.start();
+    audio.sourceNode = src;
+  }
+  audio.playing = true;
+  updateSpeakerGains();
+}
+
+function stopAudio() {
+  if (audio.sourceNode) {
+    try { audio.sourceNode.stop(); } catch(e) {}
+    audio.sourceNode.disconnect();
+    audio.sourceNode = null;
+  }
+  audio.playing = false;
+}
+
+function updateSpeakerGains() {
+  if (!audio.ctx || !audio.playing) return;
+  const N = parseInt(orderSel.value);
+
+  // collect raw gains and compute RMS for normalisation
+  const gains = audio.speakers.map(({ phi }) => evalF(phi, N));
+  const rms   = Math.sqrt(gains.reduce((s, g) => s + g*g, 0) / N_SPK) || 1;
+  const scale = 1 / (rms * Math.sqrt(N_SPK));
+
+  const t = audio.ctx.currentTime;
+  audio.speakers.forEach(({ gainNode }, k) => {
+    gainNode.gain.setTargetAtTime(gains[k] * scale, t, 0.008);
+  });
+}
+
+// ── Build audio controls in ops panel
+function buildAudioUI() {
+  const sec = document.createElement('div');
+  sec.className = 'audio-section';
+  sec.innerHTML = `
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:#7777aa;
+                text-transform:uppercase;font-family:'JetBrains Mono',monospace;">
+      Binaural
+    </div>
+    <div class="audio-row">
+      <button class="audio-btn" id="audio-play-btn">▶ play</button>
+    </div>
+    <div class="audio-row">
+      <span class="audio-label">source</span>
+      <select class="audio-select" id="audio-source">
+        <option value="pink" selected>pink noise</option>
+        <option value="white">white noise</option>
+        <option value="sine">sine</option>
+        <option value="file">file…</option>
+      </select>
+    </div>
+    <div class="audio-row" id="audio-freq-row" style="display:none">
+      <span class="audio-label">freq</span>
+      <input class="audio-input" id="audio-freq" type="number" min="20" max="20000" step="1" value="440">
+      <span style="font-size:12px;color:#8888aa;font-family:'JetBrains Mono',monospace;">Hz</span>
+    </div>
+    <div class="audio-row" id="audio-file-row" style="display:none">
+      <span class="audio-label">file</span>
+      <input type="file" id="audio-file" accept="audio/*"
+             style="flex:1;font-size:11px;font-family:'JetBrains Mono',monospace;color:#333366;
+                    background:#f0f0fa;border:1px solid #aaaacc;padding:2px 4px;cursor:pointer;">
+    </div>
+    <div id="audio-file-status" style="display:none;font-size:10px;font-style:italic;
+         color:#888;font-family:'EB Garamond',serif;padding-left:45px;"></div>
+    <div class="audio-row">
+      <span class="audio-label">vol</span>
+      <input class="audio-slider" id="audio-vol" type="range" min="0" max="1" step="0.01" value="0.4">
+    </div>
+    <div class="audio-note">ILD approx. — no HRTF convolution.<br>φ=90° → left ear, φ=270° → right.</div>
+  `;
+  opsContent.insertBefore(sec, opsContent.firstChild);
+
+  document.getElementById('audio-play-btn').addEventListener('click', () => {
+    const btn = document.getElementById('audio-play-btn');
+    if (audio.playing) {
+      stopAudio();
+      btn.textContent = '▶ play';
+      btn.classList.remove('active');
+    } else {
+      startAudio();
+      btn.textContent = '■ stop';
+      btn.classList.add('active');
+    }
+  });
+
+  document.getElementById('audio-source').addEventListener('change', e => {
+    audio.type = e.target.value;
+    document.getElementById('audio-freq-row').style.display  = audio.type === 'sine' ? '' : 'none';
+    document.getElementById('audio-file-row').style.display  = audio.type === 'file' ? '' : 'none';
+    document.getElementById('audio-file-status').style.display = audio.type === 'file' ? '' : 'none';
+    if (audio.playing) startAudio();
+  });
+
+  document.getElementById('audio-file').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const status = document.getElementById('audio-file-status');
+    status.style.display = '';
+    status.textContent = 'decoding…';
+    initAudioCtx();
+    file.arrayBuffer().then(ab => audio.ctx.decodeAudioData(ab)).then(decoded => {
+      audio.fileBuffer = decoded;
+      const dur = decoded.duration.toFixed(1);
+      status.textContent = `${file.name} (${dur}s)`;
+      if (audio.playing) startAudio();
+    }).catch(err => {
+      status.textContent = `error: ${err.message}`;
+    });
+  });
+
+  document.getElementById('audio-freq').addEventListener('change', e => {
+    audio.freq = parseFloat(e.target.value) || 440;
+    if (audio.playing && audio.sourceNode?.frequency)
+      audio.sourceNode.frequency.value = audio.freq;
+  });
+
+  document.getElementById('audio-vol').addEventListener('input', e => {
+    audio.volume = parseFloat(e.target.value);
+    if (audio.masterGain) audio.masterGain.gain.setTargetAtTime(audio.volume, audio.ctx.currentTime, 0.01);
+  });
+}
+
+// ─────────────────────────────────────────────
+//  OPERATIONS
+//
+//  registerOp(label, fn)
+//    Adds a button to the ops panel.
+//    fn(state, N) — mutate state in place, no return value needed.
+//    Sliders and canvas refresh automatically after fn runs.
+//
+//  registerSection(title)
+//    Adds a visual section header between buttons.
+// ─────────────────────────────────────────────
+
+const opsContent = document.getElementById('ops-content');
+
+function applyOp(fn) {
+  const N = parseInt(orderSel.value);
+  fn(state, N);
+  renderList(N);
+  redraw();
+}
+
+function registerSection(title) {
+  const el = document.createElement('div');
+  el.className = 'op-section';
+  el.textContent = title;
+  opsContent.appendChild(el);
+}
+
+// registerInputOp(label, inputLabel, defaultValue, fn)
+// fn(state, N, value) — value is the parsed float from the input field
+function registerInputOp(label, inputLabel, defaultValue, fn) {
+  const section = document.createElement('div');
+  section.style.cssText = 'display:flex;flex-direction:column;gap:5px;';
+
+  const title = document.createElement('div');
+  title.className = 'op-input-label';
+  title.textContent = label;
+  title.style.fontSize = '12px';
+  title.style.fontStyle = 'normal';
+  title.style.fontFamily = "'JetBrains Mono', monospace";
+  title.style.color = '#7777aa';
+  title.style.letterSpacing = '0.5px';
+
+  const row = document.createElement('div');
+  row.className = 'op-input-row';
+
+  const lbl = document.createElement('span');
+  lbl.className = 'op-input-label';
+  lbl.textContent = inputLabel;
+
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.className = 'op-input';
+  input.value = defaultValue;
+  input.step = 'any';
+
+  const btn = document.createElement('button');
+  btn.className = 'op-apply-btn';
+  btn.textContent = 'apply';
+  btn.addEventListener('click', () => {
+    const v = parseFloat(input.value);
+    if (isNaN(v)) return;
+    applyOp((state, N) => fn(state, N, v));
+  });
+
+  row.appendChild(lbl);
+  row.appendChild(input);
+  row.appendChild(btn);
+  section.appendChild(title);
+  section.appendChild(row);
+  opsContent.appendChild(section);
+}
+
+function registerOp(label, fn) {
+  const btn = document.createElement('button');
+  btn.className = 'op-btn';
+  btn.textContent = label;
+  btn.addEventListener('click', () => applyOp(fn));
+  opsContent.appendChild(btn);
+}
+
+// ── Built-in operations
+
+registerSection('presets');
+
+
+registerOp('reset', (state, N) => {
+  state.a0 = 1.0;
+  for (let n = 1; n <= N; n++) { state.amp[n] = 0; state.phase[n] = 0; }
+});
+
+registerOp('all equal', (state, N) => {
+  state.a0 = 1.0;
+  for (let n = 1; n <= N; n++) { state.amp[n] = 1; state.phase[n] = 0; }
+});
+
+registerSection('amplitude');
+
+registerOp('scale ×2', (state, N) => {
+  state.a0 *= 2;
+  for (let n = 1; n <= N; n++) state.amp[n] = Math.min(5, getAmp(n) * 2);
+});
+
+registerOp('scale ×0.5', (state, N) => {
+  state.a0 *= 0.5;
+  for (let n = 1; n <= N; n++) state.amp[n] = getAmp(n) * 0.5;
+});
+
+registerSection('phase');
+
+registerOp('rotate +45°', (state, N) => {
+  const d = Math.PI / 4;
+  for (let n = 1; n <= N; n++) {
+    state.phase[n] = ((getPhase(n) + d) + Math.PI) % (2 * Math.PI) - Math.PI;
+  }
+});
+
+registerOp('rotate −45°', (state, N) => {
+  const d = -Math.PI / 4;
+  for (let n = 1; n <= N; n++) {
+    state.phase[n] = ((getPhase(n) + d) + Math.PI) % (2 * Math.PI) - Math.PI;
+  }
+});
+
+registerOp('reset phases', (state, N) => {
+  for (let n = 1; n <= N; n++) state.phase[n] = 0;
+});
+
+// φ_n = (n · θ) mod 180°
+registerInputOp('set φₙ = n · θ  (mod 180°)', 'θ (°)', 30, (state, N, theta) => {
+  const thetaRad = theta * Math.PI / 180;
+  const mod180   = Math.PI;  // 180° in radians
+  for (let n = 1; n <= N; n++) {
+    // positive modulo: result in [0, π)
+    const phi = ((n * thetaRad) % mod180 + mod180) % mod180;
+    state.phase[n] = phi;
+  }
+});
+
+// ── Resize
+function resize() {
+  const area = document.getElementById('plot-area');
+  const size = Math.min(area.clientWidth, area.clientHeight) - 40;
+  canvas.width  = size;
+  canvas.height = size;
+  redraw();
+}
+
+// ── Init
+function init() {
+  const N = parseInt(orderSel.value);
+  buildAudioUI();
+  renderList(N);
+  resize();
+}
+
+orderSel.addEventListener('change', () => {
+  const N = parseInt(orderSel.value);
+  renderList(N);
+  redraw();
+});
+
+window.addEventListener('resize', resize);
+document.getElementById('normalize-check').addEventListener('change', redraw);
+document.getElementById('db-check').addEventListener('change', redraw);
+document.getElementById('play-btn').addEventListener('click', togglePlay);
+init();
+</script>
+</body>
+</html>
