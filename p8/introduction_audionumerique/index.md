@@ -13,6 +13,7 @@ Ce cours, ainsi que ses slides, ont été réalisés et mis à jour consécutive
 - <a href="seance_5/resume.html">Séance n°5 - Numérisation II : Retour sur l'échantillonnage & la quantification.  Formats numériques </a>
 - <a href="seance_6/resume.html">Séance n°6 : Auto-évaluation et correction collective</a>
 - <a href="seance_9/resume.html">Séance n°9 - Distortion numérique & dithering, chaîne audio-numérique</a>
+- <a href="seance_10/resume.html">Séance n°10 - Connectiques culture générale informatique, synthèse & traitements sonores</a>
 
 Voici la liste des compétences à **comprendre**, voire maîtriser, pour pouvoir réussir l'évaluation finale:
 
