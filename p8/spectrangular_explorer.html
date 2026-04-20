@@ -902,27 +902,28 @@ function renderList(N) {
     // phase row
     const phiRow = document.createElement('div');
     phiRow.className = 'harm-phase-row';
-    const phiDeg = (phase * 180 / Math.PI).toFixed(1);
+    const phiNorm = (((phase % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI) / (2*Math.PI)).toFixed(3);
     phiRow.innerHTML = `
       <span class="phase-label">φ<sub>${n}</sub></span>
-      <input type="range" class="phase-slider" min="${-Math.PI}" max="${Math.PI}" step="0.01"
-             value="${phase}">
-      <input type="number" class="phase-value" min="-180" max="180" step="0.1" value="${phiDeg}">
+      <input type="range" class="phase-slider" min="0" max="1" step="0.001"
+             value="${phiNorm}">
+      <input type="number" class="phase-value" min="0" max="1" step="0.001" value="${phiNorm}">
       <button class="lfo-toggle-btn${lfo.phi[n]?.enabled ? ' active' : ''}" title="LFO">∿</button>
     `;
     const phiSlider = phiRow.querySelector('.phase-slider');
     const phiVal    = phiRow.querySelector('.phase-value');
     const phiLfoBtn = phiRow.querySelector('.lfo-toggle-btn');
     phiSlider.addEventListener('input', () => {
-      state.phase[n] = parseFloat(phiSlider.value);
-      phiVal.value = (state.phase[n] * 180 / Math.PI).toFixed(1);
+      const v = parseFloat(phiSlider.value);
+      state.phase[n] = v * 2 * Math.PI;
+      phiVal.value = v.toFixed(3);
       redraw(); updateFormula(N);
     });
     phiVal.addEventListener('change', () => {
-      const deg = Math.max(-180, Math.min(180, parseFloat(phiVal.value) || 0));
-      state.phase[n] = deg * Math.PI / 180;
-      phiVal.value = deg.toFixed(1);
-      phiSlider.value = state.phase[n];
+      const v = Math.max(0, Math.min(1, parseFloat(phiVal.value) || 0));
+      state.phase[n] = v * 2 * Math.PI;
+      phiVal.value = v.toFixed(3);
+      phiSlider.value = v;
       redraw(); updateFormula(N);
     });
 
@@ -954,9 +955,9 @@ function updateFormula(N) {
     const A   = getAmp(n);
     const phi = getPhase(n);
     if (A < 1e-4) continue;
-    const phiDeg = (phi * 180 / Math.PI).toFixed(1);
+    const phiNorm = (((phi % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI) / (2*Math.PI)).toFixed(3);
     const sign = parts.length ? ' + ' : '';
-    parts.push(`${sign}${A.toFixed(2)}·cos(${n}φ − ${phiDeg}°)`);
+    parts.push(`${sign}${A.toFixed(2)}·cos(${n}φ − ${phiNorm}τ)`);
   }
   formulaDisplay.textContent = parts.length ? 'f(φ) = ' + parts.join('') : 'f(φ) = 0';
 }
@@ -1063,8 +1064,8 @@ function redraw() {
     ctx.stroke();
   };
 
-  drawLobe(+1, '#6688ff', 0.18);
-  drawLobe(-1, '#ff6655', 0.18);
+  drawLobe(+1, '#ff6655', 0.18);
+  drawLobe(-1, '#6688ff', 0.18);
 
   ctx.beginPath();
   for (let i = 0; i <= STEPS; i++) {

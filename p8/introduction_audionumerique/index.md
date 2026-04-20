@@ -2,6 +2,8 @@
 
 Bienvenue sur la page de contenus de cours pour le cours *Introduction à l'audio-numérique* de l'Université Paris 8.
 
+<a href="slides/index.html"> **Slides complètes disponbibles ici : ** </a>
+
 Ce cours, ainsi que ses slides, ont été réalisés et mis à jour consécutivement par : Adrien Zanni, Paul Goutmann, et Axel Chemla--Romeu-Santos.
 
 - <a href="seance_1/resume.html">Séance n°1 - Introduction à la notion de signal, temps & fréquences </a>
