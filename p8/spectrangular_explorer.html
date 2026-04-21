@@ -1015,14 +1015,14 @@ function redraw() {
     const rad = a * Math.PI / 180;
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + R * Math.cos(rad), cy - R * Math.sin(rad));
+    ctx.lineTo(cx + R * Math.sin(rad), cy - R * Math.cos(rad));
     ctx.strokeStyle = 'rgba(170,170,210,0.5)';
     ctx.lineWidth = 1;
     ctx.stroke();
     ctx.fillStyle = '#444477';
     ctx.font = 'bold 12px JetBrains Mono, monospace';
-    const lx = cx + (R + 16) * Math.cos(rad);
-    const ly = cy - (R + 16) * Math.sin(rad);
+    const lx = cx + (R + 16) * Math.sin(rad);
+    const ly = cy - (R + 16) * Math.cos(rad);
     ctx.fillText(a + '°', lx - 11, ly + 5);
   }
 
@@ -1051,8 +1051,8 @@ function redraw() {
       const v   = vals[idx];
       const phi = (idx / STEPS) * 2 * Math.PI;
       const r   = (sign * v > 0) ? Math.abs(v) : 0;
-      const x   = cx + R * r * Math.cos(phi);
-      const y   = cy - R * r * Math.sin(phi);
+      const x   = cx + R * r * Math.sin(phi);
+      const y   = cy - R * r * Math.cos(phi);
       if (!started) { ctx.moveTo(x, y); started = true; }
       else ctx.lineTo(x, y);
     }
@@ -1072,8 +1072,8 @@ function redraw() {
     const idx = i % STEPS;
     const phi = (idx / STEPS) * 2 * Math.PI;
     const r   = Math.abs(vals[idx]);
-    const x   = cx + R * r * Math.cos(phi);
-    const y   = cy - R * r * Math.sin(phi);
+    const x   = cx + R * r * Math.sin(phi);
+    const y   = cy - R * r * Math.cos(phi);
     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
   }
   ctx.closePath();
@@ -1151,7 +1151,7 @@ function initAudioCtx() {
     const panner    = audio.ctx.createStereoPanner();
     // φ=π/2 → top of polar plot → left ear  (pan = -1)
     // φ=3π/2 → bottom of polar plot → right ear (pan = +1)
-    panner.pan.value = -Math.sin(phi);
+    panner.pan.value = Math.sin(phi);
     gainNode.connect(panner);
     panner.connect(audio.masterGain);
     audio.speakers.push({ gainNode, phi });
